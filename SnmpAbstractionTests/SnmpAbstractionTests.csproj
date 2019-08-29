@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <IsPackable>false</IsPackable>
+    <PackageId>Hamnet.SnmpAbstraction.Tests</PackageId>
+    <AssemblyTitle>Unit Tests for SNMP abstraction library for Hamnet Monitoring SNMP queries.</AssemblyTitle>
+    <PackageDescription>
+    Unit Tests for theHamnet.SnmpAbstraction package.
+    </PackageDescription>
+    <Authors>DJ3MU</Authors>
+    <Product>Hamnet SNMP Abstraction Library Tests</Product>
+    <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>Hamnet SNMP Tests</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.25">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nunit" Version="3.11.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+  </ItemGroup>
+
+</Project>

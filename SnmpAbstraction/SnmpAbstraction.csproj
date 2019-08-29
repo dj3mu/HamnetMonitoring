@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <PackageId>Hamnet.SnmpAbstraction</PackageId>
+    <AssemblyTitle>SNMP abstraction library for Hamnet Monitoring SNMP queries.</AssemblyTitle>
+    <PackageDescription>
+    The library abstracts SNMP queries to a level where objects to query are addressed by
+    device-agnostic enum values. The library internally translates them to the hardware-specific OIDs.
+    This way, we finally have a generic way of performing the SNMP queries that are required to implement more
+    complex algorithms that finally work and aggregate the retrieved values.
+    </PackageDescription>
+    <Authors>DJ3MU</Authors>
+    <Product>Hamnet SNMP Abstraction Library</Product>
+    <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>Hamnet SNMP</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.25">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="SnmpSharpNetStandard" Version="0.10.0" />
+  </ItemGroup>
+
+</Project>
