@@ -6,9 +6,10 @@
     public interface IHamnetSnmpQuerier
     {
         /// <summary>
-        /// Queries for the basic device data (i.e. the .1.3.6.1.2.1.1 subtree)
+        /// Gets the device system data (i.e. the .1.3.6.1.2.1.1 subtree which is mainly device-agnostic).
         /// </summary>
-        /// <returns>A data container with the device's system data.</returns>
-        IDeviceSystemData QuerySystemData();
+        /// <remarks>This data will implicitly be queried when a instance of an SNMP Querier initialized.<br/>
+        /// This is because it includes the data that is needed to determine how to talk to the device.</remarks>
+        IDeviceSystemData SystemData { get; }
     }
 }

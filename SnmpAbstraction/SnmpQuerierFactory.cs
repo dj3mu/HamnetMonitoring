@@ -3,7 +3,8 @@
 namespace SnmpAbstraction
 {
     /// <summary>
-    /// Factory class for creating SNMP queriers to specific devices.
+    /// Factory class for creating SNMP queriers to specific devices.<br/>
+    /// Access via singleton property <see cref="Instance" />.
     /// </summary>
     public class SnmpQuerierFactory
     {
@@ -27,6 +28,10 @@ namespace SnmpAbstraction
         /// <returns>An <see cref="IHamnetSnmpQuerier" /> that talks to the given address.</returns>
         public IHamnetSnmpQuerier Create(IpAddress address, IQuerierOptions options = null)
         {
+            ISnmpLowerLayer lowerLayer = new SnmpLowerLayer(address, options);
+
+            var detector = new DeviceDetector(lowerLayer);
+
             throw new System.NotImplementedException();
         }
     }
