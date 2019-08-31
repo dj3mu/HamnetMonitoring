@@ -93,5 +93,33 @@ namespace Tests
                 );
             }
         }
+
+        /// <summary>
+        /// Test for successful query operations
+        /// </summary>
+        [Test]
+        public void QueryAsStringTest()
+        {
+            Oid testOid = new Oid("1.3.6.1.2.1.1.1.0"); 
+
+            // test a (hopefully) successful query.
+            // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
+            // is not available or has no SNMP service running.
+            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            {
+                string result = snmpll.QueryAsString(testOid, "test query");
+                Assert.NotNull(result, "The query result is null");
+                Assert.IsTrue(!string.IsNullOrEmpty(result), "result queries as string is null or empty");
+
+                Console.WriteLine($"Result queried from '{snmpll.Address}' as OID '{testOid}' as string '{result}'");
+            }
+
+            // Query to a host that has (hopefully) no SNMP service running on it.
+            using(var snmpll = new SnmpLowerLayer(this.localhostAdddress))
+            {
+                string result = snmpll.QueryAsString(testOid, "test query");
+                Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
+            }
+        }
     }
 }
