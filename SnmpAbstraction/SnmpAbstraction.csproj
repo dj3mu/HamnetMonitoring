@@ -29,4 +29,8 @@
     <PackageReference Include="SnmpSharpNetStandard" Version="0.10.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="../log4net.config" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

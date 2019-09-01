@@ -1,6 +1,8 @@
-﻿using SnmpSharpNet;
+﻿using System.Runtime.CompilerServices;
+using SnmpSharpNet;
 
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.config")]
+[assembly: InternalsVisibleTo("SnmpAbstractionTests")]
 namespace SnmpAbstraction
 {
     /// <summary>

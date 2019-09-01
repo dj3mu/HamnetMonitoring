@@ -95,11 +95,12 @@ namespace Tests
         }
 
         /// <summary>
-        /// Test for successful query operations
+        /// Test for QueryAsString extension method
         /// </summary>
         [Test]
         public void QueryAsStringTest()
         {
+            // system name should be supported by most devices
             Oid testOid = new Oid("1.3.6.1.2.1.1.1.0"); 
 
             // test a (hopefully) successful query.
@@ -119,6 +120,89 @@ namespace Tests
             {
                 string result = snmpll.QueryAsString(testOid, "test query");
                 Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
+            }
+        }
+
+        /// <summary>
+        /// Test for QueryAsOid extension method
+        /// </summary>
+        [Test]
+        public void QueryAsOidTest()
+        {
+            // system enterprise OID should be supported by most devices
+            Oid testOid = new Oid(".1.3.6.1.2.1.1.2.0"); 
+
+            // test a (hopefully) successful query.
+            // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
+            // is not available or has no SNMP service running.
+            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            {
+                Oid result = snmpll.QueryAsOid(testOid, "test query");
+                Assert.NotNull(result, "The query result is null");
+
+                Console.WriteLine($"Result queried from '{snmpll.Address}' as OID '{testOid}' as OID '{result}'");
+            }
+
+            // Query to a host that has (hopefully) no SNMP service running on it.
+            using(var snmpll = new SnmpLowerLayer(this.localhostAdddress))
+            {
+                Oid result = snmpll.QueryAsOid(testOid, "test query");
+                Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
+            }
+        }
+
+        /// <summary>
+        /// Test for QueryAsString extension method
+        /// </summary>
+        [Test]
+        public void QueryAsTimeTicksTest()
+        {
+            // system uptime should be supported by most devices
+            Oid testOid = new Oid(".1.3.6.1.2.1.1.3.0");
+
+            // test a (hopefully) successful query.
+            // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
+            // is not available or has no SNMP service running.
+            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            {
+                TimeTicks result = snmpll.QueryAsTimeTicks(testOid, "test query");
+                Assert.NotNull(result, "The query result is null");
+
+                Console.WriteLine($"Result queried from '{snmpll.Address}' as OID '{testOid}' as OID '{result}'");
+            }
+
+            // Query to a host that has (hopefully) no SNMP service running on it.
+            using(var snmpll = new SnmpLowerLayer(this.localhostAdddress))
+            {
+                Oid result = snmpll.QueryAsOid(testOid, "test query");
+                Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
+            }
+        }
+
+        /// <summary>
+        /// Test for successful query operations
+        /// </summary>
+        [Test]
+        public void QuerySystemDataTest()
+        {
+            // test a (hopefully) successful query.
+            // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
+            // is not available or has no SNMP service running.
+            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            {
+                IDeviceSystemData systemData = snmpll.SystemData;
+                Assert.NotNull(systemData, "The system data is null");
+
+                Assert.IsNotEmpty(systemData.Name, "system name is empty");
+                Assert.IsNotEmpty(systemData.Contact, "system contact is empty");
+                Assert.IsNotEmpty(systemData.Location, "system location is empty");
+                Assert.IsNotEmpty(systemData.Description, "system description is empty");
+                Assert.IsNotNull(systemData.Uptime, "system uptime is null");
+                Assert.IsNotNull(systemData.EnterpriseObjectId, "system enterprise OID is null");
+                Assert.Throws<NotImplementedException>(() => { var x = systemData.Model; }, ".Model getter didn't throw NotImplementedException");
+                Assert.Throws<NotImplementedException>(() => { var x = systemData.SoftwareVersionString; }, ".SoftwareVersionString getter didn't throw NotImplementedException");
+
+                Console.WriteLine($"{Environment.NewLine}{systemData}");
             }
         }
     }

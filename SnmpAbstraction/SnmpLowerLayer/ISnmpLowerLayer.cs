@@ -8,6 +8,17 @@ namespace SnmpAbstraction
     public interface ISnmpLowerLayer
     {
         /// <summary>
+        /// Gets the IP Address that this lower layer is talking to.
+        /// </summary>
+        /// <value></value>
+        IpAddress Address { get; }
+
+        /// <summary>
+        /// Gets the options that are used by this lower layer.
+        /// </summary>
+        IQuerierOptions Options { get; }
+
+        /// <summary>
         /// Gets a container that holds basic system data of the device.<br/>
         /// The container and even single properties of that container might be retrieved lazily (i.e. on first request).
         /// </summary>

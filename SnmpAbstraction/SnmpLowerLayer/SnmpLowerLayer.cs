@@ -1,9 +1,7 @@
 using System;
 using System.Net;
-using System.Runtime.CompilerServices;
 using SnmpSharpNet;
 
-[assembly: InternalsVisibleTo("SnmpAbstractionTests")]
 namespace SnmpAbstraction
 {
     /// <summary>
@@ -57,14 +55,10 @@ namespace SnmpAbstraction
             this.Options = options ?? QuerierOptions.Default;
         }
 
-        /// <summary>
-        /// Gets the address that this lower layer talks to.
-        /// </summary>
+        /// <inheritdoc />
         public IpAddress Address { get; }
 
-        /// <summary>
-        /// Gets the options that are used by this lower layer.
-        /// </summary>
+        /// <inheritdoc />
         public IQuerierOptions Options { get; }
 
         /// <inheritdoc />
@@ -184,7 +178,7 @@ namespace SnmpAbstraction
         /// </summary>
         private void InitSystemData()
         {
-            throw new NotImplementedException();
+            this.cachedSystemData = new LazyLoadingDeviceSystemData(this);
         }
     }
 }
