@@ -16,6 +16,7 @@
     <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Hamnet SNMP</PackageTags>
+    <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,8 +30,9 @@
     <PackageReference Include="SnmpSharpNetStandard" Version="0.10.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="../log4net.config" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+  <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+    <Copy SourceFiles="Database/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
+    <Copy SourceFiles="$(ProjectDir)/../log4net.config" DestinationFolder="$(OutDir)$(ConfigDir)" />
+  </Target>
 
 </Project>

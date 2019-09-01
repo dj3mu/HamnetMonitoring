@@ -11,7 +11,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The communication layer.
         /// </summary>
-        private ISnmpLowerLayer lowerLayer;
+        private readonly ISnmpLowerLayer lowerLayer;
 
         /// <summary>
         /// Creates of detector using the given lower communication layer.
@@ -19,12 +19,7 @@ namespace SnmpAbstraction
         /// <param name="lowerLayer">The lower layer to talk to the device of which the type shall be detected.</param>
         public DeviceDetector(ISnmpLowerLayer lowerLayer)
         {
-            if (lowerLayer == null)
-            {
-                throw new ArgumentNullException(nameof(lowerLayer), "lower communiation layer for device detection is null");
-            }
-
-            this.lowerLayer = lowerLayer;
+            this.lowerLayer = lowerLayer ?? throw new ArgumentNullException(nameof(lowerLayer), "lower communiation layer for device detection is null");
         }
 
 

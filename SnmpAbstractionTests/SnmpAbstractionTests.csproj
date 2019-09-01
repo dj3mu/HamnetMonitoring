@@ -14,6 +14,7 @@
     <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Hamnet SNMP Tests</PackageTags>
+    <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,5 +31,10 @@
   <ItemGroup>
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
   </ItemGroup>
+
+  <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+    <Copy SourceFiles="$(ProjectDir)/../SnmpAbstraction/Database/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
+    <Copy SourceFiles="$(ProjectDir)/../log4net.config" DestinationFolder="$(OutDir)$(ConfigDir)" />
+  </Target>
 
 </Project>

@@ -46,12 +46,7 @@ namespace SnmpAbstraction
         /// <param name="options">The options to use.</param>
         public SnmpLowerLayer(IpAddress address, IQuerierOptions options)
         {
-            if (address == null)
-            {
-                throw new ArgumentNullException(nameof(address), "address to talk to is null");
-            }
-
-            this.Address = address;
+            this.Address = address ?? throw new ArgumentNullException(nameof(address), "address to talk to is null");
             this.Options = options ?? QuerierOptions.Default;
         }
 
