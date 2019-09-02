@@ -3,28 +3,13 @@ using SnmpAbstraction;
 using SnmpSharpNet;
 using System;
 
-namespace Tests
+namespace SnmpAbstractionTests
 {
     public class SnmpLowerLayerTests
     {
-        /// <summary>
-        /// The address to use for the tests.
-        /// </summary>
-        private IpAddress testAddress;
-
-        /// <summary>
-        /// Address of localhost.
-        /// </summary>
-        private IpAddress localhostAdddress;
-
         [SetUp]
         public void Setup()
         {
-            // The address put here is one of the author's private Hamnet client hardware
-            // Feel free to use it for first tests. But please consider switching to one of your
-            // own devices when doing more extensive testind and/or development.
-            this.testAddress = new IpAddress("44.225.23.222");
-            this.localhostAdddress = new IpAddress("127.0.0.1");
         }
 
         /// <summary>
@@ -34,13 +19,13 @@ namespace Tests
         public void ConstructionTest()
         {
             // no options c'tor
-            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddress))
             {
                 Assert.NotNull(snmpll, "Instantiated SnmpLowerLayer(address, null) is null");
             }
 
             // c'tor with options
-            using (var snmpll = new SnmpLowerLayer(this.testAddress, QuerierOptions.Default))
+            using (var snmpll = new SnmpLowerLayer(TestConstants.TestAddress, QuerierOptions.Default))
             {
                 Assert.NotNull(snmpll, "Instantiated SnmpLowerLayer(address, options) is null");
             }
@@ -63,7 +48,7 @@ namespace Tests
             // test a (hopefully) successful query.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
             // is not available or has no SNMP service running.
-            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddress))
             {
                 VbCollection result = snmpll.Query(new Oid("1.3.6.1.2.1.1.1.0"));
                 Assert.NotNull(result, "The query result is null");
@@ -85,7 +70,7 @@ namespace Tests
             Oid testOid = new Oid("1.3.6.1.2.1.1.1.0"); 
 
             // Query to a host that has (hopefully) no SNMP service running on it.
-            using(var snmpll = new SnmpLowerLayer(this.localhostAdddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.LocalhostAdddress))
             {
                 Assert.Throws<SnmpNetworkException>(
                     () => { VbCollection result = snmpll.Query(testOid); },
@@ -106,7 +91,7 @@ namespace Tests
             // test a (hopefully) successful query.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
             // is not available or has no SNMP service running.
-            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddress))
             {
                 string result = snmpll.QueryAsString(testOid, "test query");
                 Assert.NotNull(result, "The query result is null");
@@ -116,7 +101,7 @@ namespace Tests
             }
 
             // Query to a host that has (hopefully) no SNMP service running on it.
-            using(var snmpll = new SnmpLowerLayer(this.localhostAdddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.LocalhostAdddress))
             {
                 string result = snmpll.QueryAsString(testOid, "test query");
                 Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
@@ -135,7 +120,7 @@ namespace Tests
             // test a (hopefully) successful query.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
             // is not available or has no SNMP service running.
-            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddress))
             {
                 Oid result = snmpll.QueryAsOid(testOid, "test query");
                 Assert.NotNull(result, "The query result is null");
@@ -144,7 +129,7 @@ namespace Tests
             }
 
             // Query to a host that has (hopefully) no SNMP service running on it.
-            using(var snmpll = new SnmpLowerLayer(this.localhostAdddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.LocalhostAdddress))
             {
                 Oid result = snmpll.QueryAsOid(testOid, "test query");
                 Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
@@ -163,7 +148,7 @@ namespace Tests
             // test a (hopefully) successful query.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
             // is not available or has no SNMP service running.
-            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddress))
             {
                 TimeTicks result = snmpll.QueryAsTimeTicks(testOid, "test query");
                 Assert.NotNull(result, "The query result is null");
@@ -172,7 +157,7 @@ namespace Tests
             }
 
             // Query to a host that has (hopefully) no SNMP service running on it.
-            using(var snmpll = new SnmpLowerLayer(this.localhostAdddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.LocalhostAdddress))
             {
                 Oid result = snmpll.QueryAsOid(testOid, "test query");
                 Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
@@ -188,7 +173,7 @@ namespace Tests
             // test a (hopefully) successful query.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
             // is not available or has no SNMP service running.
-            using(var snmpll = new SnmpLowerLayer(this.testAddress))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddress))
             {
                 IDeviceSystemData systemData = snmpll.SystemData;
                 Assert.NotNull(systemData, "The system data is null");
@@ -199,8 +184,6 @@ namespace Tests
                 Assert.IsNotEmpty(systemData.Description, "system description is empty");
                 Assert.IsNotNull(systemData.Uptime, "system uptime is null");
                 Assert.IsNotNull(systemData.EnterpriseObjectId, "system enterprise OID is null");
-                Assert.Throws<NotImplementedException>(() => { var x = systemData.Model; }, ".Model getter didn't throw NotImplementedException");
-                Assert.Throws<NotImplementedException>(() => { var x = systemData.SoftwareVersionString; }, ".SoftwareVersionString getter didn't throw NotImplementedException");
 
                 Console.WriteLine($"{Environment.NewLine}{systemData}");
             }

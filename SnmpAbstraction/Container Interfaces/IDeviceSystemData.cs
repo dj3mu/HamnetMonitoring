@@ -37,15 +37,5 @@ namespace SnmpAbstraction
         /// Gets the system's uptime (at the time of the query that filled the container).
         /// </summary>
         TimeSpan? Uptime { get; }
-
-        /// <summary>
-        /// Gets the model name of the device or null if not available.
-        /// </summary>
-        string Model { get; }
-
-        /// <summary>
-        /// Gets the software version of the device as raw string or null if not available.
-        /// </summary>
-        string SoftwareVersionString { get; }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SnmpAbstraction
 {
@@ -14,6 +15,14 @@ namespace SnmpAbstraction
         private readonly ISnmpLowerLayer lowerLayer;
 
         /// <summary>
+        /// Represents the list of detectable device objects that will be queried for applicability one after the other.
+        /// </summary>
+        private readonly List<IDetectableDevice> detectableDevices = new List<IDetectableDevice>
+        {
+            new MikrotikDetectableDevice()
+        };
+
+        /// <summary>
         /// Creates of detector using the given lower communication layer.
         /// </summary>
         /// <param name="lowerLayer">The lower layer to talk to the device of which the type shall be detected.</param>
@@ -22,16 +31,23 @@ namespace SnmpAbstraction
             this.lowerLayer = lowerLayer ?? throw new ArgumentNullException(nameof(lowerLayer), "lower communiation layer for device detection is null");
         }
 
-
         /// <summary>
         /// Trigger detection of the device based.
         /// </summary>
         /// <param name="cachedSystemData">The cached system data.<br/>
         /// Idea is, that this might already be sufficient to finally decide about a specific device and thus decision can be done without doing any network communiation.</param>
         /// <returns>A <see cref="IDetectableDevice" /> representing the detected device or null if the device is unknown and cannot be detected.</returns>
-        public IDetectableDevice Detect(IDeviceSystemData cachedSystemData)
+        public IDeviceHandler Detect()
         {
-            throw new NotImplementedException();
+            foreach (IDetectableDevice currentDevice in this.detectableDevices)
+            {
+                if (currentDevice.IsApplicable(this.lowerLayer))
+                {
+                    return currentDevice.CreateHandler(this.lowerLayer);
+                }
+            }
+
+            return null;
         }
     }
 }

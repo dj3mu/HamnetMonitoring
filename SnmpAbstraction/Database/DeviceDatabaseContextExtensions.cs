@@ -80,7 +80,7 @@ namespace SnmpAbstraction
             // we take the entry with the highest minimum version where the requested version is below maximum version
             foreach (DeviceVersion item in result)
             {
-                if ((item.MinimumVersion <= version) && (item.MaximumVersion >= version))
+                if ((item.MinimumVersion <= version) && (item.MaximumVersion == null) || (item.MaximumVersion >= version))
                 {
                     deviceVersionId = item.Id;
                     return true;

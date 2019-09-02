@@ -31,8 +31,10 @@ namespace SnmpAbstraction
             ISnmpLowerLayer lowerLayer = new SnmpLowerLayer(address, options);
 
             var detector = new DeviceDetector(lowerLayer);
+            var handler = detector.Detect();
+            var querier = new HamnetSnmpQuerier(handler);
 
-            throw new System.NotImplementedException();
+            return querier;
         }
     }
 }

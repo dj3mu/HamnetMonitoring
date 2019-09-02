@@ -199,12 +199,6 @@ namespace SnmpAbstraction
         }
         
         /// <inheritdoc />
-        public string Model => throw new NotImplementedException();
-
-        /// <inheritdoc />
-        public string SoftwareVersionString => throw new NotImplementedException();
-
-        /// <inheritdoc />
         public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(256);
@@ -216,8 +210,6 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - System admin       (queried=").Append(this.systemAdminContactQueried).Append("): ").AppendLine(this.systemAdminContact);
             returnBuilder.Append("  - System uptime      (queried=").Append(this.uptimeQueried).Append("): ").AppendLine(this.uptime?.ToString());
             returnBuilder.Append("  - System root OID    (queried=").Append(this.enterpriseObjectIdQueried).Append("): ").AppendLine(this.enterpriseObjectId?.ToString());
-            returnBuilder.Append("  - System model       (queried=").Append(false).Append("): ").AppendLine("Querying not yet implemented");
-            returnBuilder.Append("  - System SW version  (queried=").Append(false).Append("): ").AppendLine("Querying not yet implemented");
 
             return returnBuilder.ToString();
         }
