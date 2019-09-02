@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SemVersion;
 using SnmpAbstraction;
-using System;
 using System.IO;
 using System.Linq;
 
@@ -127,6 +126,20 @@ namespace Tests
                 Assert.GreaterOrEqual(foundLookup.Count, 1, $"Empty lookup for for 'good' lookup ID '{goodOidLookupId}'");
 
                 Assert.IsFalse(context.TryFindDeviceSpecificOidLookup(badOidLookupId, out foundLookup), $"Found lookup for 'bad' lookup ID '{badOidLookupId}'");
+            }
+        }
+
+
+        /// <summary>
+        /// Test of TryFindDeviceVersionId extension method.
+        /// </summary>
+        [Test]
+        public void DbConsistencyCheckTest()
+        {
+            using (var context = new DeviceDatabaseContext(this.database))
+            {
+                Assert.IsTrue(context.DataTypeConsistencyCheck(), "DataTypeConsistencyCheck failure");
+                Assert.IsTrue(context.RetrievableValueConsistencyCheck(), "RetrievableValueConsistencyCheck failure");
             }
         }
     }

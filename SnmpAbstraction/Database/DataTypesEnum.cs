@@ -12,24 +12,24 @@
         Oid = 2,
 
         // TimeTicks / TimeSpan
-        TimeTicks,
+        TimeTicks = 3,
 
         // Integer
-        Integer,
+        Integer = 4,
 
         // A string with hex value (chars 0-9, A-F)
-        HexString,
+        HexString = 5,
 
         // A 32 bit gauge
-        Gauge32,
+        Gauge32 = 6,
 
         // A 64 bit counter
-        Counter64,
+        Counter64 = 7,
 
         // An IP Address
-        IpAddress,
+        IpAddress = 8,
 
         // A 32 bit counter
-        Counter32
+        Counter32 = 9
     }
 }
