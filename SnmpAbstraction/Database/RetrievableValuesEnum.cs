@@ -3,7 +3,7 @@
     /// <summary>
     /// Enumeration of supported value meanings.
     /// </summary>
-    public enum RetrievableValuesEnum
+    internal enum RetrievableValuesEnum
     {
         // The device model string
         Model = 1,

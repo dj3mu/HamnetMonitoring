@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -7,7 +9,7 @@ namespace SnmpAbstraction
     /// Model for a device specific OID.
     /// </summary>
     [Table("DeviceSpecificOids")]
-    public class DeviceSpecificOid
+    internal class DeviceSpecificOid
     {
         /// <summary>
         /// Gets the schema info's name (unique key)
@@ -17,16 +19,10 @@ namespace SnmpAbstraction
         public int Name { get; set; }
 
         /// <summary>
-        /// Gets the version ID that this entry belongs to.
+        /// Gets the ID that maps this entry to a list of DeviceVersions.
         /// </summary>
-        [Column("DeviceVersionId")]
-        public int DeviceVersionId { get; set; }
-
-        /// <summary>
-        /// Gets the device version data set that this entry belongs to.
-        /// </summary>
-        [ForeignKey("DeviceVersionId")]
-        public DeviceVersion DeviceVersion { get; set; }
+        [Column("OidMappingId")]
+        public int OidMappingId { get; set; }
 
         /// <summary>
         /// Gets the ID of the meaning that this entry represents.
@@ -56,6 +52,6 @@ namespace SnmpAbstraction
         /// Gets the OID for retrieving tha data that this entry represents.
         /// </summary>
         [Column("OID")]
-        public string Oid { get; set; }
+        public Oid Oid { get; set; }
     }
 }

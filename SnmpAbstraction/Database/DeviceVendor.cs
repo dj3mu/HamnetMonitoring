@@ -8,7 +8,7 @@ namespace SnmpAbstraction
     /// Model for the device vendors table
     /// </summary>
     [Table("DeviceVendors")]
-    public class DeviceVendor
+    internal class DeviceVendor
     {
         /// <summary>
         /// Gets the ID (unique key)

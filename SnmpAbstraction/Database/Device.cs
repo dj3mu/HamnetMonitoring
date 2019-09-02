@@ -7,10 +7,10 @@ namespace SnmpAbstraction
     /// Model for the devices table
     /// </summary>
     [Table("Devices")]
-    public class Device
+    internal class Device
     {
         /// <summary>
-        /// Gets the ID (unique key)
+        /// Gets the ID (unique key).
         /// </summary>
         [Column("ID")]
         [Key]
@@ -23,9 +23,15 @@ namespace SnmpAbstraction
         public int VendorId { get; set; }
 
         /// <summary>
-        /// Gets the readable name of the device's vendor
+        /// Gets the readable name of the device's vendor.
         /// </summary>
         [ForeignKey("VendorId")]
         public DeviceVendor Vendor { get; set; }
+
+        /// <summary>
+        /// Gets the name of the device.
+        /// </summary>
+        [Column("Name")]
+        public string Name { get; set; }
     }
 }

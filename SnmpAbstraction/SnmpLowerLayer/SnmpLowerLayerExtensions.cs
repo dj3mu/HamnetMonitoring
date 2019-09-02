@@ -8,7 +8,7 @@ namespace SnmpAbstraction
     /// /// </summary>
     internal static class SnmpLowerLayerExtensions
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
     
         /// <summary>
         /// Queries the given OIDs and returns the value as string or null if the OID is not available.

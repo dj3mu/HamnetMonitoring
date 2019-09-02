@@ -7,7 +7,7 @@ namespace SnmpAbstraction
     /// Model for the values table
     /// </summary>
     [Table("Values")]
-    public class RetrievableValue
+    internal class RetrievableValue
     {
         /// <summary>
         /// A protected default c'tor is needed for Entity Framework

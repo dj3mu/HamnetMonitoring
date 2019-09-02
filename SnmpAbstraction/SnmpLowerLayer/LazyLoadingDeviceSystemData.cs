@@ -10,7 +10,7 @@ namespace SnmpAbstraction
     /// </summary>
     internal class LazyLoadingDeviceSystemData : IDeviceSystemData
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// The cache field for the system description.

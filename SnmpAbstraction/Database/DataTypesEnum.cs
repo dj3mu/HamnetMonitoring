@@ -3,7 +3,7 @@
     /// <summary>
     /// Enumeration of supported data types.
     /// </summary>
-    public enum DataTypesEnum
+    internal enum DataTypesEnum
     {
         // A string value
         String = 1,

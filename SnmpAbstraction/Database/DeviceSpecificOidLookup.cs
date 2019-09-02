@@ -1,0 +1,68 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace SnmpAbstraction
+{
+    /// <summary>
+    /// Data container representing the OID lookup for the values according to <see cref="RetrievableValuesEnum" />. 
+    /// </summary>
+    internal class DeviceSpecificOidLookup : IReadOnlyDictionary<RetrievableValuesEnum, DeviceSpecificOid>
+    {
+        /// <summary>
+        /// The lookup dictionary backing field.
+        /// </summary>
+        private readonly Dictionary<RetrievableValuesEnum, DeviceSpecificOid> localLookup;
+
+        /// <summary>
+        /// Construct from a list of lookup containers.
+        /// </summary>
+        /// <param name="deviceSpecificOids">The list to construct from.</param>
+        public DeviceSpecificOidLookup(IEnumerable<DeviceSpecificOid> deviceSpecificOids)
+        {
+            if (deviceSpecificOids == null)
+            {
+                throw new ArgumentNullException(nameof(deviceSpecificOids), "device specific OIDs enumeration is null");
+            }
+
+            this.localLookup = deviceSpecificOids.ToDictionary(doid => (RetrievableValuesEnum)doid.RetrievableValueId, doid => doid);
+        }
+
+        /// <inheritdoc />
+        public DeviceSpecificOid this[RetrievableValuesEnum key] => this.localLookup[key];
+
+        /// <inheritdoc />
+        public IEnumerable<RetrievableValuesEnum> Keys => this.localLookup.Keys;
+
+        /// <inheritdoc />
+        public IEnumerable<DeviceSpecificOid> Values => this.localLookup.Values;
+
+        /// <inheritdoc />
+        public int Count => this.localLookup.Count;
+
+        /// <inheritdoc />
+        public bool ContainsKey(RetrievableValuesEnum key)
+        {
+            return this.localLookup.ContainsKey(key);
+        }
+
+        /// <inheritdoc />
+        public IEnumerator<KeyValuePair<RetrievableValuesEnum, DeviceSpecificOid>> GetEnumerator()
+        {
+            return this.localLookup.GetEnumerator();
+        }
+
+        /// <inheritdoc />
+        public bool TryGetValue(RetrievableValuesEnum key, out DeviceSpecificOid value)
+        {
+            return this.localLookup.TryGetValue(key, out value);
+        }
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.localLookup.GetEnumerator();
+        }
+    }
+}

@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using SemVersion;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -10,6 +12,21 @@ namespace SnmpAbstraction
     /// </summary>
     internal class DeviceDatabaseContext : DbContext
     {
+        /// <summary>
+        /// Handle to the logger.
+        /// </summary>
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// The version to use for fallback for MinimumVersion fields.
+        /// </summary>
+        private static readonly SemanticVersion FallBackMinimumVersion = new SemanticVersion(0, 0, 0, string.Empty, string.Empty);
+
+        /// <summary>
+        /// The version to use for fallback for MaximumVersion fields.
+        /// </summary>
+        private static readonly SemanticVersion FallBackMaximumVersion = new SemanticVersion(int.MaxValue, int.MaxValue, int.MaxValue, string.Empty, string.Empty);
+
         /// <summary>
         /// Gets access to the retrievable values table.
         /// </summary>
@@ -41,6 +58,16 @@ namespace SnmpAbstraction
         public DbSet<DeviceSpecificOid> DeviceSpecificOids { get; set; }
 
         /// <summary>
+        /// Gets access to the device version to OID mapping table (the m:n relation between DeviceVersion and DeviceSpecificOid)
+        /// </summary>
+        public DbSet<DeviceVersionMapping> DeviceVersionMapping { get; set; }
+
+        /// <summary>
+        /// Gets access to the device versions table
+        /// </summary>
+        public DbSet<DeviceVersion> DeviceVersions { get; set; }
+
+        /// <summary>
         /// Construct for a specific database file location.
         /// </summary>
         /// <param name="databasePathAndFile">The database file location.</param>
@@ -63,6 +90,8 @@ namespace SnmpAbstraction
             }
 
             this.DatabasePathAndFile = databasePathAndFile;
+
+            log.Info($"Initialized for Device Database '{this.DatabasePathAndFile}'");
         }
 
         /// <summary>
@@ -83,10 +112,29 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Device>()
-                .HasOne(d => d.Vendor)
-                .WithMany(v => v.Devices)
-                .HasForeignKey(d => d.VendorId);
+            // Conversions of Minimum Device Version to SemanticVersion
+            modelBuilder
+                .Entity<DeviceVersion>()
+                .Property(e => e.MinimumVersion)
+                .HasConversion(
+                    v => v.ToString(),
+                    v => v.ParseVersion(FallBackMinimumVersion));
+
+            // Conversions of Maximum Device Version to SemanticVersion
+            modelBuilder
+                .Entity<DeviceVersion>()
+                .Property(e => e.MaximumVersion)
+                .HasConversion(
+                    v => v.ToString(),
+                    v => v.ParseVersion(FallBackMaximumVersion));
+
+            // Conversions of OID string to Oid object
+            modelBuilder
+                .Entity<DeviceSpecificOid>()
+                .Property(e => e.Oid)
+                .HasConversion(
+                    v => v.ToString(),
+                    v => new Oid(v));
         }
     }
 }

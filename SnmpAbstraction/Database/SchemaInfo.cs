@@ -7,7 +7,7 @@ namespace SnmpAbstraction
     /// Model for the generic database schema info.
     /// </summary>
     [Table("SchemaInfo")]
-    public class SchemaInfo
+    internal class SchemaInfo
     {
         /// <summary>
         /// Gets the schema info's name (unique key)

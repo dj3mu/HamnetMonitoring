@@ -7,7 +7,7 @@ namespace SnmpAbstraction
     /// Model for the database data types table.
     /// </summary>
     [Table("DataTypes")]
-    public class DataType
+    internal class DataType
     {
         /// <summary>
         /// A protected default c'tor is needed for Entity Framework

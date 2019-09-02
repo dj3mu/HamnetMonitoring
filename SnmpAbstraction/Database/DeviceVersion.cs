@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using SemVersion;
 
 namespace SnmpAbstraction
 {
@@ -7,7 +9,7 @@ namespace SnmpAbstraction
     /// Model for the device versions table
     /// </summary>
     [Table("DeviceVersions")]
-    public class DeviceVersion
+    internal class DeviceVersion
     {
         /// <summary>
         /// Gets the ID (unique key)
@@ -20,24 +22,24 @@ namespace SnmpAbstraction
         /// Gets the relation to the device.
         /// </summary>
         [Column("DeviceId")]
-        [ForeignKey("Device")]
-        public int VendorId { get; set; }
+        public int DeviceId { get; set; }
 
         /// <summary>
         /// Gets the structured device data.
         /// </summary>
+        [ForeignKey("DeviceId")]
         public Device Device { get; set; }
 
         /// <summary>
         /// Gets the device version's minimum software version.
         /// </summary>
         [Column("DeviceMinSwVersion")]
-        public string MinimumVersion { get; set; }
+        public SemanticVersion MinimumVersion { get; set; }
 
         /// <summary>
         /// Gets the device version's maximum software version or null if not applicable.
         /// </summary>
         [Column("DeviceMaxSwVersion")]
-        public string MaximumVersion { get; set; }
+        public SemanticVersion MaximumVersion { get; set; }
     }
 }
