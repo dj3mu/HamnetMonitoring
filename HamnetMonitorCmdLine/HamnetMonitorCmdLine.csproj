@@ -1,31 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
-    <IsPackable>false</IsPackable>
-    <PackageId>Hamnet.SnmpAbstraction.Tests</PackageId>
-    <AssemblyTitle>Unit Tests for SNMP abstraction library for Hamnet Monitoring SNMP queries.</AssemblyTitle>
+    <PackageId>HamnetMonitor.CmdLine</PackageId>
+    <AssemblyTitle>Command line utility for Hamnet Monitoring.</AssemblyTitle>
     <PackageDescription>
-    Unit Tests for theHamnet.SnmpAbstraction package.
+    The application assists with aquiring the values useful for Hamnet Monitoring.
+    It respects Hamnet requirements like saving of bandwidth by only executing the minimum
+    required retrieval operations.
     </PackageDescription>
     <Authors>DJ3MU</Authors>
-    <Product>Hamnet SNMP Abstraction Library Tests</Product>
+    <Product>Hamnet Monitoring Command Line Tool</Product>
     <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>Hamnet Monitoring SNMP Tests</PackageTags>
+    <PackageTags>Hamnet Monitoring Commandline</PackageTags>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.6.0" />
+    <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.25">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="nunit" Version="3.11.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
-    <PackageReference Include="SnmpSharpNetStandard" Version="0.10.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,7 +34,7 @@
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Copy SourceFiles="$(ProjectDir)/../SnmpAbstraction/Database/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
-    <Copy SourceFiles="$(ProjectDir)/../log4net.config" DestinationFolder="$(OutDir)$(ConfigDir)" />
+    <Copy SourceFiles="$(ProjectDir)/log4net.config" DestinationFolder="$(OutDir)$(ConfigDir)" />
   </Target>
 
 </Project>

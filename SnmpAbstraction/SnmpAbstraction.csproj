@@ -15,7 +15,7 @@
     <Product>Hamnet SNMP Abstraction Library</Product>
     <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>Hamnet SNMP</PackageTags>
+    <PackageTags>Hamnet Monitoring SNMP</PackageTags>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
 

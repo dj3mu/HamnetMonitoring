@@ -20,7 +20,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void CreateTest()
         {
-            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress);
+            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress.ToString());
 
             Assert.NotNull(querier, "Create(...) returned null");
 

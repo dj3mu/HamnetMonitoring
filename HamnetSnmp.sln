@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnmpAbstraction", "SnmpAbst
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnmpAbstractionTests", "SnmpAbstractionTests\SnmpAbstractionTests.csproj", "{6DD0225A-4C88-43D4-B678-E52EE762A1BB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HamnetMonitorCmdLine", "HamnetMonitorCmdLine\HamnetMonitorCmdLine.csproj", "{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,17 @@ Global
 		{6DD0225A-4C88-43D4-B678-E52EE762A1BB}.Release|x64.Build.0 = Release|Any CPU
 		{6DD0225A-4C88-43D4-B678-E52EE762A1BB}.Release|x86.ActiveCfg = Release|Any CPU
 		{6DD0225A-4C88-43D4-B678-E52EE762A1BB}.Release|x86.Build.0 = Release|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Debug|x64.Build.0 = Debug|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Debug|x86.Build.0 = Debug|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|x64.ActiveCfg = Release|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|x64.Build.0 = Release|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|x86.ActiveCfg = Release|Any CPU
+		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
