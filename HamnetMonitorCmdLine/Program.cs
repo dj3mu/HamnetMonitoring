@@ -69,10 +69,10 @@
         {
             InitBackings();
 
-            return CommandLine.Parser.Default.ParseArguments<AbstractedSingleOptions>(args)
+            return CommandLine.Parser.Default.ParseArguments<SystemDataOptions>(args)
                 .MapResult(
-                    (AbstractedSingleOptions opts) => RunAddAndReturnExitCode(opts),
-                    errs => 1);
+                    (SystemDataOptions opts) => RunAddAndReturnExitCode(opts),
+                    errs => (int)ExitCodes.InvalidCommandLine);
         }
 
         /// <summary>
@@ -80,19 +80,36 @@
         /// </summary>
         /// <param name="opts">The options defining the queries.</param>
         /// <returns>The exit code to return.</returns>
-        private static int RunAddAndReturnExitCode(AbstractedSingleOptions opts)
+        private static int RunAddAndReturnExitCode(SystemDataOptions opts)
         {
-            log.Info("Running abstracted single query");
+            log.Info("Running SystemData query");
 
             foreach (string address in opts.HostsOrAddresses)
             {
-                Console.WriteLine();
-                Console.WriteLine($"Querying device '{address}' for {string.Join(", ", opts.Meanings)}:");
-
                 var querier = SnmpQuerierFactory.Instance.Create(address);
+
+                var systemData = querier.SystemData;
+
+                OutputResult(opts, systemData);
             }
 
-            throw new NotImplementedException();
+            return (int)ExitCodes.Ok;
+        }
+
+        /// <summary>
+        /// Outputs the result in the selected format.
+        /// </summary>
+        /// <param name="options">The global options (which finally decide about the output format).</param>
+        /// <param name="result">The result to print.</param>
+        private static void OutputResult(GlobalOptions options, IHamnetSnmpQuerierResult result)
+        {
+            ILazyEvaluated resultAsLazyEval = result as ILazyEvaluated;
+            if (resultAsLazyEval != null)
+            {
+                resultAsLazyEval.ForceEvaluateAll();
+            }
+
+            result.ToTextWriter(Console.Out);
         }
 
         /// <summary>
