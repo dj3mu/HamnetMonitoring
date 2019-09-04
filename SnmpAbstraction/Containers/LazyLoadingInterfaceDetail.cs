@@ -98,7 +98,7 @@ namespace SnmpAbstraction
 
             returnBuilder.Append("Interface #").Append(this.interfaceId).AppendLine(":");
             returnBuilder.Append("  - Type: ").AppendLine(this.interfaceTypeQueried ? this.interfaceTypeBacking.ToString() : "Not yet queried");
-            returnBuilder.Append("  - MAC : ").AppendLine(this.macAddressStringQueried ? this.macAddressStringBacking?.ToString() : "Not yet queried");
+            returnBuilder.Append("  - MAC : ").Append(this.macAddressStringQueried ? this.macAddressStringBacking?.ToString() : "Not yet queried");
 
             return returnBuilder.ToString();
         }

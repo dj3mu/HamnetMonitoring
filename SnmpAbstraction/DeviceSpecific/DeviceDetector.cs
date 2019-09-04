@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace SnmpAbstraction
 {
@@ -9,6 +10,11 @@ namespace SnmpAbstraction
     /// </summary>
     internal class DeviceDetector
     {
+        /// <summary>
+        /// Handle to the logger.
+        /// </summary>
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         /// The communication layer.
         /// </summary>
@@ -38,14 +44,20 @@ namespace SnmpAbstraction
         /// <returns>A <see cref="IDetectableDevice" /> representing the detected device or null if the device is unknown and cannot be detected.</returns>
         public IDeviceHandler Detect()
         {
+            Stopwatch detectionDuration = Stopwatch.StartNew();
+            
             foreach (IDetectableDevice currentDevice in this.detectableDevices)
             {
                 if (currentDevice.IsApplicable(this.lowerLayer))
                 {
+                    log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
+                    
+                    detectionDuration.Stop();
                     return currentDevice.CreateHandler(this.lowerLayer);
                 }
             }
 
+            detectionDuration.Stop();
             return null;
         }
     }

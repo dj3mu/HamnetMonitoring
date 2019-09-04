@@ -102,7 +102,7 @@ namespace SnmpAbstraction
                 {
                     foreach (var item in this.interfaceDetailsBacking)
                     {
-                        returnBuilder.AppendLine().Append(SnmpAbstraction.IndentLines(item.ToConsoleString()));
+                        returnBuilder.AppendLine().AppendLine(SnmpAbstraction.IndentLines(item.ToConsoleString()));
                     }
                 }
             }
