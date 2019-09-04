@@ -1,47 +1,60 @@
 using System;
 using System.IO;
+using System.Text;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
     /// <summary>
-///     /// Base class for all <see cref="IHamnetSnmpQuerierResult" />.
+    /// Base class for all <see cref="IHamnetSnmpQuerierResult" />.
     /// </summary>
     internal abstract class HamnetSnmpQuerierResultBase : IHamnetSnmpQuerierResult
     {
         /// <summary>
         /// Construct for the given device address and query duration.
         /// </summary>
-        /// <param name="deviceAddress">The device address that this result is for.</param>
+        /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="queryDuration">The duration of the query.</param>
-        protected HamnetSnmpQuerierResultBase(IpAddress deviceAddress, TimeSpan queryDuration)
+        protected HamnetSnmpQuerierResultBase(ISnmpLowerLayer lowerSnmpLayer, TimeSpan queryDuration)
         {
-            this.DeviceAddress = deviceAddress;
+            if (lowerSnmpLayer == null)
+            {
+                throw new ArgumentNullException(nameof(lowerSnmpLayer), "The handle to the lower layer interface is null");
+            }
+
+            this.LowerSnmpLayer = lowerSnmpLayer;
             this.QueryDuration = queryDuration;
         }
 
         /// <summary>
         /// Construct for the given device address.
         /// </summary>
-        /// <param name="deviceAddress">The device address that this result is for.</param>
-        /// <param name="queryDuration">The duration of the query.</param>
-        protected HamnetSnmpQuerierResultBase(IpAddress deviceAddress)
-            : this(deviceAddress, TimeSpan.Zero)
+        /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
+        protected HamnetSnmpQuerierResultBase(ISnmpLowerLayer lowerSnmpLayer)
+            : this(lowerSnmpLayer, TimeSpan.Zero)
         {
         }
 
         /// <inheritdoc />
-        public IpAddress DeviceAddress { get; }
+        public IpAddress DeviceAddress => this.LowerSnmpLayer.Address;
 
         /// <inheritdoc />
         public virtual TimeSpan QueryDuration { get; }
 
+        /// <summary>
+        /// Gets the communication layer in use.
+        /// </summary>
+        protected ISnmpLowerLayer LowerSnmpLayer { get; }
+
         /// <inheritdoc />
-        public void ToTextWriter(TextWriter writer)
+        public string ToConsoleString()
         {
-            writer.WriteLine($"Device {this.DeviceAddress}:");
-            writer.WriteLine(this.ToTextString());
-            writer.WriteLine($"  --> Query took {this.QueryDuration.TotalMilliseconds} ms");
+            StringBuilder returnBuilder = new StringBuilder(128);
+            returnBuilder.Append("Device ").Append(this.DeviceAddress).AppendLine(":");
+            returnBuilder.AppendLine(SnmpAbstraction.IndentLines(this.ToTextString()));
+            returnBuilder.Append(SnmpAbstraction.IndentLines("--> Query took ")).Append(this.QueryDuration.TotalMilliseconds).Append(" ms");
+
+            return returnBuilder.ToString();
         }
         
         /// <summary>
@@ -50,5 +63,11 @@ namespace SnmpAbstraction
         /// </summary>
         /// <returns>A string with the human readable data.</returns>
         public abstract string ToTextString();
+        
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return this.ToConsoleString();
+        }
     }
 }

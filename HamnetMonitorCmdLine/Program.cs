@@ -69,14 +69,15 @@
         {
             InitBackings();
 
-            return CommandLine.Parser.Default.ParseArguments<SystemDataOptions>(args)
+            return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions>(args)
                 .MapResult(
                     (SystemDataOptions opts) => RunAddAndReturnExitCode(opts),
+                    (InterfaceDataOptions opts) => RunAddAndReturnExitCode(opts),
                     errs => (int)ExitCodes.InvalidCommandLine);
         }
 
         /// <summary>
-        /// Execution of Abstracted Single Queries
+        /// Execution of system data query
         /// </summary>
         /// <param name="opts">The options defining the queries.</param>
         /// <returns>The exit code to return.</returns>
@@ -97,6 +98,27 @@
         }
 
         /// <summary>
+        /// Execution of interface data query
+        /// </summary>
+        /// <param name="opts">The options defining the queries.</param>
+        /// <returns>The exit code to return.</returns>
+        private static int RunAddAndReturnExitCode(InterfaceDataOptions opts)
+        {
+            log.Info("Running SystemData query");
+
+            foreach (string address in opts.HostsOrAddresses)
+            {
+                var querier = SnmpQuerierFactory.Instance.Create(address);
+
+                var interfaceData = querier.NetworkInterfaceDetails;
+
+                OutputResult(opts, interfaceData);
+            }
+
+            return (int)ExitCodes.Ok;
+        }
+
+        /// <summary>
         /// Outputs the result in the selected format.
         /// </summary>
         /// <param name="options">The global options (which finally decide about the output format).</param>
@@ -109,7 +131,7 @@
                 resultAsLazyEval.ForceEvaluateAll();
             }
 
-            result.ToTextWriter(Console.Out);
+            Console.Out.WriteLine(result.ToConsoleString());
         }
 
         /// <summary>

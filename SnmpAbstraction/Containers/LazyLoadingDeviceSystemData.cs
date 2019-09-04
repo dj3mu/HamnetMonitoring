@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using SnmpSharpNet;
 
@@ -10,6 +9,10 @@ namespace SnmpAbstraction
     /// Implementation of <see cref="IDeviceSystemData" /> that does as
     /// lazy as possible loading of the property (i.e. on first use).
     /// </summary>
+    /// <remarks>This SHALL BE THE ONLY class that has hard-coded OIDs. All other classes shall use
+    /// the database. But we have to use hard-coded OIDs here because this is the class that is used
+    /// to identify a device. Putting the OIDs needed for this into the database we would end up with a chicken-and-egg problem.
+    /// </remarks>
     internal class LazyLoadingDeviceSystemData : HamnetSnmpQuerierResultBase, IDeviceSystemData
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -94,17 +97,11 @@ namespace SnmpAbstraction
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
         /// </summary>
-        /// <param name="lowerSnmpLayer"></param>
+        /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         public LazyLoadingDeviceSystemData(ISnmpLowerLayer lowerSnmpLayer)
-            : base(lowerSnmpLayer.Address)
+            : base(lowerSnmpLayer)
         {
-            this.LowerSnmpLayer = lowerSnmpLayer;
         }
-
-        /// <summary>
-        /// Gets the communication layer in use.
-        /// </summary>
-        public ISnmpLowerLayer LowerSnmpLayer { get; }
 
         /// <inheritdoc />
         public string Description
@@ -173,6 +170,9 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
+        public override TimeSpan QueryDuration => this.queryDurationBacking;
+
+        /// <inheritdoc />
         public void ForceEvaluateAll()
         {
             this.PopulateAdminContact();
@@ -181,17 +181,6 @@ namespace SnmpAbstraction
             this.PopulateSystemDescription();
             this.PopulateSystemName();
             this.PopulateUptime();
-        }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            StringBuilder returnBuilder = new StringBuilder(256);
-
-            returnBuilder.Append("System ").Append(this.LowerSnmpLayer.Address).AppendLine(":");
-            returnBuilder.AppendLine(this.ToTextString());
-
-            return returnBuilder.ToString();
         }
 
         /// <inheritdoc />
@@ -208,9 +197,6 @@ namespace SnmpAbstraction
 
             return returnBuilder.ToString();
         }
-
-        /// <inheritdoc />
-        public override TimeSpan QueryDuration => this.queryDurationBacking;
 
         /// <summary>
         /// Populates the <see cref="systemDescrition" /> cache field if not yet done.

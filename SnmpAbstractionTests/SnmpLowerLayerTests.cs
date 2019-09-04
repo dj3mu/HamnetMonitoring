@@ -5,8 +5,14 @@ using System;
 
 namespace SnmpAbstractionTests
 {
+    /// <summary>
+    /// Test for the SNMP lower communication layer.
+    /// </summary>
     public class SnmpLowerLayerTests
     {
+        /// <summary>
+        /// The test setup method.
+        /// </summary>
         [SetUp]
         public void Setup()
         {

@@ -5,7 +5,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Lower-layered interface to the SNMP functions.
     /// </summary>
-    public interface ISnmpLowerLayer
+    internal interface ISnmpLowerLayer
     {
         /// <summary>
         /// Gets the IP Address that this lower layer is talking to.
@@ -30,5 +30,14 @@ namespace SnmpAbstraction
         /// <param name="oids">The OIDs to query.</param>
         /// <returns>A <see cref="VbCollection" /> with the received data.</returns>
         VbCollection Query(params Oid[] oids);
+
+        /// <summary>
+        /// Performs an SNMP-Walk starting at the value specified by <paramref name="interfaceIdWalkRootOid" />
+        /// and recusing with the depth specified by <paramref name="depth" />.
+        /// </summary>
+        /// <param name="interfaceIdWalkRootOid">The retrievable value to start walking at. The actual OID is resolved from the device database.</param>
+        /// <param name="depth">The recursion depth. A value of 0 means not to recurse at all and just return the direct children.</param>
+        /// <returns>A <see cref="VbCollection" /> with the received data.</returns>
+        VbCollection DoWalk(Oid interfaceIdWalkRootOid, int depth);
     }
 }

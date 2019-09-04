@@ -16,7 +16,10 @@ namespace SnmpAbstraction
         /// <param name="community">The community string to use for the queries.</param>
         /// <param name="timeout">The query timeout.</param>
         /// <param name="retries">The SNMP peer maximum retires setting. Value of 0 will result in a single request with no retries.</param>
-        public QuerierOptions(int port, SnmpVersion protocolVersion, OctetString community, TimeSpan timeout, int retries)
+        /// <param name="ver2cMaximumValuesPerRequest">A value telling the SNMP Agent how many GETNEXT like variables to retrieve</param>
+        /// <param name="ver2cMaximumRequests">A value telling the SNMP Agent how many VBs to include in a single request.<br/>
+        /// Only valid on GETBULK requests.</param>
+        public QuerierOptions(int port, SnmpVersion protocolVersion, OctetString community, TimeSpan timeout, int retries, int ver2cMaximumValuesPerRequest, int ver2cMaximumRequests)
         {
             this.Port = port;
             this.ProtocolVersion = protocolVersion;
@@ -42,7 +45,7 @@ namespace SnmpAbstraction
         public int Port { get; } = 161;
 
         /// <inheritdoc />
-        public SnmpVersion ProtocolVersion { get; } = SnmpVersion.Ver1;
+        public SnmpVersion ProtocolVersion { get; } = SnmpVersion.Ver2;
 
         /// <inheritdoc />
         public OctetString Community { get; } = new OctetString("public");
@@ -53,6 +56,32 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public int Retries { get; } = 1;
 
+        /// <inheritdoc />
+        public int Ver2cMaximumValuesPerRequest { get; } = 0;
+
+        /// <inheritdoc />
+        public int Ver2cMaximumRequests { get; } = 5;
+
+        /// <summary>
+        /// Creates a new object that is a copy of this object with modified Ver2cMaximumRequests number.
+        /// </summary>
+        /// <param name="ver2cMaximumRequests">The new ver2cMaximumRequests number to use for the queries.</param>
+        /// <returns>A new object that is a copy of this object with modified ver2cMaximumRequests number.</returns>
+        public QuerierOptions WithVer2cMaximumRequests(int ver2cMaximumRequests)
+        {
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, ver2cMaximumRequests);
+        }
+
+        /// <summary>
+        /// Creates a new object that is a copy of this object with modified ver2cMaximumValuesPerRequest number.
+        /// </summary>
+        /// <param name="ver2cMaximumValuesPerRequest">The new ver2cMaximumValuesPerRequest number to use for the queries.</param>
+        /// <returns>A new object that is a copy of this object with modified ver2cMaximumValuesPerRequest number.</returns>
+        public QuerierOptions WithVer2cMaximumValuesPerRequest(int ver2cMaximumValuesPerRequest)
+        {
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
+        }
+
         /// <summary>
         /// Creates a new object that is a copy of this object with modified port number.
         /// </summary>
@@ -60,7 +89,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified port number.</returns>
         public QuerierOptions WithPort(int port)
         {
-            return new QuerierOptions(port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries);
+            return new QuerierOptions(port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
         }
 
         /// <summary>
@@ -70,7 +99,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified SNMP protocol version.</returns>
         public QuerierOptions WithProtocolVersion(SnmpVersion protocolVersion)
         {
-            return new QuerierOptions(this.Port, protocolVersion, this.Community, this.Timeout, this.Retries);
+            return new QuerierOptions(this.Port, protocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
         }
 
         /// <summary>
@@ -80,7 +109,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified community string.</returns>
         public QuerierOptions WithCommunity(OctetString community)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, community, this.Timeout, this.Retries);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
         }
 
         /// <summary>
@@ -90,7 +119,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified timeout.</returns>
         public QuerierOptions WithTimeout(TimeSpan timeout)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, timeout, this.Retries);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
         }
 
         /// <summary>
@@ -100,7 +129,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified retries count.</returns>
         public QuerierOptions WithRetries(int retries)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, retries);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Model for the values table
     /// </summary>
-    [Table("Values")]
+    [Table("RetrievableValues")]
     internal class RetrievableValue
     {
         /// <summary>

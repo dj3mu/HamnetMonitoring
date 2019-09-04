@@ -3,6 +3,9 @@
     using System.Collections.Generic;
     using CommandLine;
 
+    /// <summary>
+    /// Base class for global options (which are applicable to all verbs).
+    /// </summary>
     public class GlobalOptions
     {
         /// <summary>

@@ -47,5 +47,8 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public IDeviceSystemData SystemData => this.LowerLayer.SystemData;
+
+        /// <inheritdoc />
+        public abstract IInterfaceDetails NetworkInterfaceDetails { get; }
     }
 }

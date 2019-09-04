@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using SnmpSharpNet;
 
@@ -14,10 +15,15 @@ namespace SnmpAbstraction
         IpAddress DeviceAddress { get; }
 
         /// <summary>
-        /// Prints the result to the given <see cref="TextWriter" /> using
-        /// human-readable formatting.
+        /// Gets the total duration of the value queries that have been executed by this object.
         /// </summary>
-        /// <param name="writer">The writer to write to.</param>
-        void ToTextWriter(TextWriter writer);
+        /// <remarks>The value may increase continuously as queries might be done lazily when needed.</remarks>
+        TimeSpan QueryDuration { get; }
+
+        /// <summary>
+        /// Gets the data as a string using human-readable formatting.
+        /// Mainly intended for creating Console output.
+        /// </summary>
+        string ToConsoleString();
     }
 }

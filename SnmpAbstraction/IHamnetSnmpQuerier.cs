@@ -10,6 +10,13 @@
         /// </summary>
         /// <remarks>This data will implicitly be queried when a instance of an SNMP Querier initialized.<br/>
         /// This is because it includes the data that is needed to determine how to talk to the device.</remarks>
+        /// <value>A lazy-evaluated interface to the data.</value>
         IDeviceSystemData SystemData { get; }
+
+        /// <summary>
+        /// Gets the device's interface details like interface type, MAC, IP, ...
+        /// </summary>
+        /// <value>A lazy-evaluated interface to the data.</value>
+        IInterfaceDetails NetworkInterfaceDetails { get; }
     }
 }

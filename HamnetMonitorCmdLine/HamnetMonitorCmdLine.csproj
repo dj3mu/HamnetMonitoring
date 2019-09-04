@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>HamnetMonitor.CmdLine</PackageId>
     <AssemblyTitle>Command line utility for Hamnet Monitoring.</AssemblyTitle>
     <PackageDescription>

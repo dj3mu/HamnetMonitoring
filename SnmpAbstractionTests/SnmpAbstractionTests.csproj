@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsPackable>false</IsPackable>
     <PackageId>Hamnet.SnmpAbstraction.Tests</PackageId>
     <AssemblyTitle>Unit Tests for SNMP abstraction library for Hamnet Monitoring SNMP queries.</AssemblyTitle>

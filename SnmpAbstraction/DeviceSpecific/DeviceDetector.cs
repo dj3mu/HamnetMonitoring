@@ -32,10 +32,9 @@ namespace SnmpAbstraction
         }
 
         /// <summary>
-        /// Trigger detection of the device based.
+        /// Trigger detection of the device based.<br/>
+        /// Idea is, that this might already be sufficient to finally decide about a specific device and thus decision can be done without doing any network communiation.
         /// </summary>
-        /// <param name="cachedSystemData">The cached system data.<br/>
-        /// Idea is, that this might already be sufficient to finally decide about a specific device and thus decision can be done without doing any network communiation.</param>
         /// <returns>A <see cref="IDetectableDevice" /> representing the detected device or null if the device is unknown and cannot be detected.</returns>
         public IDeviceHandler Detect()
         {

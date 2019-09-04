@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Xml;
 using log4net;
 
@@ -15,6 +16,11 @@ namespace SnmpAbstraction
     public static class SnmpAbstraction
     {
         private static readonly string Log4netConfigurationFile = "Config/log4net.config";
+
+        /// <summary>
+        /// Regex for indenting (capturing start of line).
+        /// </summary>
+        private static readonly Regex IndentationRegex = new Regex(@"^", RegexOptions.Compiled | RegexOptions.Multiline);
 
         private static Version libraryVersionBacking = null;
 
@@ -43,6 +49,16 @@ namespace SnmpAbstraction
             }
 
             return LogManager.GetLogger(type);
+        }
+
+        /// <summary>
+        /// Performs indentation of every line of the input string.
+        /// </summary>
+        /// <param name="input">The string of which to indent every line.</param>
+        /// <returns>String with the lines indented.</returns>
+        internal static string IndentLines(string input)
+        {
+            return IndentationRegex.Replace(input, "  ");
         }
 
         /// <summary>

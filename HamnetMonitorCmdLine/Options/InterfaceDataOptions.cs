@@ -5,16 +5,16 @@
     using CommandLine.Text;
 
     /// <summary>
-    /// Definition of the SystemData verb and its verb-specific options.
+    /// Definition of the InterfaceData verb and its verb-specific options.
     /// </summary>
-    [Verb("SystemData", HelpText = "Query basic system data (description, admin, root OID, etc.).")]
-    public class SystemDataOptions : GlobalOptions
+    [Verb("InterfaceData", HelpText = "Query interface data (type, MAC, IP, etc.).")]
+    public class InterfaceDataOptions : GlobalOptions
     {
         /// <summary>
         /// Construct taking all the parameters.
         /// </summary>
         /// <param name="hostsOrAddresses">List of Host names or IP addresses to query.</param>
-        public SystemDataOptions(
+        public InterfaceDataOptions(
             IEnumerable<string> hostsOrAddresses)
             : base(hostsOrAddresses)
         {
@@ -31,7 +31,7 @@
             {
                 return new List<Example>()
                 {
-                    new Example("Query System Data", new SystemDataOptions(new string[] { "my-test-host.example.org" }))
+                    new Example("Query Interface Data", new InterfaceDataOptions(new string[] { "my-test-host.example.org" }))
                 };
             }
         }

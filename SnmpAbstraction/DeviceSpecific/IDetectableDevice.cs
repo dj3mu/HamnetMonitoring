@@ -17,7 +17,7 @@ namespace SnmpAbstraction
         /// Creates the device handler for the device represented by this detectable device instance.<br/>
         /// That handler is what will susequently be used to query the device.
         /// </summary>
-        /// <param name="snmpLowerLayer">The lower layer for further commincation to the device.</param>
+        /// <param name="lowerLayer">The lower layer for further commincation to the device.</param>
         /// <returns>The device handler for the device represented by this detectable device instance.</returns>
         IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer);
     }

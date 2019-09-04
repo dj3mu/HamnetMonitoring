@@ -9,5 +9,11 @@ namespace SnmpAbstraction
         /// Gets the device's generic system data.
         /// </summary>
         IDeviceSystemData SystemData { get; }
+
+        /// <summary>
+        /// Gets the device's interface details like interface type, MAC, IP, ...
+        /// </summary>
+        /// <value>A lazy-evaluated interface to the data.</value>
+        IInterfaceDetails NetworkInterfaceDetails { get; }
     }
 }

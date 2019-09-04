@@ -7,6 +7,9 @@ using System.Linq;
 
 namespace Tests
 {
+    /// <summary>
+    /// Tests for the OID database.
+    /// </summary>
     public class OidDatabaseTests
     {
         /// <summary>
@@ -14,6 +17,9 @@ namespace Tests
         /// </summary>
         private readonly string database = Path.Combine("Config", "DeviceDatabase.sqlite");
 
+        /// <summary>
+        /// The test setup method.
+        /// </summary>
         [SetUp]
         public void Setup()
         {

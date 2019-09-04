@@ -21,5 +21,8 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public IDeviceSystemData SystemData => this.handler.SystemData;
+
+        /// <inheritdoc />
+        public IInterfaceDetails NetworkInterfaceDetails => this.handler.NetworkInterfaceDetails;
     }
 }
