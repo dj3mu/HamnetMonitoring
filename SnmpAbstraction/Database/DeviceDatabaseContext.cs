@@ -118,7 +118,7 @@ namespace SnmpAbstraction
                 .Property(e => e.MinimumVersion)
                 .HasConversion(
                     v => v.ToString(),
-                    v => v.ParseVersion(FallBackMinimumVersion));
+                    v => v.ParseAsSemanticVersionWithFallback(FallBackMinimumVersion));
 
             // Conversions of Maximum Device Version to SemanticVersion
             modelBuilder
@@ -126,7 +126,7 @@ namespace SnmpAbstraction
                 .Property(e => e.MaximumVersion)
                 .HasConversion(
                     v => v.ToString(),
-                    v => v.ParseVersion(FallBackMaximumVersion));
+                    v => v.ParseAsSemanticVersionWithFallback(FallBackMaximumVersion));
 
             // Conversions of OID string to Oid object
             modelBuilder

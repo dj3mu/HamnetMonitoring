@@ -13,7 +13,7 @@ namespace SnmpAbstraction
     /// the database. But we have to use hard-coded OIDs here because this is the class that is used
     /// to identify a device. Putting the OIDs needed for this into the database we would end up with a chicken-and-egg problem.
     /// </remarks>
-    internal class LazyLoadingDeviceSystemData : HamnetSnmpQuerierResultBase, IDeviceSystemData
+    internal class LazyLoadingDeviceSystemData : LazyHamnetSnmpQuerierResultBase, IDeviceSystemData
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -173,7 +173,7 @@ namespace SnmpAbstraction
         public override TimeSpan QueryDuration => this.queryDurationBacking;
 
         /// <inheritdoc />
-        public void ForceEvaluateAll()
+        public override void ForceEvaluateAll()
         {
             this.PopulateAdminContact();
             this.PopulateEnterpriseOid();

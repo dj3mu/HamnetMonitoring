@@ -4,6 +4,9 @@ using SemVersion;
 
 namespace SnmpAbstraction
 {
+    /// <summary>
+    /// Extensions to the <see cref="DeviceDatabaseContext" /> class.
+    /// </summary>
     internal static class DeviceDatabaseContextExtensions
     {
         /// <summary>

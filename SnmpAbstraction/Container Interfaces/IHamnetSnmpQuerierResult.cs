@@ -5,7 +5,7 @@ using SnmpSharpNet;
 namespace SnmpAbstraction
 {
     /// <summary>
-    /// Marker interface for all result containers returned by a <see cref="IHamnetSnmpQuerier" />.
+    /// Marker interface for all result containers returned by a <see cref="IHamnetQuerier" />.
     /// </summary>
     public interface IHamnetSnmpQuerierResult
     {

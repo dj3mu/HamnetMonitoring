@@ -1,3 +1,5 @@
+using SnmpSharpNet;
+
 namespace SnmpAbstraction
 {
     /// <summary>
@@ -5,6 +7,11 @@ namespace SnmpAbstraction
     /// </summary>
     public interface IDeviceHandler
     {
+        /// <summary>
+        /// Gets the IP address that this device handler handles.
+        /// </summary>
+        IpAddress Address { get; }
+
         /// <summary>
         /// Gets the device's generic system data.
         /// </summary>
@@ -15,5 +22,11 @@ namespace SnmpAbstraction
         /// </summary>
         /// <value>A lazy-evaluated interface to the data.</value>
         IInterfaceDetails NetworkInterfaceDetails { get; }
+
+        /// <summary>
+        /// Gets the device's interface details like interface type, MAC, IP, ...
+        /// </summary>
+        /// <value>A lazy-evaluated interface to the data.</value>
+        IWirelessPeerInfos WirelessPeerInfos { get; }
     }
 }

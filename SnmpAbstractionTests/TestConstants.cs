@@ -14,7 +14,12 @@ namespace SnmpAbstractionTests
         /// <summary>
         /// The address to use for the tests.
         /// </summary>
-        public static IpAddress TestAddress { get; } = new IpAddress("44.225.23.222");
+        public static IpAddress TestAddress1 { get; } = new IpAddress("44.225.23.222");
+
+        /// <summary>
+        /// A second address to use for the tests.
+        /// </summary>
+        public static IpAddress TestAddress2 { get; } = new IpAddress("44.225.23.193");
 
         /// <summary>
         /// Address of localhost.

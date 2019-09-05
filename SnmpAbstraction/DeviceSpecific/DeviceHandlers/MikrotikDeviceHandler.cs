@@ -11,6 +11,11 @@ namespace SnmpAbstraction
         private IInterfaceDetails interfaceDetails = null;
 
         /// <summary>
+        /// Backing field for wireless peer information.
+        /// </summary>
+        private IWirelessPeerInfos wirelessPeerInfos = null;
+
+        /// <summary>
         /// Constructs for the given lower layer.
         /// </summary>
         /// <param name="lowerLayer">The lower layer for talking to this device.</param>
@@ -27,10 +32,24 @@ namespace SnmpAbstraction
             {
                 if (this.interfaceDetails == null)
                 {
-                    this.interfaceDetails = new LazyLoadingDeviceInterfaceDetails(this.LowerLayer, this.OidLookup);
+                    this.interfaceDetails = new LazyLoadingMikroTikDeviceInterfaceDetails(this.LowerLayer, this.OidLookup);
                 }
 
                 return this.interfaceDetails;
+            }
+        }
+
+        /// <inheritdoc />
+        public override IWirelessPeerInfos WirelessPeerInfos
+        {
+            get
+            {
+                if (this.wirelessPeerInfos == null)
+                {
+                    this.wirelessPeerInfos = new LazyLoadingMikroTikWirelessPeerInfos(this.LowerLayer, this.OidLookup);
+                }
+
+                return this.wirelessPeerInfos;
             }
         }
     }

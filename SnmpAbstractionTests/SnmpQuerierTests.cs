@@ -23,7 +23,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void QuerySystemDataTest()
         {
-            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress.ToString());
+            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress1.ToString());
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -43,7 +43,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void QueryInterfaceDataTest()
         {
-            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress.ToString());
+            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress1.ToString());
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -55,6 +55,44 @@ namespace SnmpAbstractionTests
 
             Console.WriteLine("Obtained interface details:");
             Console.WriteLine(networkInterfaceDetails);
+        }
+
+        /// <summary>
+        /// Test for querying of wireless peers.
+        /// </summary>
+        [Test]
+        public void QueryWirelessPeersTest()
+        {
+            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress1.ToString());
+
+            Assert.NotNull(querier, "Create(...) returned null");
+
+            var networkInterfaceDetails = querier.WirelessPeerInfos;
+
+            Assert.NotNull(networkInterfaceDetails, "querier.WirelessPeerInfos returned null");
+
+            networkInterfaceDetails.ForceEvaluateAll();
+
+            Console.WriteLine("Obtained peer infos:");
+            Console.WriteLine(networkInterfaceDetails);
+        }
+
+        /// <summary>
+        /// Test for querying link details.
+        /// </summary>
+        [Test]
+        public void FetchLinkDetailsTest()
+        {
+            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress1.ToString());
+
+            Assert.NotNull(querier, "Create(...) returned null");
+
+            var linkDetails = querier.FetchLinkDetails(TestConstants.TestAddress2.ToString());
+
+            Assert.NotNull(linkDetails, "querier.FetchLinkDetails returned null");
+
+            Console.WriteLine("Obtained link details:");
+            Console.WriteLine(linkDetails);
         }
     }
 }

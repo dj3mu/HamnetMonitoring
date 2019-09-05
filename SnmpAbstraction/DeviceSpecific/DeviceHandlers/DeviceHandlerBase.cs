@@ -1,4 +1,5 @@
 using System;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -50,5 +51,11 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public abstract IInterfaceDetails NetworkInterfaceDetails { get; }
+
+        /// <inheritdoc />
+        public abstract IWirelessPeerInfos WirelessPeerInfos { get; }
+
+        /// <inheritdoc />
+        public IpAddress Address => this.LowerLayer.Address;
     }
 }

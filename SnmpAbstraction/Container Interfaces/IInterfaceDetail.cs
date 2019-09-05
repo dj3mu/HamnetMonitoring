@@ -6,6 +6,11 @@ namespace SnmpAbstraction
     public interface IInterfaceDetail : IHamnetSnmpQuerierResult, ILazyEvaluated
     {
         /// <summary>
+        /// Gets the numeric ID of the interface.
+        /// </summary>
+        int InterfaceId { get; }
+
+        /// <summary>
         /// Gets the type of the interface as integer (e.g. 71 = ieee80211).
         /// </summary>
         int InterfaceType { get; }

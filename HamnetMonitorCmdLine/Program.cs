@@ -69,11 +69,52 @@
         {
             InitBackings();
 
-            return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions>(args)
+            return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions, WirelessPeersOptions, FetchLinkDetailsOptions>(args)
                 .MapResult(
                     (SystemDataOptions opts) => RunAddAndReturnExitCode(opts),
                     (InterfaceDataOptions opts) => RunAddAndReturnExitCode(opts),
+                    (WirelessPeersOptions opts) => RunAddAndReturnExitCode(opts),
+                    (FetchLinkDetailsOptions opts) => RunAddAndReturnExitCode(opts),
                     errs => (int)ExitCodes.InvalidCommandLine);
+        }
+
+        /// <summary>
+        /// Execution of link details query
+        /// </summary>
+        /// <param name="opts">The options defining the queries.</param>
+        /// <returns>The exit code to return.</returns>
+        private static int RunAddAndReturnExitCode(FetchLinkDetailsOptions opts)
+        {
+            log.Info("Running link details query");
+
+            var querier = SnmpQuerierFactory.Instance.Create(opts.HostsOrAddresses.First());
+
+            var wirelessPeerInfos = querier.FetchLinkDetails(opts.HostsOrAddresses.Skip(1).ToArray());
+
+            OutputResult(opts, wirelessPeerInfos);
+
+            return (int)ExitCodes.Ok;
+        }
+
+        /// <summary>
+        /// Execution of wireless peers query
+        /// </summary>
+        /// <param name="opts">The options defining the queries.</param>
+        /// <returns>The exit code to return.</returns>
+        private static int RunAddAndReturnExitCode(WirelessPeersOptions opts)
+        {
+            log.Info("Running wireless peers query");
+
+            foreach (string address in opts.HostsOrAddresses)
+            {
+                var querier = SnmpQuerierFactory.Instance.Create(address);
+
+                var wirelessPeerInfos = querier.WirelessPeerInfos;
+
+                OutputResult(opts, wirelessPeerInfos);
+            }
+
+            return (int)ExitCodes.Ok;
         }
 
         /// <summary>

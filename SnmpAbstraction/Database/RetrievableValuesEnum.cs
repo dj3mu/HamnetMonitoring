@@ -14,10 +14,13 @@
         // Root OID to be walked to get a list of all available interface IDs.
         InterfaceIdWalkRoot = 3,
 
-        // Root OID to accessed with interface ID appended in order to get the interface type.
+        // Root OID to access with interface ID appended in order to get the interface type.
         InterfaceTypeWalkRoot = 4,
 
-        // Root OID to accessed with interface ID appended in order to get the interface's MAC address.
-        InterfaceMacAddressWalkRoot = 5
+        // Root OID to access with interface ID appended in order to get the interface's MAC address.
+        InterfaceMacAddressWalkRoot = 5,
+
+        // Root OID to get the MAC addresses of all remote devices that this device is registered with
+        WlanRemoteMacAddressWalkRoot = 6
     }
 }

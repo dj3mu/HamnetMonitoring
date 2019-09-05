@@ -10,6 +10,8 @@ namespace SnmpAbstraction
     /// </summary>
     internal class MikrotikDetectableDevice : DetectableDeviceBase
     {
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         /// String in system description to detect RouterOS
         /// </summary>
@@ -26,11 +28,21 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public override bool IsApplicable(ISnmpLowerLayer snmpLowerLayer)
         {
-            if (!snmpLowerLayer.SystemData.Description.Contains(RouterOsDetectionString))
+            var description = snmpLowerLayer?.SystemData?.Description;
+            if (string.IsNullOrWhiteSpace(description))
             {
+                log.Warn($"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a MikroTik device");
                 return false;
             }
 
+            if (!description.Contains(RouterOsDetectionString))
+            {
+                log.Info($"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain string '{RouterOsDetectionString}': Assuming the device is not a MikroTik device");
+                return false;
+            }
+
+            log.Info($"Device '{snmpLowerLayer.Address}' seems to be a MikroTik device");
+            
             return true;
         }
 

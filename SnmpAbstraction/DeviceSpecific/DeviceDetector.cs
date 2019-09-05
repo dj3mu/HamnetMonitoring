@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -48,17 +49,32 @@ namespace SnmpAbstraction
             
             foreach (IDetectableDevice currentDevice in this.detectableDevices)
             {
-                if (currentDevice.IsApplicable(this.lowerLayer))
+                try
                 {
-                    log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
-                    
-                    detectionDuration.Stop();
-                    return currentDevice.CreateHandler(this.lowerLayer);
+                    if (currentDevice.IsApplicable(this.lowerLayer))
+                    {
+                        log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
+                        
+                        detectionDuration.Stop();
+                        return currentDevice.CreateHandler(this.lowerLayer);
+                    }
+                }
+                catch(SnmpException ex)
+                {
+                    if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
+                    {
+                        var errorInfo2 = $"Timeout talking to device '{this.lowerLayer.Address}'";
+                        log.Error(errorInfo2, ex);
+                        throw new HamnetSnmpException(errorInfo2, ex);
+                    }
                 }
             }
 
             detectionDuration.Stop();
-            return null;
+
+            var errorInfo = $"Device '{this.lowerLayer.Address}' cannot be identified as a supported/known device after {detectionDuration.ElapsedMilliseconds} ms and trying {this.detectableDevices.Count} devices";
+            log.Error(errorInfo);
+            throw new HamnetSnmpException(errorInfo);
         }
     }
 }

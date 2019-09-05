@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Worker class for lazy-loading interface details.
     /// /// </summary>
-    internal class LazyLoadingDeviceInterfaceDetails : HamnetSnmpQuerierResultBase, IInterfaceDetails
+    internal class LazyLoadingMikroTikDeviceInterfaceDetails : LazyHamnetSnmpQuerierResultBase, IInterfaceDetails
     {
         /// <summary>
         /// The OID lookup table.
@@ -40,7 +41,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public LazyLoadingDeviceInterfaceDetails(ISnmpLowerLayer lowerSnmpLayer, DeviceSpecificOidLookup oidLookup)
+        public LazyLoadingMikroTikDeviceInterfaceDetails(ISnmpLowerLayer lowerSnmpLayer, DeviceSpecificOidLookup oidLookup)
             : base(lowerSnmpLayer)
         {
             this.oidLookup = oidLookup;
@@ -72,13 +73,19 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public void ForceEvaluateAll()
+        public override void ForceEvaluateAll()
         {
             this.PopulateInterfaceDetails();
             foreach (var item in this.interfaceDetailsBacking)
             {
                 item.ForceEvaluateAll();
             }
+        }
+
+        /// <inheritdoc />
+        public IEnumerator<IInterfaceDetail> GetEnumerator()
+        {
+            return this.Details.GetEnumerator();
         }
 
         /// <inheritdoc />
@@ -108,6 +115,12 @@ namespace SnmpAbstraction
             }
 
             return returnBuilder.ToString();
+        }
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.Details.GetEnumerator();
         }
 
         /// <summary>
@@ -141,7 +154,7 @@ namespace SnmpAbstraction
 
             foreach (Vb item in interfaceVbs)
             {
-                this.interfaceDetailsBacking.Add(new LazyLoadingInterfaceDetail(this.LowerSnmpLayer, this.oidLookup, item.Value.ToInt()));
+                this.interfaceDetailsBacking.Add(new LazyLoadingMikroTikInterfaceDetail(this.LowerSnmpLayer, this.oidLookup, item.Value.ToInt()));
             }
 
             this.interfaceDetailsQueried = true;

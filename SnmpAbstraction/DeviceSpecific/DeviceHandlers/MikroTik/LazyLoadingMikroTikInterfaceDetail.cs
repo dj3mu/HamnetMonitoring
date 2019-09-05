@@ -1,22 +1,17 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Text;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
-    internal class LazyLoadingInterfaceDetail : HamnetSnmpQuerierResultBase, IInterfaceDetail
+    internal class LazyLoadingMikroTikInterfaceDetail : LazyHamnetSnmpQuerierResultBase, IInterfaceDetail
     {
         /// <summary>
         /// The OID lookup table.
         /// </summary>
         private readonly DeviceSpecificOidLookup oidLookup;
         
-        /// <summary>
-        /// The ID of the interface (i.e. the value to append to interface-specific OIDs).
-        /// </summary>
-        private readonly int interfaceId;
-
         /// <summary>
         /// Field to sum up the query duration on each "Populate" call.
         /// </summary>
@@ -52,11 +47,11 @@ namespace SnmpAbstraction
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="interfaceId">The ID of the interface (i.e. the value to append to interface-specific OIDs).</param>
-        public LazyLoadingInterfaceDetail(ISnmpLowerLayer lowerSnmpLayer, DeviceSpecificOidLookup oidLookup, int interfaceId)
+        public LazyLoadingMikroTikInterfaceDetail(ISnmpLowerLayer lowerSnmpLayer, DeviceSpecificOidLookup oidLookup, int interfaceId)
             : base(lowerSnmpLayer)
         {
             this.oidLookup = oidLookup;
-            this.interfaceId = interfaceId;
+            this.InterfaceId = interfaceId;
         }
 
         /// <inheritdoc />
@@ -85,7 +80,10 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public void ForceEvaluateAll()
+        public int InterfaceId { get; }
+
+        /// <inheritdoc />
+        public override void ForceEvaluateAll()
         {
             this.PopulateInterfaceType();
             this.PopulateMacAddressString();
@@ -96,7 +94,7 @@ namespace SnmpAbstraction
         {
             StringBuilder returnBuilder = new StringBuilder(128);
 
-            returnBuilder.Append("Interface #").Append(this.interfaceId).AppendLine(":");
+            returnBuilder.Append("Interface #").Append(this.InterfaceId).AppendLine(":");
             returnBuilder.Append("  - Type: ").AppendLine(this.interfaceTypeQueried ? this.interfaceTypeBacking.ToString() : "Not yet queried");
             returnBuilder.Append("  - MAC : ").Append(this.macAddressStringQueried ? this.macAddressStringBacking?.ToString() : "Not yet queried");
 
@@ -122,9 +120,9 @@ namespace SnmpAbstraction
             Stopwatch durationWatch = Stopwatch.StartNew();
 
             var interfactTypeOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfactTypeOid.Add(this.interfaceId);
+            interfactTypeOid.Add(this.InterfaceId);
 
-            this.macAddressStringBacking = this.LowerSnmpLayer.QueryAsString(interfactTypeOid, "mac address");
+            this.macAddressStringBacking = this.LowerSnmpLayer.QueryAsString(interfactTypeOid, "mac address").Replace(' ', ':');
 
             durationWatch.Stop();
 
@@ -152,7 +150,7 @@ namespace SnmpAbstraction
             Stopwatch durationWatch = Stopwatch.StartNew();
 
             var interfactTypeOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfactTypeOid.Add(this.interfaceId);
+            interfactTypeOid.Add(this.InterfaceId);
 
             this.interfaceTypeBacking = this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "interface type");
 
