@@ -25,6 +25,12 @@ namespace SnmpAbstraction
         /// </summary>
         private readonly Oid OsVersionOid = new Oid(".1.3.6.1.2.1.47.1.1.1.1.2.65536");
 
+        /// <summary>
+        /// A second OID to obtain the string including the OS version.<br/>
+        /// Example: "RouterOS v6.45.3 Jul/29/2019 12:11:49"
+        /// </summary>
+        private readonly Oid OsVersionOid2 = new Oid(".1.3.6.1.4.1.14988.1.1.17.1.1.4.1");
+
         /// <inheritdoc />
         public override bool IsApplicable(ISnmpLowerLayer snmpLowerLayer)
         {
@@ -49,14 +55,34 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer)
         {
-            string osVersionString = lowerLayer.QueryAsString(OsVersionOid, "MikroTik RouterOS Version String");
+            string osVersionString = null;
+
+            // try #1: In IEEE SNMP tree
+            try
+            {
+                osVersionString = lowerLayer.QueryAsString(OsVersionOid, "MikroTik RouterOS Version String #1");
+            }
+            catch(SnmpException)
+            {
+                osVersionString = null;
+            }
+            catch(HamnetSnmpException)
+            {
+                osVersionString = null;
+            }
+
+            // try #2: Withing MikroTik enterprise tree
+            if (string.IsNullOrWhiteSpace(osVersionString))
+            {
+                osVersionString = lowerLayer.QueryAsString(OsVersionOid2, "MikroTik RouterOS Version String #2");
+            }
 
             // Example: "RouterOS 6.45.3 (stable) on RB711-5Hn-MMCX"
             Match match = OsVersionExtractionRegex.Match(osVersionString);
 
             SemanticVersion osVersion = match.Success ? SemanticVersion.Parse(match.Groups[1].Value) : null;
 
-            return new MikrotikDeviceHandler(lowerLayer, this.ObtainOidTable(lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Trim(), osVersion));
+            return new MikrotikDeviceHandler(lowerLayer, this.ObtainOidTable(lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Trim(), osVersion), osVersion);
         }
     }
 }

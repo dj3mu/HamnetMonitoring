@@ -16,7 +16,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The OID lookup table.
         /// </summary>
-        private readonly DeviceSpecificOidLookup oidLookup;
+        private readonly IDeviceSpecificOidLookup oidLookup;
 
         /// <summary>
         /// Backing field for the lazy access to the interface details.
@@ -41,7 +41,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public LazyLoadingMikroTikDeviceInterfaceDetails(ISnmpLowerLayer lowerSnmpLayer, DeviceSpecificOidLookup oidLookup)
+        public LazyLoadingMikroTikDeviceInterfaceDetails(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
             : base(lowerSnmpLayer)
         {
             this.oidLookup = oidLookup;
@@ -76,6 +76,12 @@ namespace SnmpAbstraction
         public override void ForceEvaluateAll()
         {
             this.PopulateInterfaceDetails();
+
+            if (this.interfaceDetailsBacking == null)
+            {
+                 return;
+            }
+            
             foreach (var item in this.interfaceDetailsBacking)
             {
                 item.ForceEvaluateAll();

@@ -1,4 +1,5 @@
 using System;
+using SemVersion;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -20,7 +21,8 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerLayer">The lower layer for talking to this device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public DeviceHandlerBase(ISnmpLowerLayer lowerLayer, DeviceSpecificOidLookup oidLookup)
+        /// <param name="osVersion">The SW version of the device.</param>
+        public DeviceHandlerBase(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemVersion.SemanticVersion osVersion)
         {
             if (lowerLayer == null)
             {
@@ -32,8 +34,14 @@ namespace SnmpAbstraction
                 throw new ArgumentNullException(nameof(oidLookup), "OID lookup table is null when constructing a device handler");
             }
 
+            if (osVersion == null)
+            {
+                throw new ArgumentNullException(nameof(oidLookup), "OS version info is null when constructing a device handler");
+            }
+
             this.LowerLayer = lowerLayer;
             this.OidLookup = oidLookup;
+            this.OsVersion = osVersion;
         }
 
         /// <summary>
@@ -44,7 +52,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the OID lookup table for this device.
         /// </summary>
-        public DeviceSpecificOidLookup OidLookup { get; }
+        public IDeviceSpecificOidLookup OidLookup { get; }
 
         /// <inheritdoc />
         public IDeviceSystemData SystemData => this.LowerLayer.SystemData;
@@ -57,5 +65,8 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public IpAddress Address => this.LowerLayer.Address;
+
+        /// <inheritdoc />
+        public SemanticVersion OsVersion { get; }
     }
 }

@@ -10,7 +10,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The OID lookup table.
         /// </summary>
-        private readonly DeviceSpecificOidLookup oidLookup;
+        private readonly IDeviceSpecificOidLookup oidLookup;
         
         /// <summary>
         /// Field to sum up the query duration on each "Populate" call.
@@ -47,7 +47,7 @@ namespace SnmpAbstraction
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="interfaceId">The ID of the interface (i.e. the value to append to interface-specific OIDs).</param>
-        public LazyLoadingMikroTikInterfaceDetail(ISnmpLowerLayer lowerSnmpLayer, DeviceSpecificOidLookup oidLookup, int interfaceId)
+        public LazyLoadingMikroTikInterfaceDetail(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup, int interfaceId)
             : base(lowerSnmpLayer)
         {
             this.oidLookup = oidLookup;

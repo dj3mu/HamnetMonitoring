@@ -1,3 +1,5 @@
+using SemVersion;
+
 namespace SnmpAbstraction
 {
     /// <summary>
@@ -20,8 +22,9 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerLayer">The lower layer for talking to this device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public MikrotikDeviceHandler(ISnmpLowerLayer lowerLayer, DeviceSpecificOidLookup oidLookup)
-            : base(lowerLayer, oidLookup)
+        /// <param name="osVersion">The SW version of the device.</param>
+        public MikrotikDeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion)
+            : base(lowerLayer, oidLookup, osVersion)
         {
         }
 

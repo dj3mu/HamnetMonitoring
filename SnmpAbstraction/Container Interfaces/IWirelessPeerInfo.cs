@@ -1,3 +1,5 @@
+using System;
+
 namespace SnmpAbstraction
 {
     /// <summary>
@@ -15,5 +17,20 @@ namespace SnmpAbstraction
         /// Gets the numeric ID of the interface that this peer is connected to.
         /// </summary>
         int InterfaceId { get; }
+
+        /// <summary>
+        /// Get the strength of our signal at the remote side (as reported by the remote side) in dBm.
+        /// </summary>
+        double TxSignalStrength { get; }
+
+        /// <summary>
+        /// Get the strength of the remote's signal at our side in dBm.
+        /// </summary>
+        double RxSignalStrength { get; }
+
+        /// <summary>
+        /// Gets the uptime of the link.
+        /// </summary>
+        TimeSpan LinkUptime { get; }
     }
 }

@@ -5,31 +5,49 @@
     /// </summary>
     internal enum DataTypesEnum
     {
-        // A string value
+        /// <summary>
+        /// A string value
+        /// </summary>
         String = 1,
 
-        // An OID
+        /// <summary>
+        /// An OID
+        /// </summary>
         Oid = 2,
 
-        // TimeTicks / TimeSpan
+        /// <summary>
+        /// TimeTicks / TimeSpan
+        /// </summary>
         TimeTicks = 3,
 
-        // Integer
+        /// <summary>
+        /// Integer
+        /// </summary>
         Integer = 4,
 
-        // A string with hex value (chars 0-9, A-F)
+        /// <summary>
+        /// A string with hex value (chars 0-9, A-F)
+        /// </summary>
         HexString = 5,
 
-        // A 32 bit gauge
+        /// <summary>
+        /// A 32 bit gauge
+        /// </summary>
         Gauge32 = 6,
 
-        // A 64 bit counter
+        /// <summary>
+        /// A 64 bit counter
+        /// </summary>
         Counter64 = 7,
 
-        // An IP Address
+        /// <summary>
+        /// An IP Address
+        /// </summary>
         IpAddress = 8,
 
-        // A 32 bit counter
+        /// <summary>
+        /// A 32 bit counter
+        /// </summary>
         Counter32 = 9
     }
 }

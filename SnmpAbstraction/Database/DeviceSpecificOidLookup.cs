@@ -5,10 +5,11 @@ using System.Linq;
 
 namespace SnmpAbstraction
 {
+
     /// <summary>
     /// Data container representing the OID lookup for the values according to <see cref="RetrievableValuesEnum" />. 
     /// </summary>
-    internal class DeviceSpecificOidLookup : IReadOnlyDictionary<RetrievableValuesEnum, DeviceSpecificOid>
+    internal class DeviceSpecificOidLookup : IDeviceSpecificOidLookup
     {
         /// <summary>
         /// The lookup dictionary backing field.

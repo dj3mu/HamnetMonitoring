@@ -87,7 +87,7 @@ namespace SnmpAbstraction
                 fetchedDetails.AddRange(linkDetectionAlgorithm.DoQuery().Details);
             }
 
-            return new LinkDetails(fetchedDetails, this.Address, fetchedDetails.Aggregate(TimeSpan.Zero, (agg, current) => agg += current.QueryDuration));
+            return new LinkDetails(fetchedDetails, this.Address);
         }
     }
 }

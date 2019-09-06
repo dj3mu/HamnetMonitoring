@@ -1,3 +1,4 @@
+using SemVersion;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -11,6 +12,11 @@ namespace SnmpAbstraction
         /// Gets the IP address that this device handler handles.
         /// </summary>
         IpAddress Address { get; }
+
+        /// <summary>
+        /// Gets the device's operation system (i.e. Software) version.
+        /// </summary>
+        SemanticVersion OsVersion { get; }
 
         /// <summary>
         /// Gets the device's generic system data.

@@ -24,10 +24,11 @@ namespace SnmpAbstraction
         public DeviceVersion Vendor { get; set; }
 
         /// <summary>
-        /// Gets the ID that references the device specific OID mapping table.
+        /// Gets a comma-separated list of IDs, in order of precendence (first ID will be tried first)
+        /// that references the device specific OID mapping tables.
         /// </summary>
-        [Column("OidMappingId")]
-        public int OidMappingId { get; set; }
+        [Column("OidMappingIds")]
+        public string OidMappingIds { get; set; }
 
         /// <summary>
         /// Gets the list of Device Specific OIDs matching this lookup.

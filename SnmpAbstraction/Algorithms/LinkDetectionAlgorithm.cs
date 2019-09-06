@@ -35,8 +35,6 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public ILinkDetails DoQuery()
         {
-            Stopwatch durationWatch = Stopwatch.StartNew();
-            
             // we're only interested in the Wireless interfaces (not in ethernet ports or similar) and hence filter
             // for interface type 71 (ieee80211)
             var wifiInterfaces1 = this.querier1.NetworkInterfaceDetails.Where(i => i.InterfaceType == 71);
@@ -46,15 +44,11 @@ namespace SnmpAbstraction
 
             // see if side #2 has peers with MAC address of side #1
             var peeringWithSide1 = from wlp2 in wlPeerInfo2
-                                   from wm1 in wifiInterfaces1
-                                   where (wlp2.RemoteMacString.ToLowerInvariant() == wm1.MacAddressString.ToLowerInvariant())
-                                   select new Tuple<IInterfaceDetail, IWirelessPeerInfo, IInterfaceDetail>(wm1, wlp2, interfaces2.First(if2 => if2.InterfaceId == wlp2.InterfaceId));
+                                   from wi1 in wifiInterfaces1
+                                   where (wlp2.RemoteMacString.ToLowerInvariant() == wi1.MacAddressString.ToLowerInvariant())
+                                   select new LinkRelatedResultCollection(wi1, interfaces2.First(if2 => if2.InterfaceId == wlp2.InterfaceId), this.querier1.WirelessPeerInfos.First(pi => pi.InterfaceId == wi1.InterfaceId), wlp2);
 
-            var returnDetails = new LinkDetails(peeringWithSide1.Select(ps1 => new LinkDetail(this.querier1.Address, ps1)), this.querier1.Address, durationWatch.Elapsed);
-
-            durationWatch.Stop();
-
-            log.Info($"LinkDetectionQuery: DurationWatch = {durationWatch.ElapsedMilliseconds} ms");
+            var returnDetails = new LinkDetails(peeringWithSide1.Select(ps1 => new LinkDetail(this.querier1.Address, ps1)), this.querier1.Address);
 
             var lazyContainerSum = wifiInterfaces1.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
             lazyContainerSum += interfaces2.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);

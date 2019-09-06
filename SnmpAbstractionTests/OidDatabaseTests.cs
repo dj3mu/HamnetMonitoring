@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SemVersion;
 using SnmpAbstraction;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -106,12 +107,12 @@ namespace Tests
 
             using (var context = new DeviceDatabaseContext(this.database))
             {
-                int foundOidMappingId = int.MinValue;
+                string foundOidMappingIds = string.Empty;
 
-                Assert.IsTrue(context.TryFindOidLookupId(goodDeviceVersionId, out foundOidMappingId), $"Cannot find OID mapping ID for 'good' device-version ID '{goodDeviceVersionId}'");
-                Assert.AreEqual(1, foundOidMappingId, $"Wrong OID mapping ID found for 'good' device-version ID '{goodDeviceVersionId}'");
+                Assert.IsTrue(context.TryFindOidLookupId(goodDeviceVersionId, out foundOidMappingIds), $"Cannot find OID mapping ID for 'good' device-version ID '{goodDeviceVersionId}'");
+                Assert.AreEqual("1", foundOidMappingIds, $"Wrong OID mapping ID found for 'good' device-version ID '{goodDeviceVersionId}'");
 
-                Assert.IsFalse(context.TryFindOidLookupId(badDeviceVersionId, out foundOidMappingId), $"Found OID mapping ID for 'bad' device-version ID '{badDeviceVersionId}'");
+                Assert.IsFalse(context.TryFindOidLookupId(badDeviceVersionId, out foundOidMappingIds), $"Found OID mapping ID for 'bad' device-version ID '{badDeviceVersionId}'");
             }
         }
 
@@ -126,7 +127,7 @@ namespace Tests
 
             using (var context = new DeviceDatabaseContext(this.database))
             {
-                DeviceSpecificOidLookup foundLookup = null;
+                IDeviceSpecificOidLookup foundLookup = null;
 
                 Assert.IsTrue(context.TryFindDeviceSpecificOidLookup(goodOidLookupId, out foundLookup), $"Cannot find OID lookup ID for 'good' lookup ID '{goodOidLookupId}'");
                 Assert.GreaterOrEqual(foundLookup.Count, 1, $"Empty lookup for for 'good' lookup ID '{goodOidLookupId}'");

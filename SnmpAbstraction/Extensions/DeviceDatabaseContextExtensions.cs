@@ -100,16 +100,16 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="context">The device database context to extend.</param>
         /// <param name="deviceVersionId">The device version ID to look up the mapping ID for.</param>
-        /// <param name="oidMappingId">Returns the mapping ID, if found.</param>
+        /// <param name="oidMappingIds">Returns the comma-separated list of mapping IDs in order of precendence (first ID tried first).</param>
         /// <returns><c>true</c> if a lookup of the given ID has been found and returned. Otherwise <c>false</c>.</returns>
-        public static bool TryFindOidLookupId(this DeviceDatabaseContext context, int deviceVersionId, out int oidMappingId)
+        public static bool TryFindOidLookupId(this DeviceDatabaseContext context, int deviceVersionId, out string oidMappingIds)
         {
             if (context == null)
             {
                 throw new ArgumentNullException(nameof(context), "The context to search OID lookup ID on is null");
             }
 
-            oidMappingId = -1;
+            oidMappingIds = string.Empty;
 
             var result = context.DeviceVersionMapping.FirstOrDefault(d => d.DeviceVersionId == deviceVersionId);
 
@@ -118,7 +118,7 @@ namespace SnmpAbstraction
                 return false;
             }
 
-            oidMappingId = result.OidMappingId;
+            oidMappingIds = result.OidMappingIds;
 
             return true;
         }
@@ -130,7 +130,7 @@ namespace SnmpAbstraction
         /// <param name="oidLookupId">The OID mapping lookup ID to get.</param>
         /// <param name="oidLookup">Returns the OID lookup, if found.</param>
         /// <returns><c>true</c> if a lookup of the given lookup ID has been found and the ID returned. Otherwise <c>false</c>.</returns>
-        public static bool TryFindDeviceSpecificOidLookup(this DeviceDatabaseContext context, int oidLookupId, out DeviceSpecificOidLookup oidLookup)
+        public static bool TryFindDeviceSpecificOidLookup(this DeviceDatabaseContext context, int oidLookupId, out IDeviceSpecificOidLookup oidLookup)
         {
             if (context == null)
             {

@@ -16,7 +16,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The OID lookup table.
         /// </summary>
-        private readonly DeviceSpecificOidLookup oidLookup;
+        private readonly IDeviceSpecificOidLookup oidLookup;
 
         /// <summary>
         /// Backing field for the lazy access to the peer infos.
@@ -41,7 +41,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public LazyLoadingMikroTikWirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, DeviceSpecificOidLookup oidLookup)
+        public LazyLoadingMikroTikWirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
             : base(lowerSnmpLayer)
         {
             this.oidLookup = oidLookup;

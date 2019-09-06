@@ -16,15 +16,27 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="fetchedDetails"></param>
         /// <param name="addressOfSide1"></param>
-        /// <param name="queryDuration"></param>
-        public LinkDetails(IEnumerable<ILinkDetail> fetchedDetails, IpAddress addressOfSide1, TimeSpan queryDuration)
-            : base(addressOfSide1, queryDuration)
+        public LinkDetails(IEnumerable<ILinkDetail> fetchedDetails, IpAddress addressOfSide1)
+            : base(addressOfSide1, TimeSpan.Zero)
         {
             this.Details = fetchedDetails as IReadOnlyList<ILinkDetail> ?? fetchedDetails?.ToList() ?? new List<ILinkDetail>();
         }
 
         /// <inheritdoc />
         public IReadOnlyList<ILinkDetail> Details { get; }
+
+        public override TimeSpan QueryDuration
+        {
+            get
+            {
+                if (this.Details == null)
+                {
+                    return TimeSpan.Zero;
+                }
+
+                return this.Details.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
+            }
+        }
 
         /// <inheritdoc />
         public override string ToTextString()

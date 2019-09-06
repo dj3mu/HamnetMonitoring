@@ -53,6 +53,9 @@ namespace SnmpAbstractionTests
 
             networkInterfaceDetails.ForceEvaluateAll();
 
+            Assert.NotNull(networkInterfaceDetails.Details, "querier.NetworkInterfaceDetails.Details returned null");
+            Assert.Greater(networkInterfaceDetails.Details.Count, 0, "querier.NetworkInterfaceDetails.Details.Count == 0");
+
             Console.WriteLine("Obtained interface details:");
             Console.WriteLine(networkInterfaceDetails);
         }
@@ -67,14 +70,17 @@ namespace SnmpAbstractionTests
 
             Assert.NotNull(querier, "Create(...) returned null");
 
-            var networkInterfaceDetails = querier.WirelessPeerInfos;
+            var wirelessPeerInfos = querier.WirelessPeerInfos;
 
-            Assert.NotNull(networkInterfaceDetails, "querier.WirelessPeerInfos returned null");
+            Assert.NotNull(wirelessPeerInfos, "querier.WirelessPeerInfos returned null");
 
-            networkInterfaceDetails.ForceEvaluateAll();
+            wirelessPeerInfos.ForceEvaluateAll();
+
+            Assert.NotNull(wirelessPeerInfos.Details, "querier.WirelessPeerInfos.Details returned null");
+            Assert.Greater(wirelessPeerInfos.Details.Count, 0, "querier.WirelessPeerInfos.Details.Count == 0");
 
             Console.WriteLine("Obtained peer infos:");
-            Console.WriteLine(networkInterfaceDetails);
+            Console.WriteLine(wirelessPeerInfos);
         }
 
         /// <summary>
@@ -90,6 +96,9 @@ namespace SnmpAbstractionTests
             var linkDetails = querier.FetchLinkDetails(TestConstants.TestAddress2.ToString());
 
             Assert.NotNull(linkDetails, "querier.FetchLinkDetails returned null");
+
+            Assert.NotNull(linkDetails.Details, "querier.FetchLinkDetails(...).Details returned null");
+            Assert.Greater(linkDetails.Details.Count, 0, "querier.FetchLinkDetails(...).Details.Count == 0");
 
             Console.WriteLine("Obtained link details:");
             Console.WriteLine(linkDetails);

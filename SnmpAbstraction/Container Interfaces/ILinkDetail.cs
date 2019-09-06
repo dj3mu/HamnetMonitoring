@@ -1,3 +1,5 @@
+using System;
+
 namespace SnmpAbstraction
 {
     /// <summary>
@@ -26,5 +28,10 @@ namespace SnmpAbstraction
         /// Gets the RX level which the side having <see cref="MacString2" /> produces at side having <see cref="MacString1" />.
         /// </summary>
         double RxLevel2at1 { get; }
+
+        /// <summary>
+        /// Gets the uptime of the link.
+        /// </summary>
+        TimeSpan LinkUptime { get; }
     }
 }

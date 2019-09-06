@@ -1,4 +1,5 @@
 ﻿using System;
+using SemVersion;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
