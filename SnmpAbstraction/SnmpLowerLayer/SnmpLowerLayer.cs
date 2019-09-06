@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using SnmpSharpNet;
 
@@ -95,11 +97,16 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public VbCollection Query(params Oid[] oids)
+        public VbCollection Query(Oid firstOid, params Oid[] oids)
         {
             if (this.disposedValue)
             {
                 throw new ObjectDisposedException(nameof(SnmpLowerLayer), "The object is already disposed off. Cannot execute any more commands on it.");
+            }
+
+            if (firstOid == null)
+            {
+                throw new ArgumentNullException(nameof(firstOid), "firstOid to query is null - but at least one OID must be provided");
             }
 
             if (oids == null)
@@ -107,14 +114,9 @@ namespace SnmpAbstraction
                 throw new ArgumentNullException(nameof(oids), "The OIDs to query is null");
             }
 
-            if (oids.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(oids), oids.Length, "The list OIDs to query must does not contain any element");
-            }
-
             this.InitializeTarget();
             
-            SnmpPacket response = this.SendRequest(oids);
+            SnmpPacket response = this.SendRequest(new Oid[] { firstOid }.Concat(oids));
 
             if (response == null)
             {
@@ -167,7 +169,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="oids">The OIDs to request via SNMP.</param>
         /// <returns>The response SnmpPacket with the data.</returns>
-        private SnmpPacket SendRequest(Oid[] oids)
+        private SnmpPacket SendRequest(IEnumerable<Oid> oids)
         {
             Pdu pdu = new Pdu(PduType.Get);
             foreach (Oid item in oids)

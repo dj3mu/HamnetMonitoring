@@ -58,7 +58,7 @@ namespace SnmpAbstraction
         /// Indicating whether <see cref="linkUptimeBacking" /> has already been populated.
         /// </summary>
         private bool linkUptimePopulated = false;
-        
+
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
         /// </summary>
@@ -66,12 +66,14 @@ namespace SnmpAbstraction
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="macAddress">The MAC address of the peer (serves as index in OIDs for MikroTik devices).</param>
         /// <param name="interfaceId">The ID of the interface (i.e. the value to append to interface-specific OIDs).</param>
-        public LazyLoadingMikroTikWirelessPeerInfo(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup, string macAddress, int interfaceId)
+        /// <param name="isAccessPoint">Value indicating whether the device proving the peer info is an access point or a client.</param>
+        public LazyLoadingMikroTikWirelessPeerInfo(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup, string macAddress, int interfaceId, bool? isAccessPoint)
             : base(lowerSnmpLayer)
         {
             this.oidLookup = oidLookup;
             this.peerMac = macAddress;
             this.interfaceId = interfaceId;
+            this.IsAccessPoint = isAccessPoint;
         }
 
         /// <inheritdoc />
@@ -115,6 +117,9 @@ namespace SnmpAbstraction
                 return this.linkUptimeBacking;
             }
         }
+
+        /// <inheritdoc />
+        public bool? IsAccessPoint { get; }
 
         /// <inheritdoc />
         public override void ForceEvaluateAll()
@@ -184,7 +189,10 @@ namespace SnmpAbstraction
                 return;
             }
 
-            var valueToQuery = RetrievableValuesEnum.RxSignalStrengthAppendMacAndInterfaceId;
+            var valueToQuery = this.IsAccessPoint.GetValueOrDefault(false)
+                ? RetrievableValuesEnum.RxSignalStrengthApAppendMacAndInterfaceId
+                : RetrievableValuesEnum.RxSignalStrengthClientAppendMacAndInterfaceId;
+
             DeviceSpecificOid interfaceIdRootOid;
             if (!this.oidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
             {

@@ -13,6 +13,8 @@ namespace SnmpAbstraction
     /// /// </summary>
     internal class LazyLoadingMikroTikWirelessPeerInfos : LazyHamnetSnmpQuerierResultBase, IWirelessPeerInfos
     {
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         /// The OID lookup table.
         /// </summary>
@@ -134,6 +136,8 @@ namespace SnmpAbstraction
                 return;
             }
 
+            Stopwatch durationWatch = Stopwatch.StartNew();
+
             // Note: The MAC address serves as an index in nested OIDs for MikroTik devices.
             //       So this way, we get the amount of peers as well as an index to them.
             var valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressWalkRoot;
@@ -145,8 +149,6 @@ namespace SnmpAbstraction
                 return;
             }
 
-            Stopwatch durationWatch = Stopwatch.StartNew();
-
             var interfaceVbs = this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid, 0);
 
             durationWatch.Stop();
@@ -157,16 +159,54 @@ namespace SnmpAbstraction
 
             foreach (Vb item in interfaceVbs)
             {
+                int interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 1]);
                 this.peerInfosBacking.Add(
                     new LazyLoadingMikroTikWirelessPeerInfo(
                         this.LowerSnmpLayer,
                         this.oidLookup,
                         item.Value.ToString().Replace(' ', ':'),
-                        Convert.ToInt32(item.Oid[item.Oid.Length - 1]) // last element of OID contains the interface ID on which this peer is connected
+                        interfaceId, // last element of OID contains the interface ID on which this peer is connected
+                        this.CheckIsAccessPoint(interfaceId)
                     ));
             }
 
             this.peerInfosQueried = true;
+        }
+
+        /// <summary>
+        /// Check if the interface of the given ID is an access point or a client.
+        /// </summary>
+        /// <param name="interfaceId">The interface ID to check.</param>
+        /// <returns><c>true</c> if the interface is an access point.</returns>
+        private bool? CheckIsAccessPoint(int interfaceId)
+        {
+            var valueToQuery = RetrievableValuesEnum.WirelessClientCount;
+            DeviceSpecificOid wirelessClientCountRootOid;
+            if (this.oidLookup.TryGetValue(valueToQuery, out wirelessClientCountRootOid))
+            {
+                // finally we need to get the count of registered clients
+                // if it's 0, this must be a client (this method will only be called if the registration table
+                // contains at least one entry)
+                var queryOid = (Oid)wirelessClientCountRootOid.Oid.Clone();
+
+                // need to append the interface ID to the client count OID
+                queryOid.Add(interfaceId);
+
+                var returnCollection = this.LowerSnmpLayer.Query(queryOid);
+                if (returnCollection.Count == 0)
+                {
+                    log.Warn($"Unable to get AP / client distinction for wireless interface #{interfaceId} of device '{this.LowerSnmpLayer.Address}': Query of OID for '{valueToQuery}' returned empty result");
+                    return null;
+                }
+
+                var returnValue = returnCollection[queryOid];
+
+                return returnValue.Value.ToInt() > 0;
+            }
+
+            log.Warn($"Unable to get AP / client distinction for wireless interface #{interfaceId} of device '{this.LowerSnmpLayer.Address}': No OID for value of type '{valueToQuery}' available");
+
+            return null;
         }
     }
 }

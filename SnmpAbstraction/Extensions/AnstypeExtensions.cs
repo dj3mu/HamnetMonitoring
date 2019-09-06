@@ -25,11 +25,6 @@ namespace SnmpAbstraction
                 throw new ArgumentNullException(nameof(asnType), "The AsnType to convert to Integer is null");
             }
             
-            if (asnType.Type != AsnType.INTEGER)
-            {
-                throw new HamnetSnmpException($"Cannot convert an ASN Type '{SnmpConstants.GetTypeName(asnType.Type)}' of value '{asnType.ToString()}' to an integer: Non-matching type");
-            }
-
             int convertedValue;
             if (!int.TryParse(asnType.ToString(), out convertedValue))
             {

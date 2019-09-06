@@ -47,7 +47,7 @@
         TxSignalStrengthAppendMacAndInterfaceId = 7,
 
         /// <summary>
-        /// Root OID to get the RX signal strength (i.e. the strength of our signal as reported by the remote side).<br/>
+        /// Root OID to get the RX signal strength (i.e. the strength of our signal as reported by the remote side) for the access point side.<br/>
         /// The MAC address (in dotted decimal) as well as the Interface ID need to be appended.<br/>
         /// Example:<br/>
         ///     MAC:  02:0C:42:3A:52:C0<br/>
@@ -55,7 +55,7 @@
         ///     This value: .1.3.6.1.4.1.14988.1.1.1.2.1.14<br/>
         ///     ==> Full OID: .1.3.6.1.4.1.14988.1.1.1.2.1.14.2.12.66.58.82.192.6<br/>
         /// </summary>
-        RxSignalStrengthAppendMacAndInterfaceId = 8,
+        RxSignalStrengthApAppendMacAndInterfaceId = 8,
 
         /// <summary>
         /// Root OID to get the linkuptime.<br/>
@@ -67,5 +67,23 @@
         ///     ==> Full OID: .1.3.6.1.4.1.14988.1.1.1.2.1.11.2.12.66.58.82.192.6<br/>
         /// </summary>
         LinkUptimeAppendMacAndInterfaceId = 9,
+
+        /// <summary>
+        /// Root OID to get the number of currently connected wireless clients.<br/>
+        /// Usually, the ID of the wireless interface will be appended.<br/>
+        /// A value of 0 together with a non-empty registration table can also serve the purpose of distinguishing a clients from access points.
+        /// </summary>
+        WirelessClientCount = 10,
+
+        /// <summary>
+        /// Root OID to get the RX signal strength (i.e. the strength of our signal as reported by the remote side) for the client side.<br/>
+        /// The MAC address (in dotted decimal) as well as the Interface ID need to be appended.<br/>
+        /// Example:<br/>
+        ///     MAC:  02:0C:42:3A:52:C0<br/>
+        ///     Interface: 6<br/>
+        ///     This value: .1.3.6.1.4.1.14988.1.1.1.2.1.14<br/>
+        ///     ==> Full OID: .1.3.6.1.4.1.14988.1.1.1.2.1.14.2.12.66.58.82.192.6<br/>
+        /// </summary>
+        RxSignalStrengthClientAppendMacAndInterfaceId = 8,
     }
 }
