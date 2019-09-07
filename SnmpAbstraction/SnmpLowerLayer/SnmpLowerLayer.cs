@@ -97,30 +97,25 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public VbCollection Query(Oid firstOid, params Oid[] oids)
+        public VbCollection Query(IEnumerable<Oid> oids)
         {
             if (this.disposedValue)
             {
                 throw new ObjectDisposedException(nameof(SnmpLowerLayer), "The object is already disposed off. Cannot execute any more commands on it.");
             }
 
-            if (firstOid == null)
-            {
-                throw new ArgumentNullException(nameof(firstOid), "firstOid to query is null - but at least one OID must be provided");
-            }
-
             if (oids == null)
             {
-                throw new ArgumentNullException(nameof(oids), "The OIDs to query is null");
+                throw new ArgumentNullException(nameof(oids), "The list of OIDs to query is null");
             }
 
             this.InitializeTarget();
             
-            SnmpPacket response = this.SendRequest(new Oid[] { firstOid }.Concat(oids));
+            SnmpPacket response = this.SendRequest(oids);
 
             if (response == null)
             {
-                throw new HamnetSnmpException($"Query for {oids.Length} OIDs from {this.Address} produced 'null' response");
+                throw new HamnetSnmpException($"Query for {oids.Count()} OIDs from {this.Address} produced 'null' response");
             }
 
             // ErrorStatus other then 0 is an error returned by the Agent - see SnmpConstants for error definitions
@@ -131,6 +126,18 @@ namespace SnmpAbstraction
             }
 
             return response.Pdu.VbList;
+        }
+
+        /// <inheritdoc />
+        public VbCollection Query(Oid firstOid, params Oid[] oids)
+        {
+            IEnumerable<Oid> oidEnum = new Oid[] { firstOid };
+            if (oids != null)
+            {
+                oidEnum = oidEnum.Concat(oids);
+            }
+
+            return this.Query(oidEnum);
         }
 
         /// <inheritdoc />
@@ -171,7 +178,9 @@ namespace SnmpAbstraction
         /// <returns>The response SnmpPacket with the data.</returns>
         private SnmpPacket SendRequest(IEnumerable<Oid> oids)
         {
-            Pdu pdu = new Pdu(PduType.Get);
+            var pduType = PduType.Get;
+
+            Pdu pdu = new Pdu(pduType);
             foreach (Oid item in oids)
             {
                 pdu.VbList.Add(item);

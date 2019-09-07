@@ -36,7 +36,7 @@
         WlanRemoteMacAddressWalkRoot = 6,
 
         /// <summary>
-        /// Root OID to get the TX signal strength (i.e. the strength of our signal as reported by the remote side).<br/>
+        /// Root OID to get the combined TX signal strength (i.e. the strength of our signal as reported by the remote side) of all MIMO streams.<br/>
         /// The MAC address (in dotted decimal) as well as the Interface ID need to be appended.<br/>
         /// Example:<br/>
         ///     MAC:  02:0C:42:3A:52:C0<br/>
@@ -47,7 +47,7 @@
         TxSignalStrengthAppendMacAndInterfaceId = 7,
 
         /// <summary>
-        /// Root OID to get the RX signal strength (i.e. the strength of our signal as reported by the remote side) for the access point side.<br/>
+        /// Root OID to get the combined RX signal strength of all MIMO streams.<br/>
         /// The MAC address (in dotted decimal) as well as the Interface ID need to be appended.<br/>
         /// Example:<br/>
         ///     MAC:  02:0C:42:3A:52:C0<br/>
@@ -76,7 +76,7 @@
         WirelessClientCount = 10,
 
         /// <summary>
-        /// Root OID to get the RX signal strength (i.e. the strength of our signal as reported by the remote side) for the client side.<br/>
+        /// Root OID to get the RX signal strength of MIMO stream 0.<br/>
         /// The MAC address (in dotted decimal) as well as the Interface ID need to be appended.<br/>
         /// Example:<br/>
         ///     MAC:  02:0C:42:3A:52:C0<br/>
@@ -84,6 +84,28 @@
         ///     This value: .1.3.6.1.4.1.14988.1.1.1.2.1.14<br/>
         ///     ==> Full OID: .1.3.6.1.4.1.14988.1.1.1.2.1.14.2.12.66.58.82.192.6<br/>
         /// </summary>
-        RxSignalStrengthClientAppendMacAndInterfaceId = 8,
+        RxSignalStrengthCh0AppendMacAndInterfaceId = 11,
+
+        /// <summary>
+        /// Root OID to get the RX signal strength of MIMO stream 1.<br/>
+        /// The MAC address (in dotted decimal) as well as the Interface ID need to be appended.<br/>
+        /// Example:<br/>
+        ///     MAC:  02:0C:42:3A:52:C0<br/>
+        ///     Interface: 6<br/>
+        ///     This value: .1.3.6.1.4.1.14988.1.1.1.2.1.16<br/>
+        ///     ==> Full OID: .1.3.6.1.4.1.14988.1.1.1.2.1.16.2.12.66.58.82.192.6<br/>
+        /// </summary>
+        RxSignalStrengthCh1AppendMacAndInterfaceId = 12,
+
+        /// <summary>
+        /// Root OID to get the RX signal strength of MIMO stream 2.<br/>
+        /// The MAC address (in dotted decimal) as well as the Interface ID need to be appended.<br/>
+        /// Example:<br/>
+        ///     MAC:  02:0C:42:3A:52:C0<br/>
+        ///     Interface: 6<br/>
+        ///     This value: .1.3.6.1.4.1.14988.1.1.1.2.1.18<br/>
+        ///     ==> Full OID: .1.3.6.1.4.1.14988.1.1.1.2.1.18.2.12.66.58.82.192.6<br/>
+        /// </summary>
+        RxSignalStrengthCh2AppendMacAndInterfaceId = 13,
     }
 }

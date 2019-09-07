@@ -100,7 +100,7 @@ namespace SnmpAbstractionTests
             Assert.NotNull(linkDetails.Details, "querier.FetchLinkDetails(...).Details returned null");
             Assert.Greater(linkDetails.Details.Count, 0, "querier.FetchLinkDetails(...).Details.Count == 0");
 
-            Console.WriteLine("Obtained link details:");
+            Console.WriteLine($"=== Link details from {TestConstants.TestAddress1} to {TestConstants.TestAddress2} ===");
             Console.WriteLine(linkDetails);
         }
     }

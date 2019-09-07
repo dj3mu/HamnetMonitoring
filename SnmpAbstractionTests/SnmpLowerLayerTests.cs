@@ -109,8 +109,11 @@ namespace SnmpAbstractionTests
             // Query to a host that has (hopefully) no SNMP service running on it.
             using(var snmpll = new SnmpLowerLayer(TestConstants.LocalhostAdddress))
             {
-                string result = snmpll.QueryAsString(testOid, "test query");
-                Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
+                Assert.Throws<SnmpNetworkException>(() =>
+                {
+                    string result = snmpll.QueryAsString(testOid, "test query");
+                },
+                $"Query from non-existing '{snmpll.Address}' as OID '{testOid}' as string didn't throw SnmpNetworkException");
             }
         }
 
@@ -137,8 +140,11 @@ namespace SnmpAbstractionTests
             // Query to a host that has (hopefully) no SNMP service running on it.
             using(var snmpll = new SnmpLowerLayer(TestConstants.LocalhostAdddress))
             {
-                Oid result = snmpll.QueryAsOid(testOid, "test query");
-                Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
+                Assert.Throws<SnmpNetworkException>(() =>
+                {
+                    Oid result = snmpll.QueryAsOid(testOid, "test query");
+                },
+                $"Query from non-existing '{snmpll.Address}' as OID '{testOid}' as OID didn't throw SnmpNetworkException");
             }
         }
 
@@ -156,17 +162,20 @@ namespace SnmpAbstractionTests
             // is not available or has no SNMP service running.
             using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddress1))
             {
-                TimeTicks result = snmpll.QueryAsTimeTicks(testOid, "test query");
+                TimeSpan? result = snmpll.QueryAsTimeSpan(testOid, "test query");
                 Assert.NotNull(result, "The query result is null");
 
-                Console.WriteLine($"Result queried from '{snmpll.Address}' as OID '{testOid}' as OID '{result}'");
+                Console.WriteLine($"Result queried from '{snmpll.Address}' as OID '{testOid}' as TimeSpan '{result}'");
             }
 
             // Query to a host that has (hopefully) no SNMP service running on it.
             using(var snmpll = new SnmpLowerLayer(TestConstants.LocalhostAdddress))
             {
-                Oid result = snmpll.QueryAsOid(testOid, "test query");
-                Assert.IsNull(result, $"Result queried from non-existing '{snmpll.Address}' as OID '{testOid}' as string is not null but '{result}'");
+                Assert.Throws<SnmpNetworkException>(() =>
+                {
+                    TimeSpan? result = snmpll.QueryAsTimeSpan(testOid, "test query");
+                },
+                $"Query from non-existing '{snmpll.Address}' as OID '{testOid}' as TimeSpan? didn't throw SnmpNetworkException");
             }
         }
 

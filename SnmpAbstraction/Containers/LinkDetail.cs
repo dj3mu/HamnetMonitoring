@@ -4,6 +4,9 @@ using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
+    /// <summary>
+    /// Container for <see cref="ILinkDetail" />.
+    /// </summary>
     internal class LinkDetail : HamnetSnmpQuerierResultBase, ILinkDetail
     {
         /// <summary>
@@ -11,10 +14,20 @@ namespace SnmpAbstraction
         /// </summary>
         private LinkRelatedResultCollection linkRelatedResultCollection;
 
+        /// <summary>
+        /// Construct from all paraters.
+        /// </summary>
+        /// <param name="address">The address of the side #1 of this link detail.</param>
+        /// <param name="linkRelatedResultCollection">The collection of interface and wireless details for sides #1 and #2.</param>
         public LinkDetail(IpAddress address, LinkRelatedResultCollection linkRelatedResultCollection)
             : base(address, TimeSpan.Zero)
         {
             this.linkRelatedResultCollection = linkRelatedResultCollection;
+            if ((this.linkRelatedResultCollection?.WirelessPeerInfo1?.IsAccessPoint != null)
+                && (this.linkRelatedResultCollection.WirelessPeerInfo1.IsAccessPoint.HasValue))
+            {
+                this.SideOfAccessPoint = this.linkRelatedResultCollection.WirelessPeerInfo1.IsAccessPoint.Value ? 1 : 2;
+            }
         }
 
         /// <inheritdoc />
@@ -32,7 +45,11 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public override TimeSpan QueryDuration => this.linkRelatedResultCollection?.TotalQueryDuration ?? TimeSpan.Zero;
 
+        /// <inheritdoc />
         public TimeSpan LinkUptime => this.linkRelatedResultCollection?.WirelessPeerInfo2?.LinkUptime ?? TimeSpan.Zero;
+
+        /// <inheritdoc />
+        public int? SideOfAccessPoint { get; } = null;
 
         /// <inheritdoc />
         public override string ToTextString()
@@ -47,8 +64,9 @@ namespace SnmpAbstraction
             returnBuilder.Append("Link between side #1 (").Append(this.linkRelatedResultCollection.InterfaceDetail1.DeviceAddress).Append(") and side #2 (").Append(this.linkRelatedResultCollection.InterfaceDetail2.DeviceAddress).AppendLine("):");
             returnBuilder.Append("Side #1 MAC: ").AppendLine(this.MacString1);
             returnBuilder.Append("Side #2 MAC: ").AppendLine(this.MacString2);
-            returnBuilder.Append("Rx level of side #1 at side #2: ").AppendLine(this.RxLevel1at2.ToString());
-            returnBuilder.Append("Rx level of side #2 at side #1: ").AppendLine(this.RxLevel2at1.ToString());
+            returnBuilder.Append("Side of AP : ").AppendLine(this.SideOfAccessPoint?.ToString("0") ?? "not available");
+            returnBuilder.Append("Rx level of side #1 at side #2: ").AppendLine(this.RxLevel1at2.ToString("0.0 dBm"));
+            returnBuilder.Append("Rx level of side #2 at side #1: ").AppendLine(this.RxLevel2at1.ToString("0.0 dBm"));
             returnBuilder.Append("Link Uptime: ").Append(this.LinkUptime.ToString());
 
             return returnBuilder.ToString();

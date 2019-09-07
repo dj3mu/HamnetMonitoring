@@ -14,9 +14,11 @@
         /// Construct taking all the parameters.
         /// </summary>
         /// <param name="hostsOrAddresses">List of Host names or IP addresses to query.</param>
+        /// <param name="snmpVersion">The SNMP protocol version to use for the queries.</param>
         public SystemDataOptions(
-            IEnumerable<string> hostsOrAddresses)
-            : base(hostsOrAddresses)
+            IEnumerable<string> hostsOrAddresses,
+            int? snmpVersion)
+            : base(hostsOrAddresses, snmpVersion)
         {
         }
 
@@ -31,7 +33,7 @@
             {
                 return new List<Example>()
                 {
-                    new Example("Query System Data", new SystemDataOptions(new string[] { "my-test-host.example.org" }))
+                    new Example("Query System Data", new SystemDataOptions(new string[] { "my-test-host.example.org" }, 2))
                 };
             }
         }

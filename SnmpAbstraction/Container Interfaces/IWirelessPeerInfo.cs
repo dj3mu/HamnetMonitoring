@@ -24,7 +24,7 @@ namespace SnmpAbstraction
         double TxSignalStrength { get; }
 
         /// <summary>
-        /// Get the strength of the remote's signal at our side in dBm.
+        /// Get the strength (combined of all streams) of the remote's signal at our side in dBm.
         /// </summary>
         double RxSignalStrength { get; }
 
@@ -32,5 +32,10 @@ namespace SnmpAbstraction
         /// Gets the uptime of the link.
         /// </summary>
         TimeSpan LinkUptime { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether this is peer is in Access Point mode.
+        /// </summary>
+        bool? IsAccessPoint { get; }
     }
 }

@@ -85,5 +85,20 @@ namespace SnmpAbstractionTests
                 StringExtensions.HexStringToByteArray(null);
             }, "Not seen ArgumentNullException even though null has been passed for input");
         }
+
+        /// <summary>
+        /// Test for <see cref="EnumerableExtensions.DecibelLogSum(System.Collections.Generic.IEnumerable{double})" />
+        /// </summary>
+        [Test]
+        public void DecibelLogSumTest()
+        {
+            var sourceValues = new double[] { -100.0, double.PositiveInfinity, double.NaN, -100.0, double.NegativeInfinity };
+
+            var logsum = sourceValues.DecibelLogSum();
+
+            double minSum = -97.02;
+            double maxSum = -96.98;
+            Assert.IsTrue((minSum < logsum) && (logsum < maxSum), "Logsum {logsum} is not in range [{minSum}; {maxSum}]");
+        }
     }
 }

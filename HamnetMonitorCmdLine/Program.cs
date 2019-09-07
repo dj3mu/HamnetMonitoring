@@ -8,6 +8,7 @@
     using CommandLine;
     using log4net;
     using SnmpAbstraction;
+    using SnmpSharpNet;
 
     /// <summary>
     /// Main entry class
@@ -87,7 +88,9 @@
         {
             log.Info("Running link details query");
 
-            var querier = SnmpQuerierFactory.Instance.Create(opts.HostsOrAddresses.First());
+            var querierOptions = CreateQuerierOptions(opts);
+
+            var querier = SnmpQuerierFactory.Instance.Create(opts.HostsOrAddresses.First(), querierOptions);
 
             var wirelessPeerInfos = querier.FetchLinkDetails(opts.HostsOrAddresses.Skip(1).ToArray());
 
@@ -105,9 +108,11 @@
         {
             log.Info("Running wireless peers query");
 
+            var querierOptions = CreateQuerierOptions(opts);
+
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address);
+                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var wirelessPeerInfos = querier.WirelessPeerInfos;
 
@@ -115,6 +120,23 @@
             }
 
             return (int)ExitCodes.Ok;
+        }
+
+        /// <summary>
+        /// Create the querier options from the command line options.
+        /// </summary>
+        /// <param name="opts">The command line options.</param>
+        /// <returns>The querier options according to the command line options.</returns>
+        private static IQuerierOptions CreateQuerierOptions(GlobalOptions opts)
+        {
+            QuerierOptions returnOptions = QuerierOptions.Default;
+
+            //if (opts.SnmpVersion.HasValue)
+            //{
+            //    returnOptions = returnOptions.WithProtocolVersion((SnmpVersion)opts.SnmpVersion.Value - 1);
+            //}
+
+            return returnOptions;
         }
 
         /// <summary>
@@ -126,9 +148,11 @@
         {
             log.Info("Running SystemData query");
 
+            var querierOptions = CreateQuerierOptions(opts);
+
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address);
+                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var systemData = querier.SystemData;
 
@@ -147,9 +171,11 @@
         {
             log.Info("Running SystemData query");
 
+            var querierOptions = CreateQuerierOptions(opts);
+
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address);
+                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var interfaceData = querier.NetworkInterfaceDetails;
 

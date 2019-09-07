@@ -33,5 +33,11 @@ namespace SnmpAbstraction
         /// Gets the uptime of the link.
         /// </summary>
         TimeSpan LinkUptime { get; }
+
+        /// <summary>
+        /// Gets the number of the side (i.e. 1 or 2) that is the access point of this connection.<br/>
+        /// Null if side of access point cannot be determined.
+        /// </summary>
+        int? SideOfAccessPoint { get; }
     }
 }

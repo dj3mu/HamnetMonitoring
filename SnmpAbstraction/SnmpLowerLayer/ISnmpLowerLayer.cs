@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -31,6 +32,13 @@ namespace SnmpAbstraction
         /// <param name="oids">The OIDs to query.</param>
         /// <returns>A <see cref="VbCollection" /> with the received data.</returns>
         VbCollection Query(Oid firstOid, params Oid[] oids);
+
+        /// <summary>
+        /// Queries the given OIDs from the device and returns the received data as <see cref="VbCollection" />
+        /// </summary>
+        /// <param name="oids">The OIDs to query.</param>
+        /// <returns>A <see cref="VbCollection" /> with the received data.</returns>
+        VbCollection Query(IEnumerable<Oid> oids);
 
         /// <summary>
         /// Performs an SNMP-Walk starting at the value specified by <paramref name="interfaceIdWalkRootOid" />

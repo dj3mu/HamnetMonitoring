@@ -80,6 +80,28 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
+        public bool TryGetValues(out DeviceSpecificOid[] oidValues, params RetrievableValuesEnum[] valuesToQuery)
+        {
+            bool atLeastOneFound = false;
+            oidValues = new DeviceSpecificOid[valuesToQuery.Length];
+            for (int i = 0; i < valuesToQuery.Length; i++)
+            {
+                DeviceSpecificOid value;
+                if (this.localLookup.TryGetValue(valuesToQuery[i], out value))
+                {
+                    atLeastOneFound = true;
+                    oidValues[i] = value;
+                }
+                else
+                {
+                    oidValues[i] = null;
+                }
+            }
+
+            return atLeastOneFound;
+        }
+
+        /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.localLookup.GetEnumerator();

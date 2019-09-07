@@ -14,9 +14,10 @@
         /// Construct taking all the parameters.
         /// </summary>
         /// <param name="hostsOrAddresses">List of Host names or IP addresses to query.</param>
+        /// <param name="snmpVersion">The SNMP protocol version to use for the queries.</param>
         public WirelessPeersOptions(
-            IEnumerable<string> hostsOrAddresses)
-            : base(hostsOrAddresses)
+            IEnumerable<string> hostsOrAddresses, int? snmpVersion)
+            : base(hostsOrAddresses, snmpVersion)
         {
         }
 
@@ -31,7 +32,7 @@
             {
                 return new List<Example>()
                 {
-                    new Example("Query wireless peer data", new WirelessPeersOptions(new string[] { "my-test-host.example.org" }))
+                    new Example("Query wireless peer data", new WirelessPeersOptions(new string[] { "my-test-host.example.org" }, 2))
                 };
             }
         }

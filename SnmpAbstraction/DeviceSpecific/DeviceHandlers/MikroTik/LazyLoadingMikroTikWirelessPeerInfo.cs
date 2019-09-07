@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using SnmpSharpNet;
 
@@ -67,7 +68,12 @@ namespace SnmpAbstraction
         /// <param name="macAddress">The MAC address of the peer (serves as index in OIDs for MikroTik devices).</param>
         /// <param name="interfaceId">The ID of the interface (i.e. the value to append to interface-specific OIDs).</param>
         /// <param name="isAccessPoint">Value indicating whether the device proving the peer info is an access point or a client.</param>
-        public LazyLoadingMikroTikWirelessPeerInfo(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup, string macAddress, int interfaceId, bool? isAccessPoint)
+        public LazyLoadingMikroTikWirelessPeerInfo(
+            ISnmpLowerLayer lowerSnmpLayer,
+            IDeviceSpecificOidLookup oidLookup,
+            string macAddress,
+            int interfaceId,
+            bool? isAccessPoint)
             : base(lowerSnmpLayer)
         {
             this.oidLookup = oidLookup;
@@ -137,8 +143,8 @@ namespace SnmpAbstraction
             returnBuilder.Append("Peer ").Append(this.peerMac).AppendLine(":");
             returnBuilder.Append("  - On interface ID: ").AppendLine(this.interfaceId.ToString());
             returnBuilder.Append("  - Link Uptime    : ").AppendLine(this.linkUptimePopulated ? this.linkUptimeBacking.ToString() : "Not yet queried");
-            returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.rxSignalStrengthPopulated ? this.rxSignalStrengthBacking.ToString() : "Not yet queried");
-            returnBuilder.Append("  - TX signal [dBm]: ").Append(this.txSignalStrengthPopulated ? this.txSignalStrengthBacking.ToString() : "Not yet queried");
+            returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.rxSignalStrengthPopulated ? this.rxSignalStrengthBacking.ToString("0.0 dBm") : "Not yet queried");
+            returnBuilder.Append("  - TX signal [dBm]: ").Append(this.txSignalStrengthPopulated ? this.txSignalStrengthBacking.ToString("0.0 dBm") : "Not yet queried");
             //returnBuilder.Append("  - MAC : ").Append(this.macAddressStringQueried ? this.macAddressStringBacking?.ToString() : "Not yet queried");
 
             return returnBuilder.ToString();
@@ -189,14 +195,18 @@ namespace SnmpAbstraction
                 return;
             }
 
-            var valueToQuery = this.IsAccessPoint.GetValueOrDefault(false)
-                ? RetrievableValuesEnum.RxSignalStrengthApAppendMacAndInterfaceId
-                : RetrievableValuesEnum.RxSignalStrengthClientAppendMacAndInterfaceId;
-
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.oidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            RetrievableValuesEnum[] valuesToQuery =
             {
-                log.Warn($"Failed to obtain OID for '{valueToQuery}'");
+                RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId,
+                RetrievableValuesEnum.RxSignalStrengthCh1AppendMacAndInterfaceId,
+                RetrievableValuesEnum.RxSignalStrengthCh2AppendMacAndInterfaceId
+            };
+
+            DeviceSpecificOid[] deviceSpecificOids = new DeviceSpecificOid[valuesToQuery.Length];
+            DeviceSpecificOid[] oidValues;
+            if (!this.oidLookup.TryGetValues(out oidValues, valuesToQuery))
+            {
+                log.Warn($"Not even one supported OID has been found for getting the stream-specific RX level. RxSignalStrength for device '{this.DeviceAddress}', interface ID {this.InterfaceId}, cannot be retrieved.");
                 this.rxSignalStrengthBacking = double.NegativeInfinity;
                 this.rxSignalStrengthPopulated = true;
                 return;
@@ -204,11 +214,19 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfactTypeOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfactTypeOid.Add(this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid());
-            interfactTypeOid.Add(this.InterfaceId);
+            var clientSpecificOids = oidValues.Where(oid => oid != null).Select(oid => {
+                var interfaceTypeOid = (Oid)oid.Oid.Clone();
+                interfaceTypeOid.Add(this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid());
+                interfaceTypeOid.Add(this.InterfaceId);
 
-            this.rxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, RX signal strength");
+                return interfaceTypeOid;
+            });
+
+            var queryResults = this.LowerSnmpLayer.QueryAsInt(clientSpecificOids, "wireless peer info, RX signal strength");
+
+            // Note: As the SNMP cannot return -infinity MikroTik devices return 0.
+            //       Hence we effectively skip 0 values here assuming that stream is not in use.
+            this.rxSignalStrengthBacking = queryResults.Values.Where(v => v != 0).DecibelLogSum();
 
             durationWatch.Stop();
 
@@ -243,7 +261,7 @@ namespace SnmpAbstraction
             interfactTypeOid.Add(this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid());
             interfactTypeOid.Add(this.InterfaceId);
 
-            this.linkUptimeBacking = TimeSpan.FromMilliseconds(this.LowerSnmpLayer.QueryAsTimeTicks(interfactTypeOid, "wireless peer info, link uptime").Milliseconds);
+            this.linkUptimeBacking = this.LowerSnmpLayer.QueryAsTimeSpan(interfactTypeOid, "wireless peer info, link uptime").Value;
 
             durationWatch.Stop();
 

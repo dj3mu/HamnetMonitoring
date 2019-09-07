@@ -6,7 +6,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Container for options to SNMP queriers.
     /// </summary>
-    internal class QuerierOptions : IQuerierOptions
+    public class QuerierOptions : IQuerierOptions
     {
         /// <summary>
         /// Construct from all the parameters.

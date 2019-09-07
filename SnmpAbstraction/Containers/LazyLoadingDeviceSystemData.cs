@@ -310,12 +310,8 @@ namespace SnmpAbstraction
             }
 
             this.AddQueryDuration( () => {
-                TimeTicks uptimeTicks = this.LowerSnmpLayer.QueryAsTimeTicks(new Oid(".1.3.6.1.2.1.1.3.0"), "system uptime");
-                if (uptimeTicks != null)
-                {
-                    this.uptime = TimeSpan.FromMilliseconds(uptimeTicks.Milliseconds);
-                }
-                else
+                this.uptime = this.LowerSnmpLayer.QueryAsTimeSpan(new Oid(".1.3.6.1.2.1.1.3.0"), "system uptime");
+                if (this.uptime == null)
                 {
                     log.Debug($"Querying for system uptime of '{this.LowerSnmpLayer.Address}' produced null or empty uptime string");
                     this.uptime = null;
