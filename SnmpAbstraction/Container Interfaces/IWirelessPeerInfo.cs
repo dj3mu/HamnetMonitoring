@@ -16,7 +16,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the numeric ID of the interface that this peer is connected to.
         /// </summary>
-        int InterfaceId { get; }
+        int? InterfaceId { get; }
 
         /// <summary>
         /// Get the strength of our signal at the remote side (as reported by the remote side) in dBm.

@@ -82,7 +82,16 @@ namespace SnmpAbstraction
 
             SemanticVersion osVersion = match.Success ? SemanticVersion.Parse(match.Groups[1].Value) : null;
 
-            return new MikrotikDeviceHandler(lowerLayer, this.ObtainOidTable(lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Trim(), osVersion), osVersion);
+            try
+            {
+                return new MikrotikDeviceHandler(lowerLayer, this.ObtainOidTable(lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Trim(), osVersion), osVersion);
+            }
+            catch(Exception ex)
+            {
+                // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
+                // device (i.e. IP address) the exception is for
+                throw new HamnetSnmpException($"Failed to create MikroTik handler for device '{lowerLayer.Address}': {ex.Message}", ex);
+            }
         }
     }
 }

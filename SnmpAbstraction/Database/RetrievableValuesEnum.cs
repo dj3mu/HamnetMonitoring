@@ -107,5 +107,15 @@
         ///     ==> Full OID: .1.3.6.1.4.1.14988.1.1.1.2.1.18.2.12.66.58.82.192.6<br/>
         /// </summary>
         RxSignalStrengthCh2AppendMacAndInterfaceId = 13,
+
+        /// <summary>
+        /// OID for a value indicating the wireless mode (i.e. AP, Station, Repeater, ...)
+        /// </summary>
+        WirelessMode = 14,
+
+        /// <summary>
+        /// Root OID to access with interface ID appended in order to get the interface name.
+        /// </summary>
+        InterfaceNameWalkRoot = 15,
     }
 }

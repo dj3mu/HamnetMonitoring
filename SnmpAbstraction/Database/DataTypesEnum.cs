@@ -48,6 +48,11 @@
         /// <summary>
         /// A 32 bit counter
         /// </summary>
-        Counter32 = 9
+        Counter32 = 9,
+
+        /// <summary>
+        /// A collection of values of arbitrary type (e.g. used by OID that are only root for walk operations).
+        /// </summary>
+        Collection = 10
     }
 }

@@ -26,7 +26,8 @@ namespace SnmpAbstraction
         /// </summary>
         private readonly List<IDetectableDevice> detectableDevices = new List<IDetectableDevice>
         {
-            new MikrotikDetectableDevice()
+            new MikrotikDetectableDevice(),
+            new UbntDetectableDevice()
         };
 
         /// <summary>
@@ -63,10 +64,15 @@ namespace SnmpAbstraction
                 {
                     if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
                     {
-                        var errorInfo2 = $"Timeout talking to device '{this.lowerLayer.Address}'";
-                        log.Error(errorInfo2, ex);
-                        throw new HamnetSnmpException(errorInfo2, ex);
+                        log.Error($"Timeout talking to device '{this.lowerLayer.Address}'", ex);
+                        throw;
                     }
+
+                    log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}': {ex.Message}");
+                }
+                catch(HamnetSnmpException ex)
+                {
+                    log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}'", ex);
                 }
             }
 

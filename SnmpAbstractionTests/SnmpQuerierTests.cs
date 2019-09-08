@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using SnmpAbstraction;
+using SnmpSharpNet;
 
 namespace SnmpAbstractionTests
 {
@@ -18,12 +19,108 @@ namespace SnmpAbstractionTests
         }
 
         /// <summary>
-        /// Test for querying of system data.
+        /// Test for querying of system data of Ubiquiti devices.
         /// </summary>
         [Test]
-        public void QuerySystemDataTest()
+        public void UbntQuerySystemDataTest()
         {
-            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress1.ToString());
+            QueryAndPrintSystemData(TestConstants.TestAddressUbnt1, SnmpVersion.Ver1);
+        }
+
+        /// <summary>
+        /// Test for querying of system data of MikroTik devices.
+        /// </summary>
+        [Test]
+        public void MtikQuerySystemDataTest()
+        {
+            QueryAndPrintSystemData(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2);
+        }
+
+        /// <summary>
+        /// Test for querying of interface data of MikroTik devices.
+        /// </summary>
+        [Test]
+        public void MtikQueryInterfaceDataTest()
+        {
+            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2);
+        }
+
+        /// <summary>
+        /// Test for querying of interface data of MikroTik devices.
+        /// </summary>
+        [Test]
+        public void UbntQueryInterfaceDataTest()
+        {
+            QueryAndPrintInterfaces(TestConstants.TestAddressUbnt1, SnmpVersion.Ver1);
+        }
+
+        /// <summary>
+        /// Test for querying of wireless peers of Ubiquiti devices.
+        /// </summary>
+        [Test]
+        public void UbntQueryWirelessPeersTest()
+        {
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbnt1, SnmpVersion.Ver1);
+        }
+
+        /// <summary>
+        /// Test for querying of wireless peers of MikroTik devices.
+        /// </summary>
+        [Test]
+        public void MtikQueryWirelessPeersTest()
+        {
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2);
+        }
+
+        /// <summary>
+        /// Test for querying link details.
+        /// </summary>
+        [Test]
+        public void MtikFetchLinkDetailsTest()
+        {
+            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2);
+        }
+
+        /// <summary>
+        /// Test for querying link details.
+        /// </summary>
+        [Test]
+        public void UbntFetchLinkDetailsTest()
+        {
+            QueryAndPrintLinkDetails(TestConstants.TestAddressUbnt1, TestConstants.TestAddressUbnt2, SnmpVersion.Ver1);
+        }
+
+        /// <summary>
+        /// Performs procedure for *QuerySystemData tests.
+        /// </summary>
+        /// <param name="address1">The address of side #1 to test with.</param>
+        /// <param name="address2">The address of side #2 to test with.</param>
+        /// <param name="snmpVersion">The SNMP protocol version to use.</param>
+        private static void QueryAndPrintLinkDetails(IpAddress address1, IpAddress address2, SnmpVersion snmpVersion)
+        {
+            var querier = SnmpQuerierFactory.Instance.Create(address1.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion));
+
+            Assert.NotNull(querier, "Create(...) returned null");
+
+            var linkDetails = querier.FetchLinkDetails(address2.ToString());
+
+            Assert.NotNull(linkDetails, "querier.FetchLinkDetails returned null");
+
+            Assert.NotNull(linkDetails.Details, "querier.FetchLinkDetails(...).Details returned null");
+            Assert.Greater(linkDetails.Details.Count, 0, "querier.FetchLinkDetails(...).Details.Count == 0");
+
+            Console.WriteLine($"=== Link details from {address1} to {address2} ===");
+            Console.WriteLine(linkDetails);
+        }
+
+        /// <summary>
+        /// Performs procedure for *QuerySystemData tests.
+        /// </summary>
+        /// <param name="address">The address to test with.</param>
+        /// <param name="snmpVersion">The SNMP protocol version to use.</param>
+        private static void QueryAndPrintSystemData(IpAddress address, SnmpVersion snmpVersion)
+        {
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -38,35 +135,13 @@ namespace SnmpAbstractionTests
         }
 
         /// <summary>
-        /// Test for querying of interface data.
+        /// Performs procedure for *QueryWirelessPeers tests.
         /// </summary>
-        [Test]
-        public void QueryInterfaceDataTest()
+        /// <param name="address">The address to test with.</param>
+        /// <param name="snmpVersion">The SNMP protocol version to use.</param>
+        private static void QueryAndPrintWirelessPeers(IpAddress address, SnmpVersion snmpVersion)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress1.ToString());
-
-            Assert.NotNull(querier, "Create(...) returned null");
-
-            var networkInterfaceDetails = querier.NetworkInterfaceDetails;
-
-            Assert.NotNull(networkInterfaceDetails, "querier.NetworkInterfaceDetails returned null");
-
-            networkInterfaceDetails.ForceEvaluateAll();
-
-            Assert.NotNull(networkInterfaceDetails.Details, "querier.NetworkInterfaceDetails.Details returned null");
-            Assert.Greater(networkInterfaceDetails.Details.Count, 0, "querier.NetworkInterfaceDetails.Details.Count == 0");
-
-            Console.WriteLine("Obtained interface details:");
-            Console.WriteLine(networkInterfaceDetails);
-        }
-
-        /// <summary>
-        /// Test for querying of wireless peers.
-        /// </summary>
-        [Test]
-        public void QueryWirelessPeersTest()
-        {
-            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress1.ToString());
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -84,24 +159,27 @@ namespace SnmpAbstractionTests
         }
 
         /// <summary>
-        /// Test for querying link details.
+        /// Performs procedure for *QueryInterfaceData tests.
         /// </summary>
-        [Test]
-        public void FetchLinkDetailsTest()
+        /// <param name="address">The address to test with.</param>
+        /// <param name="snmpVersion">The SNMP protocol version to use.</param>
+        private static void QueryAndPrintInterfaces(IpAddress address, SnmpVersion snmpVersion)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(TestConstants.TestAddress1.ToString());
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
-            var linkDetails = querier.FetchLinkDetails(TestConstants.TestAddress2.ToString());
+            var networkInterfaceDetails = querier.NetworkInterfaceDetails;
 
-            Assert.NotNull(linkDetails, "querier.FetchLinkDetails returned null");
+            Assert.NotNull(networkInterfaceDetails, "querier.NetworkInterfaceDetails returned null");
 
-            Assert.NotNull(linkDetails.Details, "querier.FetchLinkDetails(...).Details returned null");
-            Assert.Greater(linkDetails.Details.Count, 0, "querier.FetchLinkDetails(...).Details.Count == 0");
+            networkInterfaceDetails.ForceEvaluateAll();
 
-            Console.WriteLine($"=== Link details from {TestConstants.TestAddress1} to {TestConstants.TestAddress2} ===");
-            Console.WriteLine(linkDetails);
+            Assert.NotNull(networkInterfaceDetails.Details, "querier.NetworkInterfaceDetails.Details returned null");
+            Assert.Greater(networkInterfaceDetails.Details.Count, 0, "querier.NetworkInterfaceDetails.Details.Count == 0");
+
+            Console.WriteLine("Obtained interface details:");
+            Console.WriteLine(networkInterfaceDetails);
         }
     }
 }

@@ -37,21 +37,47 @@ namespace SnmpAbstraction
         {
             // we're only interested in the Wireless interfaces (not in ethernet ports or similar) and hence filter
             // for interface type 71 (ieee80211)
-            var wifiInterfaces1 = this.querier1.NetworkInterfaceDetails.Where(i => i.InterfaceType == 71);
-            var interfaces2 = this.querier2.NetworkInterfaceDetails;
+            var wifiInterfaces1 = this.querier1.NetworkInterfaceDetails.Where(i => i.InterfaceType == IanaInterfaceType.Ieee80211);
+            var wifiInterfaces2 = this.querier2.NetworkInterfaceDetails.Where(i => i.InterfaceType == IanaInterfaceType.Ieee80211);;
 
+            IWirelessPeerInfos wlPeerInfo1 = this.querier1.WirelessPeerInfos;
             IWirelessPeerInfos wlPeerInfo2 = this.querier2.WirelessPeerInfos;
 
             // see if side #2 has peers with MAC address of side #1
-            var peeringWithSide1 = from wlp2 in wlPeerInfo2
+            var peeringWithSide1 = (from wlp2 in wlPeerInfo2
                                    from wi1 in wifiInterfaces1
                                    where (wlp2.RemoteMacString.ToLowerInvariant() == wi1.MacAddressString.ToLowerInvariant())
-                                   select new LinkRelatedResultCollection(wi1, interfaces2.First(if2 => if2.InterfaceId == wlp2.InterfaceId), this.querier1.WirelessPeerInfos.First(pi => pi.InterfaceId == wi1.InterfaceId), wlp2);
+                                   select new Tuple<IInterfaceDetail, IWirelessPeerInfo>(wi1, wlp2)).SingleOrDefault();
 
-            var returnDetails = new LinkDetails(peeringWithSide1.Select(ps1 => new LinkDetail(this.querier1.Address, ps1)), this.querier1.Address);
+            // see if side #1 has peers with MAC address of side #2
+            var peeringWithSide2 = (from wlp1 in wlPeerInfo1
+                                   from wi2 in wifiInterfaces2
+                                   where (wlp1.RemoteMacString.ToLowerInvariant() == wi2.MacAddressString.ToLowerInvariant())
+                                   select new Tuple<IInterfaceDetail, IWirelessPeerInfo>(wi2, wlp1)).SingleOrDefault();
+
+            if (peeringWithSide1 == null)
+            {
+                throw new HamnetSnmpException($"Side #2 seems to have no or more than one peerings with side #1. Results would be ambiguious.");
+            }
+
+            if (peeringWithSide2 == null)
+            {
+                throw new HamnetSnmpException($"Side #1 seems to have no or more than one peerings with side #2. Results would be ambiguious.");
+            }
+
+            var returnDetails = new LinkDetails(
+                new LinkDetail[] { new LinkDetail(
+                    this.querier1.Address,
+                    new LinkRelatedResultCollection(
+                        peeringWithSide1.Item1,
+                        peeringWithSide2.Item1,
+                        peeringWithSide2.Item2,
+                        peeringWithSide1.Item2))},
+                    this.querier1.Address);
 
             var lazyContainerSum = wifiInterfaces1.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
-            lazyContainerSum += interfaces2.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
+            lazyContainerSum += wifiInterfaces2.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
+            lazyContainerSum += wlPeerInfo1.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
             lazyContainerSum += wlPeerInfo2.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
             log.Info($"LinkDetectionQuery: Lazy container sum = {lazyContainerSum.TotalMilliseconds} ms");
 

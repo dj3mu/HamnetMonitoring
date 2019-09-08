@@ -8,7 +8,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Worker class for lazy-loading interface details.
     /// /// </summary>
-    internal class LazyLoadingMikroTikWirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
+    internal class LazyLoadingUbiquitiWirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -22,7 +22,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public LazyLoadingMikroTikWirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
+        public LazyLoadingUbiquitiWirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
             : base(lowerSnmpLayer, oidLookup)
         {
         }
@@ -56,9 +56,9 @@ namespace SnmpAbstraction
 
             foreach (Vb item in interfaceVbs)
             {
-                int interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 1]);
+                int interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 7]);
                 this.PeerInfosBacking.Add(
-                    new LazyLoadingMikroTikWirelessPeerInfo(
+                    new LazyLoadingUbiquitiWirelessPeerInfo(
                         this.LowerSnmpLayer,
                         this.OidLookup,
                         item.Value.ToString().Replace(' ', ':'),
@@ -73,14 +73,14 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override bool? CheckIsAccessPoint(int interfaceId)
         {
-            var valueToQuery = RetrievableValuesEnum.WirelessClientCount;
-            DeviceSpecificOid wirelessClientCountRootOid;
-            if (this.OidLookup.TryGetValue(valueToQuery, out wirelessClientCountRootOid))
+            var valueToQuery = RetrievableValuesEnum.WirelessMode;
+            DeviceSpecificOid wirelessModeOid;
+            if (this.OidLookup.TryGetValue(valueToQuery, out wirelessModeOid))
             {
                 // finally we need to get the count of registered clients
                 // if it's 0, this must be a client (this method will only be called if the registration table
                 // contains at least one entry)
-                var queryOid = (Oid)wirelessClientCountRootOid.Oid.Clone();
+                var queryOid = (Oid)wirelessModeOid.Oid.Clone();
 
                 // need to append the interface ID to the client count OID
                 queryOid.Add(interfaceId);
@@ -92,9 +92,17 @@ namespace SnmpAbstraction
                     return null;
                 }
 
-                var returnValue = returnCollection[queryOid];
+                int stationModeInt = returnCollection[queryOid].Value.ToInt();
 
-                return returnValue.Value.ToInt() > 0;
+                // from UBNT AirMAX MIB:
+                // ubntRadioMode OBJECT-TYPE
+                //     SYNTAX     INTEGER {
+                //     sta(1),
+                //     ap(2),
+                //     aprepeater(3),
+                //     apwds(4)
+                // }
+                return stationModeInt != 1;
             }
 
             log.Warn($"Unable to get AP / client distinction for wireless interface #{interfaceId} of device '{this.LowerSnmpLayer.Address}': No OID for value of type '{valueToQuery}' available");
