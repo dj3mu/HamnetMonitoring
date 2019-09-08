@@ -5,17 +5,17 @@
     using CommandLine.Text;
 
     /// <summary>
-    /// Definition of the FetchLinkDetails verb and its verb-specific options.
+    /// Definition of the LinkDetails verb and its verb-specific options.
     /// </summary>
-    [Verb("FetchLinkDetails", HelpText = "Query link details to the listed remote devices.")]
-    public class FetchLinkDetailsOptions : GlobalOptions
+    [Verb("LinkDetails", HelpText = "Query link details between the listed remote devices.")]
+    public class LinkDetailsOptions : GlobalOptions
     {
         /// <summary>
         /// Construct taking all the parameters.
         /// </summary>
         /// <param name="hostsOrAddresses">List of Host names or IP addresses to query.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use for the queries.</param>
-        public FetchLinkDetailsOptions(
+        public LinkDetailsOptions(
             IEnumerable<string> hostsOrAddresses
             , int? snmpVersion)
             : base(hostsOrAddresses, snmpVersion)
@@ -33,7 +33,7 @@
             {
                 return new List<Example>()
                 {
-                    new Example("Fetch link details", new FetchLinkDetailsOptions(new string[] { "my-test-host.example.org", "my-remote-host.example.org", "1.2.3.4" }, 2))
+                    new Example("Fetch link details of the link between my-test-host.example.org and my-other-host.example.org and between my-test-host.example.org and IP 1.2.3.4", new LinkDetailsOptions(new string[] { "my-test-host.example.org", "my-other-host.example.org", "1.2.3.4" }, 2))
                 };
             }
         }

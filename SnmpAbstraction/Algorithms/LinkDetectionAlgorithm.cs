@@ -57,12 +57,12 @@ namespace SnmpAbstraction
 
             if (peeringWithSide1 == null)
             {
-                throw new HamnetSnmpException($"Side #2 seems to have no or more than one peerings with side #1. Results would be ambiguious.");
+                throw new HamnetSnmpException($"Side #2 seems to have no peerings with side #1. Results would be ambiguious.");
             }
 
             if (peeringWithSide2 == null)
             {
-                throw new HamnetSnmpException($"Side #1 seems to have no or more than one peerings with side #2. Results would be ambiguious.");
+                throw new HamnetSnmpException($"Side #1 seems to have no peerings with side #2. Results would be ambiguious.");
             }
 
             var returnDetails = new LinkDetails(

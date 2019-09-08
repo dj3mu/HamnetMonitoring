@@ -70,12 +70,12 @@
         {
             InitBackings();
 
-            return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions, WirelessPeersOptions, FetchLinkDetailsOptions>(args)
+            return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions, WirelessPeersOptions, LinkDetailsOptions>(args)
                 .MapResult(
                     (SystemDataOptions opts) => RunAddAndReturnExitCode(opts),
                     (InterfaceDataOptions opts) => RunAddAndReturnExitCode(opts),
                     (WirelessPeersOptions opts) => RunAddAndReturnExitCode(opts),
-                    (FetchLinkDetailsOptions opts) => RunAddAndReturnExitCode(opts),
+                    (LinkDetailsOptions opts) => RunAddAndReturnExitCode(opts),
                     errs => (int)ExitCodes.InvalidCommandLine);
         }
 
@@ -84,7 +84,7 @@
         /// </summary>
         /// <param name="opts">The options defining the queries.</param>
         /// <returns>The exit code to return.</returns>
-        private static int RunAddAndReturnExitCode(FetchLinkDetailsOptions opts)
+        private static int RunAddAndReturnExitCode(LinkDetailsOptions opts)
         {
             log.Info("Running link details query");
 
@@ -131,10 +131,10 @@
         {
             QuerierOptions returnOptions = QuerierOptions.Default;
 
-            //if (opts.SnmpVersion.HasValue)
-            //{
-            //    returnOptions = returnOptions.WithProtocolVersion((SnmpVersion)opts.SnmpVersion.Value - 1);
-            //}
+            if (opts.SnmpVersion.HasValue)
+            {
+                returnOptions = returnOptions.WithProtocolVersion((SnmpVersion)opts.SnmpVersion.Value - 1);
+            }
 
             return returnOptions;
         }
