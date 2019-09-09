@@ -161,9 +161,11 @@ namespace SnmpAbstraction
                     throw new HamnetSnmpException(info);
                 }
 
+                log.Info($"Detected device '{lowerLayer.Address}' as Ubiquiti '{model}' v '{osVersion}'");
+
                 return (model == AirFiberFakeModelString)
-                    ? new UbiquitiAirFiberDeviceHandler(lowerLayer, this.ObtainOidTable(model.Trim(), osVersion), osVersion) as IDeviceHandler
-                    : new UbiquitiAirOsDeviceHandler(lowerLayer, this.ObtainOidTable(model.Trim(), osVersion), osVersion) as IDeviceHandler;
+                    ? new UbiquitiAirFiberDeviceHandler(lowerLayer, this.ObtainOidTable(model.Trim(), osVersion), osVersion, model) as IDeviceHandler
+                    : new UbiquitiAirOsDeviceHandler(lowerLayer, this.ObtainOidTable(model.Trim(), osVersion), osVersion, model) as IDeviceHandler;
             }
             catch(Exception ex)
             {

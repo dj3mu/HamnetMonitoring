@@ -19,6 +19,12 @@ namespace SnmpAbstraction
         SemanticVersion OsVersion { get; }
 
         /// <summary>
+        /// Gets the device's model name.<br/>
+        /// Shall return the same name as used for the device name during OID database lookups.
+        /// </summary>
+        string Model { get; }
+
+        /// <summary>
         /// Gets the device's generic system data.
         /// </summary>
         IDeviceSystemData SystemData { get; }

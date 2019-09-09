@@ -15,10 +15,12 @@
         /// </summary>
         /// <param name="hostsOrAddresses">List of Host names or IP addresses to query.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use for the queries.</param>
+        /// <param name="printStats">A value indicating whether to print PDU stats before terminating.</param>
         public LinkDetailsOptions(
             IEnumerable<string> hostsOrAddresses
-            , int? snmpVersion)
-            : base(hostsOrAddresses, snmpVersion)
+            , int? snmpVersion
+            , bool printStats)
+            : base(hostsOrAddresses, snmpVersion, printStats)
         {
         }
 
@@ -33,7 +35,7 @@
             {
                 return new List<Example>()
                 {
-                    new Example("Fetch link details of the link between my-test-host.example.org and my-other-host.example.org and between my-test-host.example.org and IP 1.2.3.4", new LinkDetailsOptions(new string[] { "my-test-host.example.org", "my-other-host.example.org", "1.2.3.4" }, 2))
+                    new Example("Fetch link details of the link between my-test-host.example.org and my-other-host.example.org and between my-test-host.example.org and IP 1.2.3.4", new LinkDetailsOptions(new string[] { "my-test-host.example.org", "my-other-host.example.org", "1.2.3.4" }, 2, false))
                 };
             }
         }

@@ -15,13 +15,25 @@ namespace SnmpAbstractionTests
         /// The address of a MikroTik device to use for the tests.
         /// </summary>
         /// <remarks>Obviously this might not forever remain an MTik device. Feel free to adjust if needed.</remarks>
-        public static IpAddress TestAddressMikrotik1 { get; } = new IpAddress("44.224.10.222");
+        public static IpAddress TestAddressMikrotik1 { get; } = new IpAddress("44.224.10.222"); // DB0ON link DB0EBE, MTik
+
+        /// <summary>
+        /// The address of a MikroTik device to use for the tests.
+        /// </summary>
+        /// <remarks>Obviously this might not forever remain an MTik device. Feel free to adjust if needed.</remarks>
+        public static IpAddress TestAddressMikrotik3 { get; } = new IpAddress("44.224.10.74"); // DB0ZM link DB0EBE, MTik
 
         /// <summary>
         /// A second address of a MikroTik device to use for the tests.
         /// </summary>
         /// <remarks>Obviously this might not forever remain an MTik device. Feel free to adjust if needed.</remarks>
-        public static IpAddress TestAddressMikrotik2 { get; } = new IpAddress("44.224.10.218");
+        public static IpAddress TestAddressMikrotik2 { get; } = new IpAddress("44.224.10.218"); // DB0EBE link DB0ON, MTik
+
+        /// <summary>
+        /// A second address of a MikroTik device to use for the tests.
+        /// </summary>
+        /// <remarks>Obviously this might not forever remain an MTik device. Feel free to adjust if needed.</remarks>
+        public static IpAddress TestAddressMikrotik4 { get; } = new IpAddress("44.224.10.77"); // DB0EBE link DB0ZM, MTik
 
         /// <summary>
         /// The address of a Ubiquiti device with AirOS 6 to use for the tests.

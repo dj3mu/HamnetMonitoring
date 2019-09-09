@@ -186,7 +186,11 @@ namespace SnmpAbstraction
                 pdu.VbList.Add(item);
             }
 
-            return this.Target.Request(pdu, this.QueryParameters);
+            SnmpPacket result = this.Target.Request(pdu, this.QueryParameters);
+
+            SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
+
+            return result;
         }
 
         /// <summary>
@@ -259,6 +263,8 @@ namespace SnmpAbstraction
 
                 // Make SNMP request
                 SnmpV2Packet result = (SnmpV2Packet)this.Target.Request(pdu, this.QueryParameters);
+
+                SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
 
                 // You should catch exceptions in the Request if using in real application.
                 // [DJ3MU] : Yeah - cool idea - but I still wouldn't know what else to do with them.
@@ -349,6 +355,8 @@ namespace SnmpAbstraction
 
                 // Make SNMP request
                 SnmpV1Packet result = (SnmpV1Packet)this.Target.Request(pdu, this.QueryParameters);
+
+                SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
 
                 // You should catch exceptions in the Request if using in real application.
                 // [DJ3MU] : Yeah - cool idea - but I still wouldn't know what else to do with them.

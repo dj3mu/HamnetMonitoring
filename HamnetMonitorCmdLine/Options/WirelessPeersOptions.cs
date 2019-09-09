@@ -15,9 +15,10 @@
         /// </summary>
         /// <param name="hostsOrAddresses">List of Host names or IP addresses to query.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use for the queries.</param>
+        /// <param name="printStats">A value indicating whether to print PDU stats before terminating.</param>
         public WirelessPeersOptions(
-            IEnumerable<string> hostsOrAddresses, int? snmpVersion)
-            : base(hostsOrAddresses, snmpVersion)
+            IEnumerable<string> hostsOrAddresses, int? snmpVersion, bool printStats)
+            : base(hostsOrAddresses, snmpVersion, printStats)
         {
         }
 
@@ -32,7 +33,7 @@
             {
                 return new List<Example>()
                 {
-                    new Example("Query wireless peer data", new WirelessPeersOptions(new string[] { "my-test-host.example.org" }, 2))
+                    new Example("Query wireless peer data", new WirelessPeersOptions(new string[] { "my-test-host.example.org" }, 2, false))
                 };
             }
         }

@@ -231,6 +231,12 @@
             }
 
             Console.Out.WriteLine(result.ToConsoleString());
+
+            if (options.PrintStats)
+            {
+                Console.Out.WriteLine();
+                Console.Out.WriteLine(SnmpAbstraction.PerformanceCounter.ToString());
+            }
         }
 
         /// <summary>

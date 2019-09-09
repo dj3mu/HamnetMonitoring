@@ -22,7 +22,8 @@ namespace SnmpAbstraction
         /// <param name="lowerLayer">The lower layer for talking to this device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="osVersion">The SW version of the device.</param>
-        public DeviceHandlerBase(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemVersion.SemanticVersion osVersion)
+        /// <param name="model">The device's model name. Shall be the same name as used for the device name during OID database lookups.</param>
+        public DeviceHandlerBase(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemVersion.SemanticVersion osVersion, string model)
         {
             if (lowerLayer == null)
             {
@@ -36,12 +37,18 @@ namespace SnmpAbstraction
 
             if (osVersion == null)
             {
-                throw new ArgumentNullException(nameof(oidLookup), "OS version info is null when constructing a device handler");
+                throw new ArgumentNullException(nameof(osVersion), "OS version info is null when constructing a device handler");
+            }
+
+            if (string.IsNullOrWhiteSpace(model))
+            {
+                throw new ArgumentNullException(nameof(model), "Model name is null, empty or white-space-only when constructing a device handler");
             }
 
             this.LowerLayer = lowerLayer;
             this.OidLookup = oidLookup;
             this.OsVersion = osVersion;
+            this.Model = model;
         }
 
         /// <summary>
@@ -68,5 +75,14 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public SemanticVersion OsVersion { get; }
+
+        /// <inheritdoc />
+        public string Model { get; }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{this.Model} v {this.OsVersion} @ {this.Address}";
+        }
     }
 }

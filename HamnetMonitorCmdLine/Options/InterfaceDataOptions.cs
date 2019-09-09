@@ -15,10 +15,12 @@
         /// </summary>
         /// <param name="hostsOrAddresses">List of Host names or IP addresses to query.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use for the queries.</param>
+        /// <param name="printStats">A value indicating whether to print PDU stats before terminating.</param>
         public InterfaceDataOptions(
             IEnumerable<string> hostsOrAddresses,
-            int? snmpVersion)
-            : base(hostsOrAddresses, snmpVersion)
+            int? snmpVersion,
+            bool printStats)
+            : base(hostsOrAddresses, snmpVersion, printStats)
         {
         }
 
@@ -33,7 +35,7 @@
             {
                 return new List<Example>()
                 {
-                    new Example("Query Interface Data", new InterfaceDataOptions(new string[] { "my-test-host.example.org" }, 2))
+                    new Example("Query Interface Data", new InterfaceDataOptions(new string[] { "my-test-host.example.org" }, 2, false))
                 };
             }
         }
