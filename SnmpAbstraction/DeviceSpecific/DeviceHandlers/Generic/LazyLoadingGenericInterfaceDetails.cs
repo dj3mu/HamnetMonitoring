@@ -150,7 +150,7 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfaceVbs = this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid, 0);
+            var interfaceVbs = this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid);
 
             durationWatch.Stop();
 

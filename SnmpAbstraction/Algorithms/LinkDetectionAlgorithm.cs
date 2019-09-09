@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -10,6 +11,11 @@ namespace SnmpAbstraction
     internal class LinkDetectionAlgorithm : IQueryAlgorithm<ILinkDetails>
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// Equality comparer to get wifi interfaces with distince MAC address.
+        /// </summary>
+        private readonly IEqualityComparer<IInterfaceDetail> InterfaceByMacAddressEqualityComparer = new InterfaceByMacAddressEqualityComparer();
 
         /// <summary>
         /// The device handler to use for obtaining SNMP data for side #1 of the link.
@@ -37,8 +43,9 @@ namespace SnmpAbstraction
         {
             // we're only interested in the Wireless interfaces (not in ethernet ports or similar) and hence filter
             // for interface type 71 (ieee80211)
-            var wifiInterfaces1 = this.querier1.NetworkInterfaceDetails.Where(i => i.InterfaceType == IanaInterfaceType.Ieee80211);
-            var wifiInterfaces2 = this.querier2.NetworkInterfaceDetails.Where(i => i.InterfaceType == IanaInterfaceType.Ieee80211);;
+            // Note: We need to make the result distinct on MAC as some devices tend to return mulitple IEEE 802.11 interfaces with same MAC address.
+            var wifiInterfaces1 = this.querier1.NetworkInterfaceDetails.Where(i => i.InterfaceType == IanaInterfaceType.Ieee80211).Distinct(this.InterfaceByMacAddressEqualityComparer).ToList();
+            var wifiInterfaces2 = this.querier2.NetworkInterfaceDetails.Where(i => i.InterfaceType == IanaInterfaceType.Ieee80211).Distinct(this.InterfaceByMacAddressEqualityComparer).ToList();
 
             IWirelessPeerInfos wlPeerInfo1 = this.querier1.WirelessPeerInfos;
             IWirelessPeerInfos wlPeerInfo2 = this.querier2.WirelessPeerInfos;
@@ -57,12 +64,12 @@ namespace SnmpAbstraction
 
             if (peeringWithSide1 == null)
             {
-                throw new HamnetSnmpException($"Side #2 seems to have no peerings with side #1. Results would be ambiguious.");
+                throw new HamnetSnmpException($"Side #2 ({this.querier2}) seems to have no peerings with side #1 ({this.querier1})");
             }
 
             if (peeringWithSide2 == null)
             {
-                throw new HamnetSnmpException($"Side #1 seems to have no peerings with side #2. Results would be ambiguious.");
+                throw new HamnetSnmpException($"Side #1 ({this.querier1}) seems to have no peerings with side #2 ({this.querier2})");
             }
 
             var returnDetails = new LinkDetails(

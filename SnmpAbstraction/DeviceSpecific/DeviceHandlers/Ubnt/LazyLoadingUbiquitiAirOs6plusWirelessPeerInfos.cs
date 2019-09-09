@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
     /// <summary>
-    /// Worker class for lazy-loading interface details.
+    /// Worker class for lazy-loading interface details for AirOs v 6 and higher.
     /// /// </summary>
-    internal class LazyLoadingUbiquitiWirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
+    internal class LazyLoadingUbiquitiAirOs6plusWirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -22,7 +21,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public LazyLoadingUbiquitiWirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
+        public LazyLoadingUbiquitiAirOs6plusWirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
             : base(lowerSnmpLayer, oidLookup)
         {
         }
@@ -46,7 +45,7 @@ namespace SnmpAbstraction
                 return false;
             }
 
-            var interfaceVbs = this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid, 0);
+            var interfaceVbs = this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid);
 
             durationWatch.Stop();
 
@@ -58,7 +57,7 @@ namespace SnmpAbstraction
             {
                 int interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 7]);
                 this.PeerInfosBacking.Add(
-                    new LazyLoadingUbiquitiWirelessPeerInfo(
+                    new LazyLoadingUbiquitiAirOs6plusWirelessPeerInfo(
                         this.LowerSnmpLayer,
                         this.OidLookup,
                         item.Value.ToString().Replace(' ', ':'),
@@ -80,10 +79,8 @@ namespace SnmpAbstraction
                 // finally we need to get the count of registered clients
                 // if it's 0, this must be a client (this method will only be called if the registration table
                 // contains at least one entry)
-                var queryOid = (Oid)wirelessModeOid.Oid.Clone();
-
                 // need to append the interface ID to the client count OID
-                queryOid.Add(interfaceId);
+                var queryOid = wirelessModeOid.Oid + new Oid(new int[] { interfaceId });
 
                 var returnCollection = this.LowerSnmpLayer.Query(queryOid);
                 if (returnCollection.Count == 0)

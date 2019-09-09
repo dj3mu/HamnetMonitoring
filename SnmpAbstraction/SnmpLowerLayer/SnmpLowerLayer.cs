@@ -78,17 +78,17 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public VbCollection DoWalk(Oid interfaceIdWalkRootOid, int depth)
+        public VbCollection DoWalk(Oid interfaceIdWalkRootOid)
         {
             this.InitializeTarget();
 
             if (this.Options.ProtocolVersion == SnmpVersion.Ver1)
             {
-                return this.DoWalkGetNext(interfaceIdWalkRootOid, depth);
+                return this.DoWalkGetNext(interfaceIdWalkRootOid);
             }
             else if ((this.Options.ProtocolVersion == SnmpVersion.Ver2) || (this.Options.ProtocolVersion == SnmpVersion.Ver3))
             {
-                return this.DoWalkBulk(interfaceIdWalkRootOid, depth);
+                return this.DoWalkBulk(interfaceIdWalkRootOid);
             }
             else
             {
@@ -220,10 +220,9 @@ namespace SnmpAbstraction
         /// Performs SNMP walk using Ver 2c GetBulk operation.
         /// </summary>
         /// <param name="interfaceIdWalkRootOid">The retrievable value to start walking at. The actual OID is resolved from the device database.</param>
-        /// <param name="depth">The recursion depth. A value of 0 means not to recurse at all and just return the direct children.</param>
         /// <returns>A <see cref="VbCollection" /> with the received data.</returns>
         /// <remarks>Derived from example code at <see href="http://www.snmpsharpnet.com/?page_id=108" />.</remarks>
-        private VbCollection DoWalkBulk(Oid interfaceIdWalkRootOid, int depth)
+        private VbCollection DoWalkBulk(Oid interfaceIdWalkRootOid)
         {
             // This Oid represents last Oid returned by the SNMP agent
             Oid lastOid = (Oid)interfaceIdWalkRootOid.Clone();
@@ -273,7 +272,7 @@ namespace SnmpAbstraction
                     if (result.Pdu.ErrorStatus != 0)
                     {
                         // agent reported an error with the request
-                        log.Error($"Error in SNMP reply. Error {result.Pdu.ErrorStatus} index {result.Pdu.ErrorIndex}");
+                        log.Debug($"Error in SNMP reply. Error {result.Pdu.ErrorStatus} index {result.Pdu.ErrorIndex}");
                         lastOid = null;
                         break;
                     }
@@ -318,10 +317,9 @@ namespace SnmpAbstraction
         /// Performs SNMP walk using Ver 1 GetNext operation.
         /// </summary>
         /// <param name="interfaceIdWalkRootOid">The retrievable value to start walking at. The actual OID is resolved from the device database.</param>
-        /// <param name="depth">The recursion depth. A value of 0 means not to recurse at all and just return the direct children.</param>
         /// <returns>A <see cref="VbCollection" /> with the received data.</returns>
         /// <remarks>Derived from example code at <see href="http://www.snmpsharpnet.com/?page_id=108" />.</remarks>
-        private VbCollection DoWalkGetNext(Oid interfaceIdWalkRootOid, int depth)
+        private VbCollection DoWalkGetNext(Oid interfaceIdWalkRootOid)
         {
             // This Oid represents last Oid returned by
             //  the SNMP agent
@@ -364,7 +362,7 @@ namespace SnmpAbstraction
                     if (result.Pdu.ErrorStatus != 0)
                     {
                         // agent reported an error with the request
-                        log.Error($"Error in SNMP reply. Error {result.Pdu.ErrorStatus} index {result.Pdu.ErrorIndex}");
+                        log.Debug($"Error in SNMP reply. Error {result.Pdu.ErrorStatus} index {result.Pdu.ErrorIndex}");
                         lastOid = null;
                         break;
                     }

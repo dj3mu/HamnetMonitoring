@@ -33,13 +33,13 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the device version's minimum software version.
         /// </summary>
-        [Column("DeviceMinSwVersion")]
-        public SemanticVersion MinimumVersion { get; set; }
+        [Column("DeviceHigherOrEqualSwVersion")]
+        public SemanticVersion HigherOrEqualVersion { get; set; }
 
         /// <summary>
         /// Gets the device version's maximum software version or null if not applicable.
         /// </summary>
-        [Column("DeviceMaxSwVersion")]
-        public SemanticVersion MaximumVersion { get; set; }
+        [Column("DeviceLowerThanSwVersion")]
+        public SemanticVersion LowerThanVersion { get; set; }
     }
 }

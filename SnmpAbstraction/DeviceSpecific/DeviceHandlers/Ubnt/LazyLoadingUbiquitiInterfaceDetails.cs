@@ -29,7 +29,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override IInterfaceDetail InstantiateInterfaceDetail(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup, int interfaceId)
         {
-            return new LazyLoadingUbiquitiInterfaceDetail(this.LowerSnmpLayer, this.OidLookup, interfaceId);
+            return new LazyLoadingUbiquitiInterfaceDetail(this.LowerSnmpLayer, this.OidLookup, interfaceId, new string[] { "WIFI", "ATH", "AIR", "ETH" });
         }
     }
 }

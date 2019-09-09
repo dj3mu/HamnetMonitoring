@@ -53,5 +53,10 @@ namespace SnmpAbstraction
         /// </summary>
         [Column("OID")]
         public Oid Oid { get; set; }
+
+        public override string ToString()
+        {
+            return $"OID '{this.Oid?.ToString()}'";
+        }
     }
 }

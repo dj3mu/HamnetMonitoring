@@ -115,7 +115,7 @@ namespace SnmpAbstraction
             // Conversions of Minimum Device Version to SemanticVersion
             modelBuilder
                 .Entity<DeviceVersion>()
-                .Property(e => e.MinimumVersion)
+                .Property(e => e.HigherOrEqualVersion)
                 .HasConversion(
                     v => v.ToString(),
                     v => v.ParseAsSemanticVersionWithFallback(FallBackMinimumVersion));
@@ -123,7 +123,7 @@ namespace SnmpAbstraction
             // Conversions of Maximum Device Version to SemanticVersion
             modelBuilder
                 .Entity<DeviceVersion>()
-                .Property(e => e.MaximumVersion)
+                .Property(e => e.LowerThanVersion)
                 .HasConversion(
                     v => v.ToString(),
                     v => v.ParseAsSemanticVersionWithFallback(FallBackMaximumVersion));

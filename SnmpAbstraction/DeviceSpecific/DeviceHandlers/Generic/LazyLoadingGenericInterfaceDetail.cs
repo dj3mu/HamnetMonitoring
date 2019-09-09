@@ -147,8 +147,7 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfaceMacOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfaceMacOid.Add(this.InterfaceId);
+            var interfaceMacOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.InterfaceId });
 
             this.MacAddressStringBacking = this.LowerSnmpLayer.QueryAsString(interfaceMacOid, "mac address").Replace(' ', ':');
 
@@ -174,8 +173,7 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfaceTypeOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfaceTypeOid.Add(this.InterfaceId);
+            var interfaceTypeOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.InterfaceId });
 
             this.InterfaceTypeBacking = (IanaInterfaceType)this.LowerSnmpLayer.QueryAsInt(interfaceTypeOid, "interface type");
 
@@ -201,8 +199,7 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfaceNameOid = (Oid)interfaceNameRootOid.Oid.Clone();
-            interfaceNameOid.Add(this.InterfaceId);
+            var interfaceNameOid = interfaceNameRootOid.Oid + new Oid(new int[] { this.InterfaceId });
 
             this.InterfaceNameBacking = this.LowerSnmpLayer.QueryAsString(interfaceNameOid, "interface name");
 

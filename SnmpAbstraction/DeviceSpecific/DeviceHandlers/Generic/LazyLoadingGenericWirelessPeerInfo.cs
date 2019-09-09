@@ -87,7 +87,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public bool? IsAccessPoint { get; }
+        public virtual bool? IsAccessPoint { get; }
 
         /// <inheritdoc />
         public override void ForceEvaluateAll()
@@ -121,7 +121,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the peer's MAC address.
         /// </summary>
-        protected string PeerMac { get; }
+        protected virtual string PeerMac { get; }
 
         /// <inheritdoc />
         public override string ToTextString()
@@ -129,6 +129,7 @@ namespace SnmpAbstraction
             StringBuilder returnBuilder = new StringBuilder(128);
 
             returnBuilder.Append("Peer ").Append(this.PeerMac).AppendLine(":");
+            returnBuilder.Append("  - Mode           : ").AppendLine(this.IsAccessPoint.HasValue ? (this.IsAccessPoint.Value ? "AP" : "Client") : "not available");
             returnBuilder.Append("  - On interface ID: ").AppendLine(this.InterfaceId.HasValue ? this.InterfaceId.Value.ToString() : "not available");
             returnBuilder.Append("  - Link Uptime    : ").AppendLine(this.linkUptimePopulated ? this.LinkUptimeBacking.ToString() : "not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.rxSignalStrengthPopulated ? this.RxSignalStrengthBacking.ToString("0.0 dBm") : "not available");

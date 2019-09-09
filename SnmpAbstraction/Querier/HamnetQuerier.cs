@@ -89,5 +89,11 @@ namespace SnmpAbstraction
 
             return new LinkDetails(fetchedDetails, this.Address);
         }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return this.Address.ToString();
+        }
     }
 }

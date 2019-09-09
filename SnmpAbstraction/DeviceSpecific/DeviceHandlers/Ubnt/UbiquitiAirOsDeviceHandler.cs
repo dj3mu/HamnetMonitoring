@@ -1,11 +1,11 @@
-using SemVersion;
+﻿using SemVersion;
 
 namespace SnmpAbstraction
 {
     /// <summary>
     /// Device Handler class for Mikrotik devices.
     /// </summary>
-    internal class UbiquitiDeviceHandler : GenericDeviceHandler
+    internal class UbiquitiAirOsDeviceHandler : GenericDeviceHandler
     {
         /// <summary>
         /// Constructs for the given lower layer.
@@ -13,7 +13,7 @@ namespace SnmpAbstraction
         /// <param name="lowerLayer">The lower layer for talking to this device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="osVersion">The SW version of the device.</param>
-        public UbiquitiDeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion)
+        public UbiquitiAirOsDeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion)
             : base(lowerLayer, oidLookup, osVersion)
         {
         }
@@ -27,7 +27,9 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override IWirelessPeerInfos RetrieveWirelessPeerInfos(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup)
         {
-            return new LazyLoadingUbiquitiWirelessPeerInfos(this.LowerLayer, this.OidLookup);
+            return this.OsVersion >= new SemanticVersion(6, 0, 0)
+                ? new LazyLoadingUbiquitiAirOs6plusWirelessPeerInfos(this.LowerLayer, this.OidLookup) as IWirelessPeerInfos
+                : new LazyLoadingUbiquitiAirOs4WirelessPeerInfos(this.LowerLayer, this.OidLookup) as IWirelessPeerInfos;
         }
     }
 }

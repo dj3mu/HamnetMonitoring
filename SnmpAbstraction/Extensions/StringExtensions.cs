@@ -17,6 +17,73 @@ namespace SnmpAbstraction
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
+        /// Tries to convert the given version into a valid <see cref="SemanticVersion" />
+        /// </summary>
+        /// <param name="versionString">The version string to convert.</param>
+        /// <param name="outputVersion">The result of the conversion.</param>
+        /// <returns><c>true</c> if the converstion was successful.</returns>
+        public static bool TryToSemanticVersion(this string versionString, out SemanticVersion outputVersion)
+        {
+            outputVersion = null;
+
+            try
+            {
+                string[] splitVersion = versionString.Split('.', StringSplitOptions.None);
+                
+                int major = 0, minor = 0, patch = 0;
+                string build = string.Empty, prerelease = string.Empty;
+
+                if (splitVersion.Length < 1)
+                {
+                    log.Warn($"Trying to get SemanticVersion of string '{versionString}': Splitting didn't reveal even a major version");
+                    return false;
+                }
+
+                major = Convert.ToInt32(splitVersion[0]);
+
+                if (splitVersion.Length > 1)
+                {
+                    minor = Convert.ToInt32(splitVersion[1]);
+                }
+
+                if (splitVersion.Length > 2)
+                {
+                    patch = Convert.ToInt32(splitVersion[2]);
+                }
+
+                if (splitVersion.Length > 3)
+                {
+                    prerelease = splitVersion[3];
+                }
+
+                outputVersion = new SemanticVersion(major, minor, patch, prerelease, build);
+
+                return true;
+            }
+            catch (System.FormatException ex)
+            {
+                log.Warn($"Trying to get SemanticVersion of string '{versionString}' ran into exception: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Tries to convert the given version into a valid <see cref="SemanticVersion" />
+        /// </summary>
+        /// <param name="versionString">The version string to convert.</param>
+        /// <returns>The converted <see cref="SemanticVersion" />.</returns>
+        public static SemanticVersion ToSemanticVersion(this string versionString)
+        {
+            SemanticVersion returnVersion;
+            if (!versionString.TryToSemanticVersion(out returnVersion))
+            {
+                throw new FormatException($"Cannot convert string '{versionString}' to a valid Semantic Version");
+            }
+
+            return returnVersion;
+        }
+
+        /// <summary>
         /// Parses a string as <see cref="SemanticVersion" /> and returns the result or the fallback version if the string is not parsable.
         /// </summary>
         /// <param name="versionString">The version string to parse. It must at least contain two dots (i.e. three sections).</param>

@@ -70,13 +70,45 @@
         {
             InitBackings();
 
-            return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions, WirelessPeersOptions, LinkDetailsOptions>(args)
-                .MapResult(
-                    (SystemDataOptions opts) => RunAddAndReturnExitCode(opts),
-                    (InterfaceDataOptions opts) => RunAddAndReturnExitCode(opts),
-                    (WirelessPeersOptions opts) => RunAddAndReturnExitCode(opts),
-                    (LinkDetailsOptions opts) => RunAddAndReturnExitCode(opts),
-                    errs => (int)ExitCodes.InvalidCommandLine);
+            try
+            {
+                return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions, WirelessPeersOptions, LinkDetailsOptions>(args)
+                    .MapResult(
+                        (SystemDataOptions opts) => RunAddAndReturnExitCode(opts),
+                        (InterfaceDataOptions opts) => RunAddAndReturnExitCode(opts),
+                        (WirelessPeersOptions opts) => RunAddAndReturnExitCode(opts),
+                        (LinkDetailsOptions opts) => RunAddAndReturnExitCode(opts),
+                        errs => (int)ExitCodes.InvalidCommandLine);
+            }
+            catch(HamnetSnmpException hamnetEx)
+            {
+                Console.Error.Write($"ERROR: HNEX: {FormatExceptionForUser(hamnetEx)}");
+                return (int)ExitCodes.HamnetException;
+            }
+            catch(SnmpException snmpEx)
+            {
+                Console.Error.Write($"ERROR: SNEX: {FormatExceptionForUser(snmpEx)}");
+                return (int)ExitCodes.SnmpException;
+            }
+            catch(Exception ex)
+            {
+                Console.Error.Write($"ERROR: EX: {FormatExceptionForUser(ex)}");
+                return (int)ExitCodes.Exception;
+            }
+        }
+
+        /// <summary>
+        /// Formats the exception for user output.
+        /// </summary>
+        /// <param name="ex">The exception to format.</param>
+        /// <returns>Formatted exception depending on </returns>
+        private static object FormatExceptionForUser(Exception ex)
+        {
+#if DEBUG
+            return ex.ToString();
+#else
+            return ex.Message;
+#endif
         }
 
         /// <summary>

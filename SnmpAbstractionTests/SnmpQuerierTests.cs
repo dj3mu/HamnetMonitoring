@@ -24,7 +24,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQuerySystemDataTest()
         {
-            QueryAndPrintSystemData(TestConstants.TestAddressUbnt1, SnmpVersion.Ver1);
+            QueryAndPrintSystemData(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver1);
         }
 
         /// <summary>
@@ -51,7 +51,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQueryInterfaceDataTest()
         {
-            QueryAndPrintInterfaces(TestConstants.TestAddressUbnt1, SnmpVersion.Ver1);
+            //QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver1);
+            //QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1);
+            //QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1);
+            QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirFiberSide2, SnmpVersion.Ver1);
         }
 
         /// <summary>
@@ -60,7 +63,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQueryWirelessPeersTest()
         {
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbnt1, SnmpVersion.Ver1);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver1);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirFiberSide1, SnmpVersion.Ver1);
         }
 
         /// <summary>
@@ -87,7 +93,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntFetchLinkDetailsTest()
         {
-            QueryAndPrintLinkDetails(TestConstants.TestAddressUbnt1, TestConstants.TestAddressUbnt2, SnmpVersion.Ver1);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs4side1, TestConstants.TestAddressUbntAirOs4side2, SnmpVersion.Ver1);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs6side1, TestConstants.TestAddressUbntAirOs6side2, SnmpVersion.Ver1);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs8side1, TestConstants.TestAddressUbntAirOs8side2, SnmpVersion.Ver1);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirFiberSide1, TestConstants.TestAddressUbntAirFiberSide2, SnmpVersion.Ver1);
         }
 
         /// <summary>

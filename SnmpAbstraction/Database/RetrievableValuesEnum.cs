@@ -117,5 +117,11 @@
         /// Root OID to access with interface ID appended in order to get the interface name.
         /// </summary>
         InterfaceNameWalkRoot = 15,
+
+        /// <summary>
+        /// Root OID to get the wireless remote peer MAC address.<br/>
+        /// The Interface ID needs to be appended.
+        /// </summary>
+        WlanRemoteMacAddressAppendInterfaceId = 16,
     }
 }

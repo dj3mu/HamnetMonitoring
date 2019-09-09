@@ -64,7 +64,7 @@ namespace SnmpAbstraction
 
             deviceVersionId = -1;
 
-            var result = context.DeviceVersions.Where(d => d.DeviceId == deviceId).OrderByDescending(d => d.MinimumVersion).ToList();
+            var result = context.DeviceVersions.Where(d => d.DeviceId == deviceId).OrderByDescending(d => d.HigherOrEqualVersion).ToList();
 
             if (result.Count == 0)
             {
@@ -83,7 +83,7 @@ namespace SnmpAbstraction
             // we take the entry with the highest minimum version where the requested version is below maximum version
             foreach (DeviceVersion item in result)
             {
-                if ((item.MinimumVersion <= version) && (item.MaximumVersion == null) || (item.MaximumVersion >= version))
+                if ((item.HigherOrEqualVersion <= version) && ((item.LowerThanVersion == null) || (item.LowerThanVersion > version)))
                 {
                     deviceVersionId = item.Id;
                     return true;

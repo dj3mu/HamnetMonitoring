@@ -46,7 +46,7 @@ namespace SnmpAbstraction
                 return false;
             }
 
-            var interfaceVbs = this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid, 0);
+            var interfaceVbs = this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid);
 
             durationWatch.Stop();
 
@@ -80,10 +80,8 @@ namespace SnmpAbstraction
                 // finally we need to get the count of registered clients
                 // if it's 0, this must be a client (this method will only be called if the registration table
                 // contains at least one entry)
-                var queryOid = (Oid)wirelessClientCountRootOid.Oid.Clone();
-
                 // need to append the interface ID to the client count OID
-                queryOid.Add(interfaceId);
+                var queryOid = wirelessClientCountRootOid.Oid + new Oid(new int[] { interfaceId });
 
                 var returnCollection = this.LowerSnmpLayer.Query(queryOid);
                 if (returnCollection.Count == 0)

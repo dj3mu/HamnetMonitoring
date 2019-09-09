@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SemVersion;
 using SnmpAbstraction;
-using System;
 using System.IO;
 using System.Linq;
 
@@ -52,7 +51,7 @@ namespace Tests
         [Test]
         public void TryFindDeviceIdTest()
         {
-            string goodDeviceName = "RB711-5Hn";
+            string goodDeviceName = "UnitTestDevice";
             string badDeviceName = "wrzlbrmft";
 
             using (var context = new DeviceDatabaseContext(this.database))
@@ -110,7 +109,7 @@ namespace Tests
                 string foundOidMappingIds = string.Empty;
 
                 Assert.IsTrue(context.TryFindOidLookupId(goodDeviceVersionId, out foundOidMappingIds), $"Cannot find OID mapping ID for 'good' device-version ID '{goodDeviceVersionId}'");
-                Assert.AreEqual("1", foundOidMappingIds, $"Wrong OID mapping ID found for 'good' device-version ID '{goodDeviceVersionId}'");
+                Assert.AreEqual("2,1", foundOidMappingIds, $"Wrong OID mapping ID found for 'good' device-version ID '{goodDeviceVersionId}'");
 
                 Assert.IsFalse(context.TryFindOidLookupId(badDeviceVersionId, out foundOidMappingIds), $"Found OID mapping ID for 'bad' device-version ID '{badDeviceVersionId}'");
             }

@@ -54,25 +54,51 @@ namespace SnmpAbstraction
                 {
                     if (currentDevice.IsApplicable(this.lowerLayer))
                     {
-                        log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
-                        
                         detectionDuration.Stop();
-                        return currentDevice.CreateHandler(this.lowerLayer);
+
+                        log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
+                    }
+                    else
+                    {
+                        continue;
                     }
                 }
                 catch(SnmpException ex)
                 {
                     if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
                     {
-                        log.Error($"Timeout talking to device '{this.lowerLayer.Address}'", ex);
+                        log.Error($"Timeout talking to device '{this.lowerLayer.Address}' during applicability check", ex);
                         throw;
                     }
 
-                    log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}': {ex.Message}");
+                    log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during applicability check: {ex.Message}");
+
+                    continue;
                 }
                 catch(HamnetSnmpException ex)
                 {
-                    log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}'", ex);
+                    log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during applicability check", ex);
+
+                    continue;
+                }
+
+                try
+                {
+                    return currentDevice.CreateHandler(this.lowerLayer);
+                }
+                catch(SnmpException ex)
+                {
+                    if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
+                    {
+                        log.Error($"Timeout talking to device '{this.lowerLayer.Address}' during handler creation", ex);
+                        throw;
+                    }
+
+                    log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation: {ex.Message}");
+                }
+                catch(HamnetSnmpException ex)
+                {
+                    log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation", ex);
                 }
             }
 

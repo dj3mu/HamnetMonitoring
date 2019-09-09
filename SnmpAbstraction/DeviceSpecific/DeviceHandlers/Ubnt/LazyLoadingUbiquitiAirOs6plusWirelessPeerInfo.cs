@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
-    internal class LazyLoadingUbiquitiWirelessPeerInfo : LazyLoadingGenericWirelessPeerInfo
+    internal class LazyLoadingUbiquitiAirOs6plusWirelessPeerInfo : LazyLoadingGenericWirelessPeerInfo
     {
         /// <summary>
         /// Handle to the logger.
@@ -30,7 +29,7 @@ namespace SnmpAbstraction
         /// <param name="macAddress">The MAC address of the peer (serves as index in OIDs for MikroTik devices).</param>
         /// <param name="peerIndex">The peer's index (to use in SNMP get).</param>
         /// <param name="isAccessPoint">Value indicating whether the device proving the peer info is an access point or a client.</param>
-        public LazyLoadingUbiquitiWirelessPeerInfo(
+        public LazyLoadingUbiquitiAirOs6plusWirelessPeerInfo(
             ISnmpLowerLayer lowerSnmpLayer,
             IDeviceSpecificOidLookup oidLookup,
             string macAddress,
@@ -70,9 +69,7 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfactTypeOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfactTypeOid.Add(this.peerIndex);
-            interfactTypeOid.Add(this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid());
+            var interfactTypeOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.peerIndex }) + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid();
 
             this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, RX signal strength");
 
@@ -97,9 +94,7 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfactTypeOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfactTypeOid.Add(this.peerIndex);
-            interfactTypeOid.Add(this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid());
+            var interfactTypeOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.peerIndex }) + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid();
 
             this.LinkUptimeBacking = this.LowerSnmpLayer.QueryAsTimeSpan(interfactTypeOid, "wireless peer info, link uptime").Value;
 

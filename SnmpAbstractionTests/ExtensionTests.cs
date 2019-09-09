@@ -52,8 +52,7 @@ namespace SnmpAbstractionTests
 
             var rootOid = new Oid(".1.2.3.4.5");
             result = testArray.ToDottedDecimalOid(rootOid);
-            var expectedConcateOid = (Oid)rootOid.Clone();
-            expectedConcateOid.Add(expectedOid);
+            var expectedConcateOid = rootOid + expectedOid;
 
             Assert.AreEqual(expectedConcateOid, result, "returned concatenated OID representation not as expected");
 

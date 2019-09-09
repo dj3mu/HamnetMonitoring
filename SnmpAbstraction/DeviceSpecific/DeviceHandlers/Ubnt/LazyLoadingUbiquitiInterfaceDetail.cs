@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -8,6 +9,11 @@ namespace SnmpAbstraction
     internal class LazyLoadingUbiquitiInterfaceDetail : LazyLoadingGenericInterfaceDetail
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// A list of string that are used to detect whether the interface is actually related to the wireless link.
+        /// </summary>
+        private readonly IEnumerable<string> wirelessInterfaceNames;
 
         /// <summary>
         /// Field to sum up the query duration on each "Populate" call.
@@ -25,9 +31,11 @@ namespace SnmpAbstraction
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="interfaceId">The ID of the interface (i.e. the value to append to interface-specific OIDs).</param>
-        public LazyLoadingUbiquitiInterfaceDetail(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup, int interfaceId)
+        /// <param name="wirelessInterfaceNames">A list of string that are used to detect whether the interface is actually related to the wireless link.</param>
+        public LazyLoadingUbiquitiInterfaceDetail(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup, int interfaceId, IEnumerable<string> wirelessInterfaceNames)
             : base(lowerSnmpLayer, oidLookup, interfaceId)
         {
+            this.wirelessInterfaceNames = wirelessInterfaceNames;
         }
 
         /// <inheritdoc />
@@ -65,10 +73,8 @@ namespace SnmpAbstraction
                 return true;
             }
 
-            var interfaceTypeOid = (Oid)interfaceTypeRootOid.Oid.Clone();
-            interfaceTypeOid.Add(this.InterfaceId);
+            var interfaceTypeOid = interfaceTypeRootOid.Oid + new Oid(new int[] { this.InterfaceId });
             oidsToQuery.Add(interfaceTypeOid);
-
             valueToQuery = RetrievableValuesEnum.InterfaceNameWalkRoot;
             DeviceSpecificOid interfaceNameRootOid;
             Oid interfaceNameOid = null;
@@ -78,8 +84,7 @@ namespace SnmpAbstraction
             }
             else
             {
-                interfaceNameOid = (Oid)interfaceNameRootOid.Oid.Clone();
-                interfaceNameOid.Add(this.InterfaceId);
+                interfaceNameOid = interfaceNameRootOid.Oid + new Oid(new int[] { this.InterfaceId });
                 oidsToQuery.Add(interfaceNameOid);
             }
 
@@ -91,11 +96,13 @@ namespace SnmpAbstraction
             
             durationWatch.Stop();
 
+            this.InterfaceNameBacking = retrievedValues[interfaceNameOid].Value.ToString();
+
             // Ubiquiti IS CRAZY: They're reporting all interfaces as type 6 "ethernetcsmacd" ...
             // We have to use a hack and see the interface name to detect (and finally report back) the actual type
             if ((interfaceNameOid != null) && retrievedValues.ContainsOid(interfaceNameOid))
             {
-                this.InterfaceTypeBacking = this.ConvertUbntTypeToIeee80211typeForWifiInterfaces(retrievedType, retrievedValues[interfaceNameOid].Value.ToString());
+                this.InterfaceTypeBacking = this.ConvertUbntTypeToIeee80211typeForWifiInterfaces(retrievedType, this.InterfaceNameBacking);
             }
             else
             {
@@ -116,24 +123,35 @@ namespace SnmpAbstraction
         /// <returns>The (good) type reflecting what the interface really is.</returns>
         private IanaInterfaceType ConvertUbntTypeToIeee80211typeForWifiInterfaces(IanaInterfaceType retrievedType, string interfaceName)
         {
-            if (retrievedType != IanaInterfaceType.EthernetCsmacd)
+            if (this.wirelessInterfaceNames == null)
             {
-                // Buggy UBNT devices return EthernetCsmacd for all interfaces.
-                // If we find anything else we must assume that the device is right with the type.
+                log.Warn("Cannot ConvertUbntTypeToIeee80211typeForWifiInterfaces: Wireless interface names list is null");
                 return retrievedType;
             }
 
-            if (interfaceName.ToUpperInvariant().Contains("WIFI"))
+            switch (retrievedType)
             {
-                return IanaInterfaceType.Ieee80211;
-            }
+                case IanaInterfaceType.EthernetCsmacd:
+                case IanaInterfaceType.Other:
+                    {
+                        var interfaceNameUpperInvariant = interfaceName.ToUpperInvariant();
+                        if (this.wirelessInterfaceNames.Any(ifName => interfaceNameUpperInvariant.StartsWith(ifName)))
+                        {
+                            // interface name is starting with one of the "wireless names"
+                            return IanaInterfaceType.Ieee80211;
+                        }
 
-            if (interfaceName.ToUpperInvariant().Contains("BR"))
-            {
-                return IanaInterfaceType.Bridge;
-            }
+                        if (interfaceName.ToUpperInvariant().StartsWith("BR"))
+                        {
+                            return IanaInterfaceType.Bridge;
+                        }
 
-            return retrievedType;
+                        return retrievedType;
+                    }
+
+                default:
+                    return retrievedType;
+            }
         }
     }
 }

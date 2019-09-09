@@ -52,9 +52,7 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfactTypeOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfactTypeOid.Add(this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid());
-            interfactTypeOid.Add(this.InterfaceId.Value);
+            var interfactTypeOid = interfaceIdRootOid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
 
             this.TxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, TX signal strength");
 
@@ -87,9 +85,7 @@ namespace SnmpAbstraction
             Stopwatch durationWatch = Stopwatch.StartNew();
 
             var clientSpecificOids = oidValues.Where(oid => oid != null).Select(oid => {
-                var interfaceTypeOid = (Oid)oid.Oid.Clone();
-                interfaceTypeOid.Add(this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid());
-                interfaceTypeOid.Add(this.InterfaceId.Value);
+                var interfaceTypeOid = oid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
 
                 return interfaceTypeOid;
             });
@@ -121,9 +117,7 @@ namespace SnmpAbstraction
 
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            var interfactTypeOid = (Oid)interfaceIdRootOid.Oid.Clone();
-            interfactTypeOid.Add(this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid());
-            interfactTypeOid.Add(this.InterfaceId.Value);
+            var interfactTypeOid = interfaceIdRootOid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
 
             this.LinkUptimeBacking = this.LowerSnmpLayer.QueryAsTimeSpan(interfactTypeOid, "wireless peer info, link uptime").Value;
 

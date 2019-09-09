@@ -41,12 +41,10 @@ namespace SnmpAbstraction
         VbCollection Query(IEnumerable<Oid> oids);
 
         /// <summary>
-        /// Performs an SNMP-Walk starting at the value specified by <paramref name="interfaceIdWalkRootOid" />
-        /// and recusing with the depth specified by <paramref name="depth" />.
+        /// Performs an SNMP-Walk starting at the value specified by <paramref name="interfaceIdWalkRootOid" />.
         /// </summary>
         /// <param name="interfaceIdWalkRootOid">The retrievable value to start walking at. The actual OID is resolved from the device database.</param>
-        /// <param name="depth">The recursion depth. A value of 0 means not to recurse at all and just return the direct children.</param>
         /// <returns>A <see cref="VbCollection" /> with the received data.</returns>
-        VbCollection DoWalk(Oid interfaceIdWalkRootOid, int depth);
+        VbCollection DoWalk(Oid interfaceIdWalkRootOid);
     }
 }

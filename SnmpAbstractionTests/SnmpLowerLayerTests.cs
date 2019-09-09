@@ -69,7 +69,7 @@ namespace SnmpAbstractionTests
             // test a (hopefully) successful query to a Ubiquiti device.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
             // is not available or has no SNMP service running.
-            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddressUbnt1, QuerierOptions.Default.WithProtocolVersion(SnmpVersion.Ver1)))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddressUbntAirOs4side1, QuerierOptions.Default.WithProtocolVersion(SnmpVersion.Ver1)))
             {
                 VbCollection result = snmpll.Query(new Oid("1.3.6.1.2.1.1.1.0"));
                 Assert.NotNull(result, "The query result is null");
@@ -221,7 +221,7 @@ namespace SnmpAbstractionTests
             // test a (hopefully) successful query.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
             // is not available or has no SNMP service running.
-            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddressUbnt1, QuerierOptions.Default.WithProtocolVersion(SnmpVersion.Ver1)))
+            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddressUbntAirOs4side1, QuerierOptions.Default.WithProtocolVersion(SnmpVersion.Ver1)))
             {
                 IDeviceSystemData systemData = snmpll.SystemData;
                 Assert.NotNull(systemData, "The system data is null");
