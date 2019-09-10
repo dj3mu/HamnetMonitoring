@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -20,7 +21,8 @@ namespace SnmpAbstraction
         /// Construct from a list of lookup containers.
         /// </summary>
         /// <param name="deviceSpecificOids">The list to construct from.</param>
-        public DeviceSpecificOidLookup(IEnumerable<DeviceSpecificOid> deviceSpecificOids)
+        /// <param name="maximumSupportedSnmpVersion">The maximum supported SNMP version.</param>
+        public DeviceSpecificOidLookup(IEnumerable<DeviceSpecificOid> deviceSpecificOids, SnmpVersion maximumSupportedSnmpVersion)
         {
             if (deviceSpecificOids == null)
             {
@@ -28,6 +30,7 @@ namespace SnmpAbstraction
             }
 
             this.localLookup = deviceSpecificOids.ToDictionary(doid => (RetrievableValuesEnum)doid.RetrievableValueId, doid => doid);
+            this.MaximumSupportedSnmpVersion = maximumSupportedSnmpVersion;
         }
 
         /// <inheritdoc />
@@ -41,6 +44,9 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public int Count => this.localLookup.Count;
+
+        /// <inheritdoc />
+        public SnmpVersion MaximumSupportedSnmpVersion { get; }
 
         /// <inheritdoc />
         public bool ContainsKey(RetrievableValuesEnum key)

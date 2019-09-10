@@ -52,7 +52,7 @@ namespace SnmpAbstractionTests
         public void UbntQueryInterfaceDataTest()
         {
             QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver1);
-            QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1);
+            QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver2); // Ver2 should cause a fallback to V1 for UBNT
             QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1);
             QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirFiberSide2, SnmpVersion.Ver1);
         }
@@ -63,7 +63,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQueryWirelessPeersTest()
         {
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver1);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver2); // Ver2 should cause a fallback to V1 for UBNT
             QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirFiberSide1, SnmpVersion.Ver1);
@@ -75,6 +75,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryWirelessPeersTest()
         {
+            QueryAndPrintWirelessPeers(new IpAddress("44.224.10.42"), SnmpVersion.Ver2);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2);
         }
 
@@ -85,7 +86,7 @@ namespace SnmpAbstractionTests
         public void MtikFetchLinkDetailsTest()
         {
             QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver1);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2);
         }
 
         /// <summary>

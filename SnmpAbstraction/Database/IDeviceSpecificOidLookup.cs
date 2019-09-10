@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -14,5 +15,10 @@ namespace SnmpAbstraction
         /// <param name="valuesToQuery">The list of values to query.</param>
         /// <returns><c>true</c> if AT LEAST ONE value could be successfully retrieved. Otherwise <c>false</c>.</returns>
         bool TryGetValues(out DeviceSpecificOid[] oidValues, params RetrievableValuesEnum[] valuesToQuery);
+
+        /// <summary>
+        /// Gets the device's maximum supported SNMP version.
+        /// </summary>
+        SnmpVersion MaximumSupportedSnmpVersion { get; }
     }
 }

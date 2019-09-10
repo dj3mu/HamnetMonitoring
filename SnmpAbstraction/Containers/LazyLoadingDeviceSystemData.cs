@@ -96,6 +96,11 @@ namespace SnmpAbstraction
         private TimeSpan queryDurationBacking;
 
         /// <summary>
+        /// Backup of current SNMP version when forcing V1.
+        /// </summary>
+        private SnmpVersion snmpVersionBackup;
+
+        /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
@@ -174,6 +179,30 @@ namespace SnmpAbstraction
         public override TimeSpan QueryDuration => this.queryDurationBacking;
 
         /// <inheritdoc />
+        public string Model => this.ModifyableModel;
+
+        /// <inheritdoc />
+        public SemanticVersion Version => this.ModifyableVersion;
+
+        /// <summary>
+        /// Backing property for Version that is settable from outside (by Device Detector).
+        /// </summary>
+        /// <remarks>This seems kind of violation of immutability. But the Model and Version retrieval
+        /// unfortunately is device-specific and hence done in DetectableDevice only.
+        /// As this object is never passed out anywhere to our API users it seems a feasible trade-off to far more complex implementation.
+        /// </remarks>
+        internal SemanticVersion ModifyableVersion { get; set; }
+
+        /// <summary>
+        /// Backing property for Model that is settable from outside (by Device Detector).
+        /// </summary>
+        /// <remarks>This seems kind of violation of immutability. But the Model and Version retrieval
+        /// unfortunately is device-specific and hence done in DetectableDevice only.
+        /// As this object is never passed out anywhere to our API users it seems a feasible trade-off to far more complex implementation.
+        /// </remarks>
+        internal string ModifyableModel { get; set; }
+
+        /// <inheritdoc />
         public override void ForceEvaluateAll()
         {
             this.PopulateAdminContact();
@@ -189,6 +218,8 @@ namespace SnmpAbstraction
         {
             StringBuilder returnBuilder = new StringBuilder(256);
 
+            returnBuilder.Append("  - System Model                     : ").AppendLine(string.IsNullOrWhiteSpace(this.Model) ? "not available" : this.Model);
+            returnBuilder.Append("  - System SW Version                : ").AppendLine((this.Version == null) ? "not available" : this.Version.ToString());
             returnBuilder.Append("  - System Name        (queried=").Append(this.systemNameQueried).Append("): ").AppendLine(this.systemName);
             returnBuilder.Append("  - System location    (queried=").Append(this.systemLocationQueried).Append("): ").AppendLine(this.systemLocation);
             returnBuilder.Append("  - System description (queried=").Append(this.systemDescriptionQueried).Append("): ").AppendLine(this.systemDescrition);
@@ -209,9 +240,13 @@ namespace SnmpAbstraction
                 return;
             }
             
+            this.BackupSnmpVersionAndSetV1();
+
             this.AddQueryDuration( () => {
                 this.systemDescrition = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.1.0"), "system description");
             });
+
+            this.RestoreSnmpVersion();
 
             this.systemDescriptionQueried = true;
         }
@@ -226,9 +261,13 @@ namespace SnmpAbstraction
                 return;
             }
 
+            this.BackupSnmpVersionAndSetV1();
+
             this.AddQueryDuration( () => {
                 this.enterpriseObjectId = this.LowerSnmpLayer.QueryAsOid(new Oid(".1.3.6.1.2.1.1.2.0"), "system enterprise OID");
             });
+
+            this.RestoreSnmpVersion();
 
             this.enterpriseObjectIdQueried = true;
         }
@@ -243,9 +282,13 @@ namespace SnmpAbstraction
                 return;
             }
             
+            this.BackupSnmpVersionAndSetV1();
+
             this.AddQueryDuration( () => {
                 this.systemAdminContact = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.4.0"), "system adminstrative contact");
             });
+
+            this.RestoreSnmpVersion();
 
             this.systemAdminContactQueried = true;
         }
@@ -260,9 +303,13 @@ namespace SnmpAbstraction
                 return;
             }
 
+            this.BackupSnmpVersionAndSetV1();
+
             this.AddQueryDuration( () => {
                 this.systemLocation = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.6.0"), "system location");
             });
+
+            this.RestoreSnmpVersion();
 
             this.systemLocationQueried = true;
         }
@@ -277,11 +324,33 @@ namespace SnmpAbstraction
                 return;
             }
 
+            this.BackupSnmpVersionAndSetV1();
+
             this.AddQueryDuration( () => {
                 this.systemName = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.5.0"), "system name");
             });
 
+            this.RestoreSnmpVersion();
+
             this.systemNameQueried = true;
+        }
+
+        /// <summary>
+        /// Restores the SNMP version from backup.
+        /// </summary>
+        private void RestoreSnmpVersion()
+        {
+            this.LowerSnmpLayer.AdjustSnmpVersion(this.snmpVersionBackup);
+        }
+
+        /// <summary>
+        /// Backs up current SNMP version and sets V1.
+        /// </summary>
+        private void BackupSnmpVersionAndSetV1()
+        {
+            this.snmpVersionBackup = this.LowerSnmpLayer.ProtocolVersionInUse;
+
+            this.LowerSnmpLayer.AdjustSnmpVersion(SnmpVersion.Ver1);
         }
 
         /// <summary>
@@ -309,6 +378,8 @@ namespace SnmpAbstraction
                 return;
             }
 
+            this.BackupSnmpVersionAndSetV1();
+
             this.AddQueryDuration( () => {
                 this.uptime = this.LowerSnmpLayer.QueryAsTimeSpan(new Oid(".1.3.6.1.2.1.1.3.0"), "system uptime");
                 if (this.uptime == null)
@@ -318,6 +389,8 @@ namespace SnmpAbstraction
                 }
             });
 
+            this.RestoreSnmpVersion();
+            
             this.uptimeQueried = true;
         }
     }

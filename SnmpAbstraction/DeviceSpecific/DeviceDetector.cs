@@ -48,6 +48,11 @@ namespace SnmpAbstraction
         {
             Stopwatch detectionDuration = Stopwatch.StartNew();
             
+            var snmpVersionBackup = this.lowerLayer.ProtocolVersionInUse;
+
+            // for device detection fall back to the lowest possible version
+            this.lowerLayer.AdjustSnmpVersion(SnmpVersion.Ver1);
+
             foreach (IDetectableDevice currentDevice in this.detectableDevices)
             {
                 try
@@ -84,7 +89,25 @@ namespace SnmpAbstraction
 
                 try
                 {
-                    return currentDevice.CreateHandler(this.lowerLayer);
+                    var handler = currentDevice.CreateHandler(this.lowerLayer);
+                    var handlerBase = handler as DeviceHandlerBase;
+
+                    var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;
+                    var internalSystemData = internalLowerLayer.InternalSystemData;
+                    internalSystemData.ModifyableModel = handler.Model;
+                    internalSystemData.ModifyableVersion = handler.OsVersion;
+
+                    if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
+                    {
+                        log.Warn($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MaximumSupportedSnmpVersion} due to maximum version in device database");
+                        internalLowerLayer.AdjustSnmpVersion(handlerBase.OidLookup.MaximumSupportedSnmpVersion);
+                    }
+                    else
+                    {
+                        this.lowerLayer.AdjustSnmpVersion(snmpVersionBackup);
+                    }
+                    
+                    return handler;
                 }
                 catch(SnmpException ex)
                 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -46,6 +47,7 @@ namespace SnmpAbstraction
                 var concatenatedDicts = this.layers.Aggregate(Enumerable.Empty<KeyValuePair<RetrievableValuesEnum, DeviceSpecificOid>>(), (a, c) => a.Concat(c));
                 var groupedDicts = concatenatedDicts.GroupBy(e => e.Key, e => e.Value);
                 this.localLookup = groupedDicts.ToDictionary(g => g.Key, v => v.First());
+                this.MaximumSupportedSnmpVersion = layers.Min(l => l.MaximumSupportedSnmpVersion);
             }
         }
 
@@ -60,6 +62,9 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public int Count => this.localLookup.Count;
+
+        /// <inheritdoc />
+        public SnmpVersion MaximumSupportedSnmpVersion { get; }
 
         /// <inheritdoc />
         public bool ContainsKey(RetrievableValuesEnum key)

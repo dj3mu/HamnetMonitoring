@@ -20,10 +20,21 @@ namespace SnmpAbstraction
         IQuerierOptions Options { get; }
 
         /// <summary>
+        /// Gets the SNMP protocol version that is currently in use.
+        /// </summary>
+        SnmpVersion ProtocolVersionInUse { get; }
+
+        /// <summary>
         /// Gets a container that holds basic system data of the device.<br/>
         /// The container and even single properties of that container might be retrieved lazily (i.e. on first request).
         /// </summary>
         IDeviceSystemData SystemData { get; }
+
+        /// <summary>
+        /// Adjusts the SNMP version in use away from that in options to the one given here.
+        /// </summary>
+        /// <param name="snmpVersion">The new SNMP version to use.</param>
+        void AdjustSnmpVersion(SnmpVersion snmpVersion);
 
         /// <summary>
         /// Queries the given OIDs from the device and returns the received data as <see cref="VbCollection" />

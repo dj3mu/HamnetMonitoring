@@ -55,6 +55,8 @@ namespace SnmpAbstraction
         {
             this.Address = address ?? throw new ArgumentNullException(nameof(address), "address to talk to is null");
             this.Options = options ?? QuerierOptions.Default;
+
+            this.SetVersionAndCommunity(this.Options.ProtocolVersion, this.Options.Community);
         }
 
         /// <inheritdoc />
@@ -77,16 +79,26 @@ namespace SnmpAbstraction
             }
         }
 
+        /// <summary>
+        /// Gets access to the real system data container (mainly for device detector to add model and version).
+        /// </summary>
+        internal LazyLoadingDeviceSystemData InternalSystemData => this.cachedSystemData;
+
+        /// <summary>
+        /// Gets the SNMP protocol version that is currently in use.
+        /// </summary>
+        public SnmpVersion ProtocolVersionInUse => this.QueryParameters.Version;
+
         /// <inheritdoc />
         public VbCollection DoWalk(Oid interfaceIdWalkRootOid)
         {
             this.InitializeTarget();
 
-            if (this.Options.ProtocolVersion == SnmpVersion.Ver1)
+            if (this.ProtocolVersionInUse == SnmpVersion.Ver1)
             {
                 return this.DoWalkGetNext(interfaceIdWalkRootOid);
             }
-            else if ((this.Options.ProtocolVersion == SnmpVersion.Ver2) || (this.Options.ProtocolVersion == SnmpVersion.Ver3))
+            else if ((this.ProtocolVersionInUse == SnmpVersion.Ver2) || (this.ProtocolVersionInUse == SnmpVersion.Ver3))
             {
                 return this.DoWalkBulk(interfaceIdWalkRootOid);
             }
@@ -122,10 +134,21 @@ namespace SnmpAbstraction
             if (response.Pdu.ErrorStatus != 0)
             {
                 // agent reported an error with the request
-                throw new HamnetSnmpException($"Error in SNMP reply. Error {response.Pdu.ErrorStatus} index {response.Pdu.ErrorIndex}");
+                var ex = new HamnetSnmpException($"Error in SNMP reply from device '{this.Address}': Error status {response.Pdu.ErrorStatus} at index {response.Pdu.ErrorIndex}, requested OIDs were '{string.Join(", ", response.Pdu.VbList.Select(o => o.Oid.ToString()))}'");
+                log.Info(ex.Message);
+                throw ex;
             }
 
             return response.Pdu.VbList;
+        }
+
+        /// <summary>
+        /// Adjusts the SNMP version in use away from that in options to the one given here.
+        /// </summary>
+        /// <param name="snmpVersion">The new SNMP version to use.</param>
+        public void AdjustSnmpVersion(SnmpVersion snmpVersion)
+        {
+            this.SetVersionAndCommunity(snmpVersion, this.Options.Community);
         }
 
         /// <inheritdoc />
@@ -203,15 +226,29 @@ namespace SnmpAbstraction
                 return;
             }
 
-            OctetString community = new OctetString(this.Options.Community);
-            this.QueryParameters = new AgentParameters(community)
-            {
-                Version = this.Options.ProtocolVersion
-            };
-
             this.Target = new UdpTarget((IPAddress)this.Address, this.Options.Port, Convert.ToInt32(this.Options.Timeout.TotalMilliseconds), this.Options.Retries);
         }
-        
+
+        /// <summary>
+        /// Sets the given protocol version and community.
+        /// </summary>
+        /// <param name="protocolVersion">The new protocol version to use.</param>
+        /// <param name="community">The new communitiy to use.</param>
+        private void SetVersionAndCommunity(SnmpVersion protocolVersion, OctetString community)
+        {
+            if ((this.QueryParameters?.Version == protocolVersion) && (this.QueryParameters?.Community == community))
+            {
+                log.Debug($"Device '{this.Address}': SNMP community '{community}' and protocol version '{protocolVersion}' already set. No change.");
+                return;
+            }
+
+            log.Info($"Device '{this.Address}': From now on using SNMP community '{community}' and protocol version '{protocolVersion}'");
+            this.QueryParameters = new AgentParameters(community)
+            {
+                Version = protocolVersion
+            };
+        }
+
         /// <summary>
         /// Initializes the device system data container.
         /// </summary>
@@ -278,7 +315,7 @@ namespace SnmpAbstraction
                     if (result.Pdu.ErrorStatus != 0)
                     {
                         // agent reported an error with the request
-                        log.Debug($"Error in SNMP reply. Error {result.Pdu.ErrorStatus} index {result.Pdu.ErrorIndex}");
+                        log.Warn($"Error in SNMP reply of device '{this.Address}': Error status {result.Pdu.ErrorStatus} at index {result.Pdu.ErrorIndex}");
                         lastOid = null;
                         break;
                     }
@@ -370,7 +407,7 @@ namespace SnmpAbstraction
                     if (result.Pdu.ErrorStatus != 0)
                     {
                         // agent reported an error with the request
-                        log.Debug($"Error in SNMP reply. Error {result.Pdu.ErrorStatus} index {result.Pdu.ErrorIndex}");
+                        log.Warn($"Error in SNMP reply of device '{this.Address}': Error status {result.Pdu.ErrorStatus} at index {result.Pdu.ErrorIndex}");
                         lastOid = null;
                         break;
                     }

@@ -78,20 +78,20 @@ namespace Tests
 
             using (var context = new DeviceDatabaseContext(this.database))
             {
-                int foundDeviceVersionId = int.MinValue;
+                DeviceVersion foundDeviceVersion = null;
 
-                Assert.IsTrue(context.TryFindDeviceVersionId(goodDeviceId, inside1stBlockVersion, out foundDeviceVersionId), $"Cannot find 'good' device-version ID for device '{goodDeviceId}', inside-block-1 version {inside1stBlockVersion}");
-                Assert.AreEqual(1, foundDeviceVersionId, $"Wrong device-version ID found for 'good' device ID '{goodDeviceId}', inside-block-1 version {inside1stBlockVersion}");
+                Assert.IsTrue(context.TryFindDeviceVersionId(goodDeviceId, inside1stBlockVersion, out foundDeviceVersion), $"Cannot find 'good' device-version ID for device '{goodDeviceId}', inside-block-1 version {inside1stBlockVersion}");
+                Assert.AreEqual(1, foundDeviceVersion, $"Wrong device-version ID found for 'good' device ID '{goodDeviceId}', inside-block-1 version {inside1stBlockVersion}");
 
-                Assert.IsTrue(context.TryFindDeviceVersionId(goodDeviceId, inside2ndBlockVersion, out foundDeviceVersionId), $"Cannot find 'good' device-version ID for device '{goodDeviceId}', inside-block-2 version {inside2ndBlockVersion}");
-                Assert.AreEqual(2, foundDeviceVersionId, $"Wrong device-version ID found for 'good' device ID '{goodDeviceId}', inside-block-2 version {inside2ndBlockVersion}");
+                Assert.IsTrue(context.TryFindDeviceVersionId(goodDeviceId, inside2ndBlockVersion, out foundDeviceVersion), $"Cannot find 'good' device-version ID for device '{goodDeviceId}', inside-block-2 version {inside2ndBlockVersion}");
+                Assert.AreEqual(2, foundDeviceVersion, $"Wrong device-version ID found for 'good' device ID '{goodDeviceId}', inside-block-2 version {inside2ndBlockVersion}");
 
-                Assert.IsFalse(context.TryFindDeviceVersionId(goodDeviceId, outsideAllVersion, out foundDeviceVersionId), $"Found 'good' device-version ID for device '{goodDeviceId}' using version outside all blocks.");
+                Assert.IsFalse(context.TryFindDeviceVersionId(goodDeviceId, outsideAllVersion, out foundDeviceVersion), $"Found 'good' device-version ID for device '{goodDeviceId}' using version outside all blocks.");
 
-                Assert.IsTrue(context.TryFindDeviceVersionId(goodDeviceId, null, out foundDeviceVersionId), $"Cannot find 'good' device-version ID for device '{goodDeviceId}', null version (i.e. highest available minimum version)");
-                Assert.AreEqual(2, foundDeviceVersionId, $"Wrong device-version ID found for 'good' device ID '{goodDeviceId}', null version (i.e. highest available minimum version)");
+                Assert.IsTrue(context.TryFindDeviceVersionId(goodDeviceId, null, out foundDeviceVersion), $"Cannot find 'good' device-version ID for device '{goodDeviceId}', null version (i.e. highest available minimum version)");
+                Assert.AreEqual(2, foundDeviceVersion, $"Wrong device-version ID found for 'good' device ID '{goodDeviceId}', null version (i.e. highest available minimum version)");
 
-                Assert.IsFalse(context.TryFindDeviceVersionId(badDeviceId, null, out foundDeviceVersionId), $"Found 'bad' device ID '{badDeviceId}'");
+                Assert.IsFalse(context.TryFindDeviceVersionId(badDeviceId, null, out foundDeviceVersion), $"Found 'bad' device ID '{badDeviceId}'");
             }
         }
 
@@ -128,10 +128,10 @@ namespace Tests
             {
                 IDeviceSpecificOidLookup foundLookup = null;
 
-                Assert.IsTrue(context.TryFindDeviceSpecificOidLookup(goodOidLookupId, out foundLookup), $"Cannot find OID lookup ID for 'good' lookup ID '{goodOidLookupId}'");
+                Assert.IsTrue(context.TryFindDeviceSpecificOidLookup(goodOidLookupId, SnmpSharpNet.SnmpVersion.Ver1, out foundLookup), $"Cannot find OID lookup ID for 'good' lookup ID '{goodOidLookupId}'");
                 Assert.GreaterOrEqual(foundLookup.Count, 1, $"Empty lookup for for 'good' lookup ID '{goodOidLookupId}'");
 
-                Assert.IsFalse(context.TryFindDeviceSpecificOidLookup(badOidLookupId, out foundLookup), $"Found lookup for 'bad' lookup ID '{badOidLookupId}'");
+                Assert.IsFalse(context.TryFindDeviceSpecificOidLookup(badOidLookupId, SnmpSharpNet.SnmpVersion.Ver1, out foundLookup), $"Found lookup for 'bad' lookup ID '{badOidLookupId}'");
             }
         }
 

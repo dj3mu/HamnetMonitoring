@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using SemVersion;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -53,16 +54,16 @@ namespace SnmpAbstraction
         /// <param name="context">The device database context to extend.</param>
         /// <param name="deviceId">The device ID to search versions for.</param>
         /// <param name="version">The version number to return the device version ID for. If null, the ID for the highest available version will be retrieved.</param>
-        /// <param name="deviceVersionId">Returns the database key, if a device version of for given device ID and version range has been found.</param>
+        /// <param name="deviceVersion">Returns the device version object if a device version of for given device ID and version range has been found.</param>
         /// <returns><c>true</c> if a device version of the given version has been found and the ID returned. Otherwise <c>false</c>.</returns>
-        public static bool TryFindDeviceVersionId(this DeviceDatabaseContext context, int deviceId, SemanticVersion version, out int deviceVersionId)
+        public static bool TryFindDeviceVersionId(this DeviceDatabaseContext context, int deviceId, SemanticVersion version, out DeviceVersion deviceVersion)
         {
             if (context == null)
             {
                 throw new ArgumentNullException(nameof(context), "The context to search device version ID on is null");
             }
 
-            deviceVersionId = -1;
+            deviceVersion = null;
 
             var result = context.DeviceVersions.Where(d => d.DeviceId == deviceId).OrderByDescending(d => d.HigherOrEqualVersion).ToList();
 
@@ -75,7 +76,7 @@ namespace SnmpAbstraction
             if (version == null)
             {
                 // no specific version requested, returns first entry (i.e. the one with the highest MinimumVersion)
-                deviceVersionId = result[0].Id;
+                deviceVersion = result[0];
                 return true;
             }
 
@@ -85,7 +86,7 @@ namespace SnmpAbstraction
             {
                 if ((item.HigherOrEqualVersion <= version) && ((item.LowerThanVersion == null) || (item.LowerThanVersion > version)))
                 {
-                    deviceVersionId = item.Id;
+                    deviceVersion = item;
                     return true;
                 }
             }
@@ -128,9 +129,10 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="context">The device database context to extend.</param>
         /// <param name="oidLookupId">The OID mapping lookup ID to get.</param>
+        /// <param name="maximumSupportedSnmpVersion">The maximum supported SNMP version (to put into returned lookup)</param>
         /// <param name="oidLookup">Returns the OID lookup, if found.</param>
         /// <returns><c>true</c> if a lookup of the given lookup ID has been found and the ID returned. Otherwise <c>false</c>.</returns>
-        public static bool TryFindDeviceSpecificOidLookup(this DeviceDatabaseContext context, int oidLookupId, out IDeviceSpecificOidLookup oidLookup)
+        public static bool TryFindDeviceSpecificOidLookup(this DeviceDatabaseContext context, int oidLookupId, SnmpVersion maximumSupportedSnmpVersion, out IDeviceSpecificOidLookup oidLookup)
         {
             if (context == null)
             {
@@ -146,7 +148,7 @@ namespace SnmpAbstraction
                 return false;
             }
 
-            oidLookup = new DeviceSpecificOidLookup(result);
+            oidLookup = new DeviceSpecificOidLookup(result, maximumSupportedSnmpVersion);
 
             return true;
         }

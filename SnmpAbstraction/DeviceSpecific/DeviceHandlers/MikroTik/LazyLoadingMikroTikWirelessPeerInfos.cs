@@ -83,7 +83,18 @@ namespace SnmpAbstraction
                 // need to append the interface ID to the client count OID
                 var queryOid = wirelessClientCountRootOid.Oid + new Oid(new int[] { interfaceId });
 
-                var returnCollection = this.LowerSnmpLayer.Query(queryOid);
+                VbCollection returnCollection = null;
+                try
+                {
+                    returnCollection = this.LowerSnmpLayer.Query(queryOid);
+                }
+                catch(HamnetSnmpException hmnex)
+                {
+                    // no wireless client count --> no access point
+                    log.Info($"AP / client distinction for wireless interface #{interfaceId} of device '{this.LowerSnmpLayer.Address}': Assuming Client: Query of OID for '{valueToQuery}' threw exception: {hmnex.Message}");
+                    return false;
+                }
+
                 if (returnCollection.Count == 0)
                 {
                     log.Warn($"Unable to get AP / client distinction for wireless interface #{interfaceId} of device '{this.LowerSnmpLayer.Address}': Query of OID for '{valueToQuery}' returned empty result");
@@ -91,6 +102,13 @@ namespace SnmpAbstraction
                 }
 
                 var returnValue = returnCollection[queryOid];
+
+                if (returnValue.Value.Type == 128)
+                {
+                    // no wireless client count --> no access point
+                    log.Info($"AP / client distinction for wireless interface #{interfaceId} of device '{this.LowerSnmpLayer.Address}': Assuming Client: Query of OID for '{valueToQuery}' returned a value of type {returnValue.Value.Type}");
+                    return false;
+                }
 
                 return returnValue.Value.ToInt() > 0;
             }

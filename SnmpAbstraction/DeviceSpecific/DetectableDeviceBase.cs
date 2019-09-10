@@ -35,8 +35,8 @@ namespace SnmpAbstraction
                 throw exception;
             }
 
-            int foundDeviceVersionId = -1;
-            if (!database.TryFindDeviceVersionId(foundDeviceId, version, out foundDeviceVersionId))
+            DeviceVersion foundDeviceVersion = null;
+            if (!database.TryFindDeviceVersionId(foundDeviceId, version, out foundDeviceVersion))
             {
                 var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}) cannot be matched to any version range of device database");
                 log.Error(exception.Message);
@@ -44,9 +44,9 @@ namespace SnmpAbstraction
             }
 
             string foundOidMappingIds = string.Empty;
-            if (!database.TryFindOidLookupId(foundDeviceVersionId, out foundOidMappingIds))
+            if (!database.TryFindOidLookupId(foundDeviceVersion.Id, out foundOidMappingIds))
             {
-                var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceVersionId}) cannot be matched to any OID mapping ID of device database");
+                var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceVersion}) cannot be matched to any OID mapping ID of device database");
                 log.Error(exception.Message);
                 throw exception;
             }
@@ -61,12 +61,12 @@ namespace SnmpAbstraction
                 int intId;
                 if (!int.TryParse(sid, out intId))
                 {
-                    log.Warn($"OID mapping table ID '{sid}' as found for device '{deviceName}' v '{version}' (version ID {foundDeviceVersionId}, mapping IDs '{foundOidMappingIds}') is not an integer value and will be ignored");
+                    log.Warn($"OID mapping table ID '{sid}' as found for device '{deviceName}' v '{version}' (version ID {foundDeviceVersion}, mapping IDs '{foundOidMappingIds}') is not an integer value and will be ignored");
                     continue;
                 }
 
                 IDeviceSpecificOidLookup foundLookup = null;
-                if (!database.TryFindDeviceSpecificOidLookup(intId, out foundLookup))
+                if (!database.TryFindDeviceSpecificOidLookup(intId, foundDeviceVersion.MaximumSupportedSnmpVersion.ToSnmpVersion(), out foundLookup))
                 {
                     var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}': Cannot find OID mapping ID table of ID {intId} in device database");
                     log.Error(exception.Message);

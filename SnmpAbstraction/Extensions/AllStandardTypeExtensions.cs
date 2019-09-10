@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -32,6 +34,27 @@ namespace SnmpAbstraction
             }
 
             return hex.ToString();
+        }
+        /// <summary>
+        /// Converts the integer array to a hex string.
+        /// </summary>
+        /// <returns>The SNMP version matching the integer.</returns>
+        public static SnmpVersion ToSnmpVersion(this int intVersion)
+        {
+            switch (intVersion)
+            {
+                case 1:
+                    return SnmpVersion.Ver1;
+
+                case 2:
+                    return SnmpVersion.Ver2;
+
+                case 3:
+                    return SnmpVersion.Ver3;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(intVersion), "The integer {intVersion} cannot be converted to a valid SnmpVersion");
+            }
         }
     }
 }
