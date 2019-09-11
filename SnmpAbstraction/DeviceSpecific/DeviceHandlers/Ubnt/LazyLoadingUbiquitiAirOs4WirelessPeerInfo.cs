@@ -108,7 +108,7 @@ namespace SnmpAbstraction
                 return true;
             }
 
-            uint[] macOidFragments = rxSignalStrengthEntry.Oid.Skip(rxStrengthRootOid.Oid.Length).Take(6).ToArray();
+            var macOidFragments = rxSignalStrengthEntry.Oid.Skip(rxStrengthRootOid.Oid.Length).Take(6);
             this.peerMacBacking = macOidFragments.ToHexString();
             this.RxSignalStrengthBacking = rxSignalStrengthEntry.Value.ToInt();
 

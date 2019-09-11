@@ -149,7 +149,17 @@ namespace SnmpAbstraction
 
             var interfaceMacOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.InterfaceId });
 
-            this.MacAddressStringBacking = this.LowerSnmpLayer.QueryAsString(interfaceMacOid, "mac address").Replace(' ', ':');
+            VbCollection macQueryResult = this.LowerSnmpLayer.Query(interfaceMacOid);
+
+            var macString = macQueryResult[interfaceMacOid].Value.ToString().Trim();
+            if (macString.Length == 6)
+            {
+                this.MacAddressStringBacking = Encoding.ASCII.GetBytes(macString).ToHexString();
+            }
+            else if (macString.Split(new char[] { ':', ' ' }, StringSplitOptions.None).Length == 6)
+            {
+                this.MacAddressStringBacking = macString.Replace(' ', ':');
+            }
 
             durationWatch.Stop();
 

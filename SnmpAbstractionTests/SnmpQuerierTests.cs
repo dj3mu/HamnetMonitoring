@@ -42,6 +42,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryInterfaceDataTest()
         {
+            QueryAndPrintInterfaces(new IpAddress("44.224.10.109"), SnmpVersion.Ver2);
             QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2);
         }
 
@@ -75,7 +76,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryWirelessPeersTest()
         {
-            QueryAndPrintWirelessPeers(new IpAddress("44.224.10.42"), SnmpVersion.Ver2);
+            QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2);
         }
 
@@ -85,6 +86,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikFetchLinkDetailsTest()
         {
+            QueryAndPrintLinkDetails(new IpAddress("44.224.10.106"), new IpAddress("44.224.10.109"), SnmpVersion.Ver2);
             QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2);
             QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2);
         }
