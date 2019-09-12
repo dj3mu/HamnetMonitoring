@@ -36,7 +36,7 @@ namespace SnmpAbstraction
                 return 0;
             }
 
-            return obj.MacAddressString.GetHashCode();
+            return obj.MacAddressString?.GetHashCode() ?? 0;
         }
     }
 }

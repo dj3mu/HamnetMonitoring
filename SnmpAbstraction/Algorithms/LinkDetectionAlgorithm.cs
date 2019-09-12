@@ -53,13 +53,13 @@ namespace SnmpAbstraction
             // see if side #2 has peers with MAC address of side #1
             var peeringWithSide1 = (from wlp2 in wlPeerInfo2
                                    from wi1 in wifiInterfaces1
-                                   where (wlp2.RemoteMacString.ToLowerInvariant() == wi1.MacAddressString.ToLowerInvariant())
+                                   where (wlp2.RemoteMacString?.ToLowerInvariant() == wi1.MacAddressString?.ToLowerInvariant())
                                    select new Tuple<IInterfaceDetail, IWirelessPeerInfo>(wi1, wlp2)).SingleOrDefault();
 
             // see if side #1 has peers with MAC address of side #2
             var peeringWithSide2 = (from wlp1 in wlPeerInfo1
                                    from wi2 in wifiInterfaces2
-                                   where (wlp1.RemoteMacString.ToLowerInvariant() == wi2.MacAddressString.ToLowerInvariant())
+                                   where (wlp1.RemoteMacString?.ToLowerInvariant() == wi2.MacAddressString?.ToLowerInvariant())
                                    select new Tuple<IInterfaceDetail, IWirelessPeerInfo>(wi2, wlp1)).SingleOrDefault();
 
             if (peeringWithSide1 == null)

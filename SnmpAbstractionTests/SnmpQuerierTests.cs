@@ -86,9 +86,9 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikFetchLinkDetailsTest()
         {
-            QueryAndPrintLinkDetails(new IpAddress("44.224.10.106"), new IpAddress("44.224.10.109"), SnmpVersion.Ver2);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2);
+            QueryAndPrintLinkDetails(new IpAddress("44.224.10.186"), new IpAddress("44.224.10.189"), SnmpVersion.Ver2);
+            //QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2);
+            //QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2);
         }
 
         /// <summary>
