@@ -51,8 +51,9 @@
         {
             if (log == null)
             {
+                var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 XmlDocument log4netConfig = new XmlDocument();
-                log4netConfig.Load(File.OpenRead(Log4netConfigurationFile));
+                log4netConfig.Load(File.OpenRead(Path.Combine(assemblyFolder, Log4netConfigurationFile)));
                 var repo = log4net.LogManager.CreateRepository(Assembly.GetEntryAssembly(), typeof(log4net.Repository.Hierarchy.Hierarchy));
                 log4net.Config.XmlConfigurator.Configure(repo, log4netConfig["log4net"]);
 

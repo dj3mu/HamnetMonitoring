@@ -33,9 +33,19 @@
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
+  </ItemGroup>
+
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+    <Message Text="Copying database and config files to $(OutDir)$(ConfigDir)" Importance="high" />
     <Copy SourceFiles="$(ProjectDir)/../SnmpAbstraction/Database/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
-    <Copy SourceFiles="$(ProjectDir)/log4net.config" DestinationFolder="$(OutDir)$(ConfigDir)" />
+    <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
+  </Target>
+
+  <Target Name="PublishCustomContent" AfterTargets="PrepareForPublish">
+    <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high" />
+    <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)" />
   </Target>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reflection;
 
 namespace SnmpAbstraction
 {
@@ -17,7 +18,8 @@ namespace SnmpAbstraction
         /// </summary>
         private DatabaseProvider()
         {
-            this.DeviceDatabase = new DeviceDatabaseContext(DeviceDatabasePathAndFile);
+            var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            this.DeviceDatabase = new DeviceDatabaseContext(Path.Combine(assemblyFolder, DeviceDatabasePathAndFile));
         }
 
         /// <summary>
