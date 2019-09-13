@@ -17,6 +17,9 @@
     <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Hamnet Monitoring Commandline</PackageTags>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishSingleFile>true</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
 
@@ -43,9 +46,14 @@
     <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
   </Target>
 
-  <Target Name="PublishCustomContent" AfterTargets="PrepareForPublish">
+  <Target Name="PublishCustomContent" AfterTargets="Publish">
     <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high" />
+    <MakeDir Directories="$(PublishDir)$(ConfigDir)"/>
     <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)" />
+  </Target>
+
+  <Target Name="PackageZip" AfterTargets="PublishCustomContent">
+    <Message Text="Would package ZIP file now but not yet implemented due ZIP being required" Importance="high" />
   </Target>
 
 </Project>
