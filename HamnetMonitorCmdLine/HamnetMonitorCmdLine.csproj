@@ -24,6 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="IPNetwork2" Version="2.4.0.133" />
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.25">
@@ -34,6 +35,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
+    <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,7 +50,7 @@
 
   <Target Name="PublishCustomContent" AfterTargets="Publish">
     <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high" />
-    <MakeDir Directories="$(PublishDir)$(ConfigDir)"/>
+    <MakeDir Directories="$(PublishDir)$(ConfigDir)" />
     <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)" />
   </Target>
 

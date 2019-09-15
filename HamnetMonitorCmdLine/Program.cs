@@ -3,9 +3,11 @@
     using System;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Reflection;
     using System.Xml;
     using CommandLine;
+    using HamnetDbAbstraction;
     using log4net;
     using SnmpAbstraction;
     using SnmpSharpNet;
@@ -73,12 +75,13 @@
 
             try
             {
-                return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions, WirelessPeersOptions, LinkDetailsOptions>(args)
+                return CommandLine.Parser.Default.ParseArguments<SystemDataOptions, InterfaceDataOptions, WirelessPeersOptions, LinkDetailsOptions, HamnetDbLinksOptions>(args)
                     .MapResult(
                         (SystemDataOptions opts) => RunAddAndReturnExitCode(opts),
                         (InterfaceDataOptions opts) => RunAddAndReturnExitCode(opts),
                         (WirelessPeersOptions opts) => RunAddAndReturnExitCode(opts),
                         (LinkDetailsOptions opts) => RunAddAndReturnExitCode(opts),
+                        (HamnetDbLinksOptions opts) => RunAddAndReturnExitCode(opts),
                         errs => (int)ExitCodes.InvalidCommandLine);
             }
             catch(HamnetSnmpException hamnetEx)
@@ -110,6 +113,88 @@
 #else
             return ex.Message;
 #endif
+        }
+
+        /// <summary>
+        /// Execution of HamnetDB retrieved monitoring
+        /// </summary>
+        /// <param name="opts">The options defining the data to retrieve and query.</param>
+        /// <returns>The exit code to return.</returns>
+        private static int RunAddAndReturnExitCode(HamnetDbLinksOptions opts)
+        {
+            log.Info("Running HamnetDB-retrieved monitoring");
+
+            var querierOptions = CreateQuerierOptions(opts);
+
+            var accessor = HamnetDbProvider.Instance.GetHamnetDb(opts.ConnectionStringFile);
+
+            Console.WriteLine();
+            Console.WriteLine($"Getting unique host pairs to be monitored from HamnetDB. Please stand by ...");
+
+            var uniquePairs = accessor.UniqueMonitoredHostPairsInSameSubnet();
+
+            Console.WriteLine($"... found {uniquePairs.Count} unique pairs");
+
+            var pairsSlicedForOptions = uniquePairs.Skip(opts.StartOffset).Take(opts.NumberOfEntries);
+
+            Console.Write("SNMP querying ");
+            if (opts.NumberOfEntries == int.MaxValue)
+            {
+                Console.Write("all");
+            }
+            else
+            {
+                Console.Write(opts.NumberOfEntries);
+            }
+
+            Console.Write($" entries, starting at entry index {opts.StartOffset}");
+
+            IPNetwork onlyNetwork = null;
+            if (!string.IsNullOrWhiteSpace(opts.Network) && IPNetwork.TryParse(opts.Network, out onlyNetwork))
+            {
+                Console.Write($" and being inside network {onlyNetwork}");
+            }
+            else
+            {
+                onlyNetwork = null;
+            }
+
+            Console.WriteLine(":");
+
+            foreach (var pair in pairsSlicedForOptions)
+            {
+                if ((onlyNetwork != null) && !onlyNetwork.Contains(pair.Value.First().Address))
+                {
+                    //Console.WriteLine();
+                    //Console.WriteLine($"Skipping link details for pair {pair.Value.First().Address} <-> {pair.Value.Last().Address}: Not inside network {onlyNetwork}");
+                    continue;
+                }
+
+                var title = $"Querying link details for pair {pair.Value.First().Address} <-> {pair.Value.Last().Address} of subnet {pair.Key.Subnet}";
+                Console.WriteLine();
+                Console.WriteLine(new string('=', title.Length));
+                Console.WriteLine(title);
+                Console.WriteLine(new string('-', title.Length));
+
+                try
+                {
+                    var querier = SnmpQuerierFactory.Instance.Create(pair.Value.First().Address, querierOptions);
+
+                    var linkDetails = querier.FetchLinkDetails(pair.Value.Last().Address.ToString());
+
+                    OutputResult(opts, linkDetails);
+                }
+                catch (SnmpException ex)
+                {
+                    Console.Error.WriteLine($"Cannot get link details for pair {pair.Value.First().Address} <-> {pair.Value.Last().Address} (subnet {pair.Key.Subnet}): SNMP Error: {ex.Message}");
+                }
+                catch (HamnetSnmpException ex)
+                {
+                    Console.Error.WriteLine($"Cannot get link details for pair {pair.Value.First().Address} <-> {pair.Value.Last().Address} (subnet {pair.Key.Subnet}): Error: {ex.Message}");
+                }
+            }
+
+            return (int)ExitCodes.Ok;
         }
 
         /// <summary>

@@ -8,7 +8,7 @@
     /// Definition of the SystemData verb and its verb-specific options.
     /// </summary>
     [Verb("SystemData", HelpText = "Query basic system data (description, admin, root OID, etc.).")]
-    public class SystemDataOptions : GlobalOptions
+    public class SystemDataOptions : HostSpecificOptions
     {
         /// <summary>
         /// Construct taking all the parameters.

@@ -12,6 +12,6 @@
         /// <summary>
         /// Path to a file containing the database connection string.
         /// </summary>
-        public static readonly string ConnectionStringFilePath = @"c:\Users\loupal\Documents\_PRIVATE\HamNet\connectionstring.testdb";
+        public static readonly string ConnectionStringFilePath = @"c:\Users\kurt\Documents\connectionstring.testdb";
     }
 }
