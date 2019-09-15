@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>HamnetDbAbstraction</RootNamespace>
+    <PackageId>Hamnet.HamnetDbAbstraction</PackageId>
+    <AssemblyTitle>HamnetDB abstraction library for Hamnet Monitoring.</AssemblyTitle>
+    <PackageDescription>
+    The library abstracts access to the HamnetDB. Abstraction is focussing on the data needed
+    to do reliable monitoring of the network.
+    </PackageDescription>
+    <Authors>DJ3MU</Authors>
+    <Product>HamnetDB Abstraction Library</Product>
+    <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>Hamnet Monitoring HamnetDB</PackageTags>
+    <ConfigDir>Config</ConfigDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IPNetwork2" Version="2.4.0.133" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="MySql.Data" Version="8.0.17" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.25">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+    <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
+    <Copy SourceFiles="$(ProjectDir)../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
+  </Target>
+
+</Project>

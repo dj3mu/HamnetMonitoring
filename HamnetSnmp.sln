@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnmpAbstractionTests", "Snm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HamnetMonitorCmdLine", "HamnetMonitorCmdLine\HamnetMonitorCmdLine.csproj", "{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HamnetDbAbstraction", "HamnetDbAbstraction\HamnetDbAbstraction.csproj", "{A022598E-59B1-4E03-83BB-33DAA2996769}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HamnetDbAbstractionTests", "HamnetDbAbstractionTests\HamnetDbAbstractionTests.csproj", "{A65DBB2D-51AF-4BBA-9899-17E8079E7139}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,5 +62,29 @@ Global
 		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|x64.Build.0 = Release|Any CPU
 		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|x86.ActiveCfg = Release|Any CPU
 		{D2F8E106-9F1C-47E4-9500-A6C4E6C5A6ED}.Release|x86.Build.0 = Release|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Debug|x64.Build.0 = Debug|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Debug|x86.Build.0 = Debug|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Release|x64.ActiveCfg = Release|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Release|x64.Build.0 = Release|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Release|x86.ActiveCfg = Release|Any CPU
+		{A022598E-59B1-4E03-83BB-33DAA2996769}.Release|x86.Build.0 = Release|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Debug|x64.Build.0 = Debug|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Debug|x86.Build.0 = Debug|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Release|x64.ActiveCfg = Release|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Release|x64.Build.0 = Release|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Release|x86.ActiveCfg = Release|Any CPU
+		{A65DBB2D-51AF-4BBA-9899-17E8079E7139}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

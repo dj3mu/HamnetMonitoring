@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>SnmpAbstraction</RootNamespace>
     <PackageId>Hamnet.SnmpAbstraction</PackageId>
     <AssemblyTitle>SNMP abstraction library for Hamnet Monitoring SNMP queries.</AssemblyTitle>
     <PackageDescription>

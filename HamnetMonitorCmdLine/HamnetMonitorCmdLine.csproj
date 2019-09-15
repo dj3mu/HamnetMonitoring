@@ -41,7 +41,7 @@
   </ItemGroup>
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
-    <Message Text="Copying database and config files to $(OutDir)$(ConfigDir)" Importance="high" />
+    <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
     <Copy SourceFiles="$(ProjectDir)/../SnmpAbstraction/Database/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
     <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
   </Target>
