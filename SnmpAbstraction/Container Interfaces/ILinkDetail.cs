@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 
 namespace SnmpAbstraction
 {
@@ -10,14 +11,22 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the MAC address of the local side (as Hex string like &quot;b8:27:eb:97:b6:39&quot;).
         /// </summary>
-        /// <value></value>
         string MacString1 { get; }
 
         /// <summary>
         /// Gets the MAC address of the remote side (as Hex string like &quot;b8:27:eb:97:b6:39&quot;).
         /// </summary>
-        /// <value></value>
         string MacString2 { get; }
+
+        /// <summary>
+        /// Gets the IP address of the local side.
+        /// </summary>
+        IPAddress Address1 { get; }
+
+        /// <summary>
+        /// Gets the IP address of the remote side.
+        /// </summary>
+        IPAddress Address2 { get; }
 
         /// <summary>
         /// Gets the RX level which the side having <see cref="MacString1" /> produces at side having <see cref="MacString2" />.

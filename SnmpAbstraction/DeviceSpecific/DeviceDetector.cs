@@ -72,8 +72,12 @@ namespace SnmpAbstraction
                 {
                     if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
                     {
-                        log.Error($"Timeout talking to device '{this.lowerLayer.Address}' during applicability check", ex);
-                        throw;
+                        var snmpErrorInfo = $"Timeout talking to device '{this.lowerLayer.Address}' during applicability check";
+                        log.Error(snmpErrorInfo, ex);
+
+                        // Re-throwing a different exception is not good practice.
+                        // But here we have a good reason: We need to add the IP address which timed out as that information is not contained in the SnmpException itself.
+                        throw new HamnetSnmpException(snmpErrorInfo, ex);
                     }
 
                     log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during applicability check: {ex.Message}");
@@ -113,8 +117,12 @@ namespace SnmpAbstraction
                 {
                     if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
                     {
-                        log.Error($"Timeout talking to device '{this.lowerLayer.Address}' during handler creation", ex);
-                        throw;
+                        var snmpErrorInfo = $"Timeout talking to device '{this.lowerLayer.Address}' during handler creation";
+                        log.Error(snmpErrorInfo, ex);
+
+                        // Re-throwing a different exception is not good practice.
+                        // But here we have a good reason: We need to add the IP address which timed out as that information is not contained in the SnmpException itself.
+                        throw new HamnetSnmpException(snmpErrorInfo, ex);
                     }
 
                     log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation: {ex.Message}");

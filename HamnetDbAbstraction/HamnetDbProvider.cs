@@ -70,16 +70,18 @@ namespace HamnetDbAbstraction
         /// <returns>The connection string read from the file.</returns>
         private string ReadAndValidateConnectionStringFromFile(string connectionStringFile)
         {
-            if (!File.Exists(connectionStringFile))
+            var fileNameToUse = connectionStringFile.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+
+            if (!File.Exists(fileNameToUse))
             {
                 throw new FileNotFoundException($"Connection string file '{connectionStringFile}' does not exist");
             }
 
-            var connectionString = File.ReadAllText(connectionStringFile).Trim();
+            var connectionString = File.ReadAllText(fileNameToUse).Trim();
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                throw new InvalidOperationException($"The connection string in file '{connectionStringFile}' is null, empty or white-space-only");
+                throw new InvalidOperationException($"The connection string in file '{fileNameToUse}' is null, empty or white-space-only");
             }
 
             return connectionString;

@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Text;
 using SnmpSharpNet;
 
@@ -52,6 +53,12 @@ namespace SnmpAbstraction
         public int? SideOfAccessPoint { get; } = null;
 
         /// <inheritdoc />
+        public IPAddress Address1 => (IPAddress)this.linkRelatedResultCollection.InterfaceDetail1.DeviceAddress;
+
+        /// <inheritdoc />
+        public IPAddress Address2 => (IPAddress)this.linkRelatedResultCollection.InterfaceDetail2.DeviceAddress;
+
+        /// <inheritdoc />
         public override string ToTextString()
         {
             if (this.linkRelatedResultCollection == null)
@@ -61,7 +68,7 @@ namespace SnmpAbstraction
 
             StringBuilder returnBuilder = new StringBuilder(128);
 
-            returnBuilder.Append("Link between side #1 (").Append(this.linkRelatedResultCollection.InterfaceDetail1.DeviceAddress).Append(") and side #2 (").Append(this.linkRelatedResultCollection.InterfaceDetail2.DeviceAddress).AppendLine("):");
+            returnBuilder.Append("Link between side #1 (").Append(this.Address1).Append(") and side #2 (").Append(this.Address2).AppendLine("):");
             returnBuilder.Append("Side #1 MAC: ").AppendLine(this.MacString1);
             returnBuilder.Append("Side #2 MAC: ").AppendLine(this.MacString2);
             returnBuilder.Append("Side of AP : ").AppendLine(this.SideOfAccessPoint?.ToString("0") ?? "not available");

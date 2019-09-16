@@ -251,7 +251,7 @@
 
             if (opts.SnmpVersion.HasValue)
             {
-                returnOptions = returnOptions.WithProtocolVersion((SnmpVersion)opts.SnmpVersion.Value - 1);
+                returnOptions = returnOptions.WithProtocolVersion(opts.SnmpVersion.Value.ToSnmpVersion());
             }
 
             return returnOptions;
