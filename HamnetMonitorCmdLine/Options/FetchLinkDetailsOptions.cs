@@ -8,7 +8,7 @@
     /// Definition of the LinkDetails verb and its verb-specific options.
     /// </summary>
     [Verb("LinkDetails", HelpText = "Query link details between the listed remote devices.")]
-    public class LinkDetailsOptions : GlobalOptions
+    public class LinkDetailsOptions : HostSpecificOptions
     {
         /// <summary>
         /// Construct taking all the parameters.

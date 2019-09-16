@@ -99,7 +99,7 @@ namespace SnmpAbstraction
 
                     if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
                     {
-                        log.Warn($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MaximumSupportedSnmpVersion} due to maximum version in device database");
+                        log.Info($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MaximumSupportedSnmpVersion} due to maximum version in device database");
                         internalLowerLayer.AdjustSnmpVersion(handlerBase.OidLookup.MaximumSupportedSnmpVersion);
                     }
                     else

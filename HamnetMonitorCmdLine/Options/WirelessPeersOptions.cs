@@ -8,7 +8,7 @@
     /// Definition of the WirelessPeers verb and its verb-specific options.
     /// </summary>
     [Verb("WirelessPeers", HelpText = "Query wireless peer information (MAC, etc.).")]
-    public class WirelessPeersOptions : GlobalOptions
+    public class WirelessPeersOptions : HostSpecificOptions
     {
         /// <summary>
         /// Construct taking all the parameters.

@@ -8,7 +8,7 @@
     /// Definition of the InterfaceData verb and its verb-specific options.
     /// </summary>
     [Verb("InterfaceData", HelpText = "Query interface data (type, MAC, IP, etc.).")]
-    public class InterfaceDataOptions : GlobalOptions
+    public class InterfaceDataOptions : HostSpecificOptions
     {
         /// <summary>
         /// Construct taking all the parameters.

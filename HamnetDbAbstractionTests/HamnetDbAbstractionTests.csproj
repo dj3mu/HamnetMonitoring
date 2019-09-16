@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <PackageId>Hamnet.SnmpAbstraction.Tests</PackageId>
+    <AssemblyTitle>Unit Tests for HamnetDB abstraction library.</AssemblyTitle>
+    <PackageDescription>
+    Unit Tests for the HamnetDbAbstraction package.
+    </PackageDescription>
+    <Authors>DJ3MU</Authors>
+    <Product>HamnetDB Abstraction Library Tests</Product>
+    <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>Hamnet Monitoring HamnetDB Tests</PackageTags>
+    <ConfigDir>Config</ConfigDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.25">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nunit" Version="3.11.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+    <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
+    <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
+  </Target>
+
+</Project>
