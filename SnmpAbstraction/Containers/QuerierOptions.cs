@@ -26,6 +26,8 @@ namespace SnmpAbstraction
             this.Community = community;
             this.Timeout = timeout;
             this.Retries = retries;
+            this.Ver2cMaximumRequests = ver2cMaximumRequests;
+            this.Ver2cMaximumValuesPerRequest = ver2cMaximumValuesPerRequest;
         }
 
         /// <summary>
@@ -51,10 +53,10 @@ namespace SnmpAbstraction
         public OctetString Community { get; } = new OctetString("public");
 
         /// <inheritdoc />
-        public TimeSpan Timeout { get; } = TimeSpan.FromSeconds(2);
+        public TimeSpan Timeout { get; } = TimeSpan.FromSeconds(10);
 
         /// <inheritdoc />
-        public int Retries { get; } = 1;
+        public int Retries { get; } = 3;
 
         /// <inheritdoc />
         public int Ver2cMaximumValuesPerRequest { get; } = 0;

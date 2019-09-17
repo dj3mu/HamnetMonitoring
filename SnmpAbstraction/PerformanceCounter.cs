@@ -57,50 +57,58 @@ namespace SnmpAbstraction
         /// <param name="result">The result.</param>
         internal void Record(IpAddress destinationAddress, Pdu request, SnmpPacket result)
         {
-            if (destinationAddress == null)
+            try
             {
-                log.Error("Failed to record for performance count: destinationAddress == null");
-                return;
-            }
+                if (destinationAddress == null)
+                {
+                    log.Error("Failed to record for performance count: destinationAddress == null");
+                    return;
+                }
 
-            if (request == null)
+                if (request == null)
+                {
+                    log.Error("Failed to record for performance count: request == null");
+                    return;
+                }
+
+                if (result == null)
+                {
+                    log.Error("Failed to record for performance count: result == null");
+                    return;
+                }
+
+                this.overallResultsBacking.Record(request, result);
+
+                // per address results:
+                PerformanceSingleResultSet singleResultSet;
+                if (!this.resultsPerDeviceMutable.TryGetValue((IPAddress)destinationAddress, out singleResultSet))
+                {
+                    singleResultSet = new PerformanceSingleResultSet();
+
+                    // Note: It's crucial that we put exactly the same object in both dictionaries !
+                    this.resultsPerDeviceMutable.Add((IPAddress)destinationAddress, singleResultSet);
+                    this.resultsPerDeviceInterfaced.Add((IPAddress)destinationAddress, singleResultSet);
+                }
+
+                singleResultSet.Record(request, result);
+
+                // per request type results:
+                if (!this.resultsPerRequestTypeMutable.TryGetValue(request.Type.ToString(), out singleResultSet))
+                {
+                    singleResultSet = new PerformanceSingleResultSet();
+
+                    // Note: It's crucial that we put exactly the same object in both dictionaries !
+                    this.resultsPerRequestTypeMutable.Add(request.Type.ToString(), singleResultSet);
+                    this.resultsPerRequestTypeInterfaced.Add(request.Type.ToString(), singleResultSet);
+                }
+
+                singleResultSet.Record(request, result);
+            }
+            catch(Exception ex)
             {
-                log.Error("Failed to record for performance count: request == null");
-                return;
+                // eat it up - this is crude but the simple small recording of stats shall not interrupt anything useful
+                log.Error("Exception during statistics recording", ex);
             }
-
-            if (result == null)
-            {
-                log.Error("Failed to record for performance count: result == null");
-                return;
-            }
-
-            this.overallResultsBacking.Record(request, result);
-
-            // per address results:
-            PerformanceSingleResultSet singleResultSet;
-            if (!this.resultsPerDeviceMutable.TryGetValue((IPAddress)destinationAddress, out singleResultSet))
-            {
-                singleResultSet = new PerformanceSingleResultSet();
-
-                // Note: It's crucial that we put exactly the same object in both dictionaries !
-                this.resultsPerDeviceMutable.Add((IPAddress)destinationAddress, singleResultSet);
-                this.resultsPerDeviceInterfaced.Add((IPAddress)destinationAddress, singleResultSet);
-            }
-
-            singleResultSet.Record(request, result);
-
-            // per request type results:
-            if (!this.resultsPerRequestTypeMutable.TryGetValue(request.Type.ToString(), out singleResultSet))
-            {
-                singleResultSet = new PerformanceSingleResultSet();
-
-                // Note: It's crucial that we put exactly the same object in both dictionaries !
-                this.resultsPerRequestTypeMutable.Add(request.Type.ToString(), singleResultSet);
-                this.resultsPerRequestTypeInterfaced.Add(request.Type.ToString(), singleResultSet);
-            }
-
-            singleResultSet.Record(request, result);
         }
 
         /// <inheritdoc />

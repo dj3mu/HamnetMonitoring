@@ -61,5 +61,15 @@ namespace HamnetDbRest.Controllers
         {
             return await this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout")).ToListAsync();
         }
+
+        /// <summary>
+        /// Implementation of GET /failing request.
+        /// </summary>
+        /// <returns>The results of the get /failing request.</returns>
+        [HttpGet("{failing}/{nontimeout}")]
+        public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetNonTimeoutFailingRssiQueries()
+        {
+            return await this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout")).ToListAsync();
+        }
     }
 }

@@ -15,13 +15,17 @@ namespace RestService.Database
         private static readonly string DeviceDatabasePathAndFile = Path.Combine("Config", "ResultDatabase.sqlite");
 
         /// <summary>
+        /// The location of the database.
+        /// </summary>
+        private string databaseLocation;
+
+        /// <summary>
         /// Prevent construction from outside the singleton getter.
         /// </summary>
         private DatabaseProvider()
         {
             var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.ResultDatabase = new QueryResultDatabaseContext(Path.Combine(assemblyFolder, DeviceDatabasePathAndFile));
-            this.ResultDatabase.Database.EnsureCreated();
+            this.databaseLocation = Path.Combine(assemblyFolder, DeviceDatabasePathAndFile);
         }
 
         /// <summary>
@@ -30,9 +34,17 @@ namespace RestService.Database
         public static DatabaseProvider Instance { get; } = new DatabaseProvider();
 
         /// <summary>
-        /// Gets the device database handle.
+        /// Gets a device database context.
         /// </summary>
-        public QueryResultDatabaseContext ResultDatabase { get; }
+        /// <remarks>The context must be disposed off by the caller.</remarks>
+        public QueryResultDatabaseContext CreateContext()
+        {
+            var context = new QueryResultDatabaseContext(this.databaseLocation);
+            
+            context.Database.EnsureCreated();
+
+            return context;
+        }
     }
 
     /// <summary>
@@ -43,7 +55,7 @@ namespace RestService.Database
         /// <inheritdoc />
         public QueryResultDatabaseContext CreateDbContext(string[] args)
         {
-            return DatabaseProvider.Instance.ResultDatabase;
+            return DatabaseProvider.Instance.CreateContext();
         }
     }
 }

@@ -5,20 +5,20 @@
    "version": "0.2.0",
    "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "Launch Command Line",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/HamnetMonitorCmdLine.dll",
-            "args": [ "HamnetDbLinks", "-f", "c:\\Users\\kurt\\Documents\\connectionstring.testdb", "-c", "3" ],
+            "args": [ "LinkDetails", "-h", "44.224.34.66", "44.224.34.67" ],
             "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false
         },
         {
-            "name": ".NET Core Launch (REST service)",
+            "name": "Launch REST service",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
