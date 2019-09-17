@@ -46,7 +46,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("{failing}")]
+        [HttpGet("failing")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.ToListAsync();
@@ -56,7 +56,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("{failing}/{timeout}")]
+        [HttpGet("failing/timeout")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetTimeoutFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout")).ToListAsync();
@@ -66,7 +66,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("{failing}/{nontimeout}")]
+        [HttpGet("failing/nontimeout")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetNonTimeoutFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout")).ToListAsync();
