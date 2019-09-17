@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -156,6 +157,11 @@ namespace RestService.DataFetchingService
             HashSet<IPAddress> queriedHosts = new HashSet<IPAddress>();
 
             QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.ResultDatabase;
+
+            if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
+            {
+                resultDb.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
+            }
 
             foreach (var pair in pairsSlicedForOptions)
             {

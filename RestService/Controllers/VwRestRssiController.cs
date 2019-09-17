@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -48,8 +49,17 @@ namespace HamnetDbRest.Controllers
         [HttpGet("{failing}")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetFailingRssiQueries()
         {
-            this.logger.LogDebug("GET request to 'vw_rest_rssi' detected");
             return await this.dbContext.RssiFailingQueries.ToListAsync();
+        }
+
+        /// <summary>
+        /// Implementation of GET /failing request.
+        /// </summary>
+        /// <returns>The results of the get /failing request.</returns>
+        [HttpGet("{failing}/{timeout}")]
+        public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetTimeoutFailingRssiQueries()
+        {
+            return await this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout")).ToListAsync();
         }
     }
 }
