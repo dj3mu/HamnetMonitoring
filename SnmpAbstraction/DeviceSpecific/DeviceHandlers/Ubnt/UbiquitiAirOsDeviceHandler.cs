@@ -28,7 +28,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override IWirelessPeerInfos RetrieveWirelessPeerInfos(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup)
         {
-            return this.OsVersion >= new SemanticVersion(6, 0, 0)
+            return this.OsVersion >= new SemanticVersion(5, 0, 0)
                 ? new LazyLoadingUbiquitiAirOs6plusWirelessPeerInfos(this.LowerLayer, this.OidLookup) as IWirelessPeerInfos
                 : new LazyLoadingUbiquitiAirOs4WirelessPeerInfos(this.LowerLayer, this.OidLookup) as IWirelessPeerInfos;
         }

@@ -80,7 +80,7 @@ namespace SnmpAbstraction
             // Example: "RouterOS 6.45.3 (stable) on RB711-5Hn-MMCX"
             Match match = OsVersionExtractionRegex.Match(osVersionString);
 
-            SemanticVersion osVersion = match.Success ? SemanticVersion.Parse(match.Groups[1].Value) : null;
+            SemanticVersion osVersion = match.Success ? match.Groups[1].Value.ToSemanticVersion() : null;
 
             var model = lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Trim();
 

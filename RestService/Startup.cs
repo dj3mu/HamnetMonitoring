@@ -37,10 +37,16 @@ namespace HamnetDbRest
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            var querySection = this.Configuration.GetSection("HamnetQuery");
+            var querySection = this.Configuration.GetSection(DataAquisitionService.AquisitionServiceSectionKey);
             if ((querySection == null) || querySection.GetValue<bool>("Enabled"))
             {
                 services.AddHostedService<DataAquisitionService>();
+            }
+
+            var maintenanceSection = this.Configuration.GetSection(MaintenanceService.MaintenanceServiceSectionKey);
+            if ((maintenanceSection == null) || maintenanceSection.GetValue<bool>("Enabled"))
+            {
+                services.AddHostedService<MaintenanceService>();
             }
 
             services.AddTransient<VwRestRssiController>();

@@ -21,7 +21,7 @@ namespace SnmpAbstraction
         /// <param name="address">The address of the side #1 of this link detail.</param>
         /// <param name="linkRelatedResultCollection">The collection of interface and wireless details for sides #1 and #2.</param>
         public LinkDetail(IpAddress address, LinkRelatedResultCollection linkRelatedResultCollection)
-            : base(address, TimeSpan.Zero)
+            : base(address, $"Side #1: {linkRelatedResultCollection.InterfaceDetail1.DeviceModel}, Side #2: {linkRelatedResultCollection.InterfaceDetail2.DeviceModel}", TimeSpan.Zero)
         {
             this.linkRelatedResultCollection = linkRelatedResultCollection;
             if ((this.linkRelatedResultCollection?.WirelessPeerInfo1?.IsAccessPoint != null)
@@ -58,6 +58,10 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public IPAddress Address2 => (IPAddress)this.linkRelatedResultCollection.InterfaceDetail2.DeviceAddress;
 
+        public string ModelAndVersion1 => this.linkRelatedResultCollection.InterfaceDetail1.DeviceModel;
+
+        public string ModelAndVersion2 => this.linkRelatedResultCollection.InterfaceDetail2.DeviceModel;
+
         /// <inheritdoc />
         public override string ToTextString()
         {
@@ -68,7 +72,7 @@ namespace SnmpAbstraction
 
             StringBuilder returnBuilder = new StringBuilder(128);
 
-            returnBuilder.Append("Link between side #1 (").Append(this.Address1).Append(") and side #2 (").Append(this.Address2).AppendLine("):");
+            returnBuilder.Append("Link between side #1 (").Append(this.Address1).Append(", ").Append(this.ModelAndVersion1).Append(") and side #2 (").Append(this.Address2).Append(", ").Append(this.ModelAndVersion2).AppendLine("):");
             returnBuilder.Append("Side #1 MAC: ").AppendLine(this.MacString1);
             returnBuilder.Append("Side #2 MAC: ").AppendLine(this.MacString2);
             returnBuilder.Append("Side of AP : ").AppendLine(this.SideOfAccessPoint?.ToString("0") ?? "not available");

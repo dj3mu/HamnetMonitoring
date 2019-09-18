@@ -10,6 +10,11 @@ namespace SnmpAbstraction
     internal abstract class DeviceHandlerBase : IDeviceHandler
     {
         /// <summary>
+        /// To detect multiple calls to <see cref="Dispose()" />.
+        /// </summary>
+        private bool disposedValue = false;
+
+        /// <summary>
         /// Prevent default construction
         /// </summary>
         private DeviceHandlerBase()
@@ -51,6 +56,13 @@ namespace SnmpAbstraction
             this.Model = model;
         }
 
+        // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
+        // ~DeviceHandlerBase()
+        // {
+        //   // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in Dispose(bool disposing) weiter oben ein.
+        //   Dispose(false);
+        // }
+
         /// <summary>
         /// Gets the lower layer to talk to this device.
         /// </summary>
@@ -83,6 +95,30 @@ namespace SnmpAbstraction
         public override string ToString()
         {
             return $"{this.Model} v {this.OsVersion} @ {this.Address}";
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+
+            // TODO: Imcomment following line only if finalizer is overloaded above.
+            // GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this.disposedValue)
+            {
+                if (disposing)
+                {
+                    if (this.LowerLayer != null)
+                    {
+                        this.LowerLayer.Dispose();
+                    }
+                }
+
+                this.disposedValue = true;
+            }
         }
     }
 }

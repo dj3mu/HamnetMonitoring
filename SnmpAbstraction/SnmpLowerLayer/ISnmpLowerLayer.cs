@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using SnmpSharpNet;
 
@@ -6,7 +7,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Lower-layered interface to the SNMP functions.
     /// </summary>
-    internal interface ISnmpLowerLayer
+    internal interface ISnmpLowerLayer : IDisposable
     {
         /// <summary>
         /// Gets the IP Address that this lower layer is talking to.

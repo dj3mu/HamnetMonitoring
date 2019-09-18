@@ -5,13 +5,26 @@
    "version": "0.2.0",
    "configurations": [
         {
-            "name": "Launch Command Line",
+            "name": "CMD LinkDetails",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/HamnetMonitorCmdLine.dll",
-            "args": [ "LinkDetails", "-h", "44.224.34.66", "44.224.34.67" ],
+            "args": [ "LinkDetails", "-h", "44.143.223.10", "44.143.223.13" ],
+            "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "CMD WirelessPeers",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/HamnetMonitorCmdLine.dll",
+            "args": [ "WirelessPeers", "-h", "44.143.223.13" ],
             "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

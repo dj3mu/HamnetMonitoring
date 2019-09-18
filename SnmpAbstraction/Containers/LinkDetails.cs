@@ -14,10 +14,11 @@ namespace SnmpAbstraction
         /// <summary>
         /// Construct the container populating all fields.
         /// </summary>
-        /// <param name="fetchedDetails"></param>
-        /// <param name="addressOfSide1"></param>
-        public LinkDetails(IEnumerable<ILinkDetail> fetchedDetails, IpAddress addressOfSide1)
-            : base(addressOfSide1, TimeSpan.Zero)
+        /// <param name="fetchedDetails">The feteched link details.</param>
+        /// <param name="addressOfSide1">The address of side 1 device.</param>
+        /// <param name="deviceModel">The model and version of the device.</param>
+        public LinkDetails(IEnumerable<ILinkDetail> fetchedDetails, IpAddress addressOfSide1, string deviceModel)
+            : base(addressOfSide1, deviceModel, TimeSpan.Zero)
         {
             this.Details = fetchedDetails as IReadOnlyList<ILinkDetail> ?? fetchedDetails?.ToList() ?? new List<ILinkDetail>();
         }

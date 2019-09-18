@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -19,22 +20,22 @@ namespace SnmpAbstraction
         /// <summary>
         /// Access to the mutable results per device.
         /// </summary>
-        private readonly Dictionary<IPAddress, PerformanceSingleResultSet> resultsPerDeviceMutable = new Dictionary<IPAddress, PerformanceSingleResultSet>();
+        private readonly ConcurrentDictionary<IPAddress, PerformanceSingleResultSet> resultsPerDeviceMutable = new ConcurrentDictionary<IPAddress, PerformanceSingleResultSet>();
 
         /// <summary>
         /// Access to the mutable results per request type.
         /// </summary>
-        private readonly Dictionary<string, PerformanceSingleResultSet> resultsPerRequestTypeMutable = new Dictionary<string, PerformanceSingleResultSet>();
+        private readonly ConcurrentDictionary<string, PerformanceSingleResultSet> resultsPerRequestTypeMutable = new ConcurrentDictionary<string, PerformanceSingleResultSet>();
 
         /// <summary>
         /// Backing field for <see cref="ResultsPerDevice" />.
         /// </summary>
-        private readonly Dictionary<IPAddress, IPerformanceSingleResultSet> resultsPerDeviceInterfaced = new Dictionary<IPAddress, IPerformanceSingleResultSet>();
+        private readonly ConcurrentDictionary<IPAddress, IPerformanceSingleResultSet> resultsPerDeviceInterfaced = new ConcurrentDictionary<IPAddress, IPerformanceSingleResultSet>();
 
         /// <summary>
         /// Backing field for <see cref="ResultsPerRequestType" />.
         /// </summary>
-        private readonly Dictionary<string, IPerformanceSingleResultSet> resultsPerRequestTypeInterfaced = new Dictionary<string, IPerformanceSingleResultSet>();
+        private readonly ConcurrentDictionary<string, IPerformanceSingleResultSet> resultsPerRequestTypeInterfaced = new ConcurrentDictionary<string, IPerformanceSingleResultSet>();
         
         /// <summary>
         /// Backing field for the overall results.
@@ -86,8 +87,8 @@ namespace SnmpAbstraction
                     singleResultSet = new PerformanceSingleResultSet();
 
                     // Note: It's crucial that we put exactly the same object in both dictionaries !
-                    this.resultsPerDeviceMutable.Add((IPAddress)destinationAddress, singleResultSet);
-                    this.resultsPerDeviceInterfaced.Add((IPAddress)destinationAddress, singleResultSet);
+                    this.resultsPerDeviceMutable.TryAdd((IPAddress)destinationAddress, singleResultSet);
+                    this.resultsPerDeviceInterfaced.TryAdd((IPAddress)destinationAddress, singleResultSet);
                 }
 
                 singleResultSet.Record(request, result);
@@ -98,8 +99,8 @@ namespace SnmpAbstraction
                     singleResultSet = new PerformanceSingleResultSet();
 
                     // Note: It's crucial that we put exactly the same object in both dictionaries !
-                    this.resultsPerRequestTypeMutable.Add(request.Type.ToString(), singleResultSet);
-                    this.resultsPerRequestTypeInterfaced.Add(request.Type.ToString(), singleResultSet);
+                    this.resultsPerRequestTypeMutable.TryAdd(request.Type.ToString(), singleResultSet);
+                    this.resultsPerRequestTypeInterfaced.TryAdd(request.Type.ToString(), singleResultSet);
                 }
 
                 singleResultSet.Record(request, result);

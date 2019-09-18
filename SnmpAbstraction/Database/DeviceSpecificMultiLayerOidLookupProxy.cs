@@ -46,7 +46,7 @@ namespace SnmpAbstraction
                 //          If a RetrievableValuesEnum has a value in lookup of ID 3 that value will be used. Otherwise the value of lookup #1.
                 var concatenatedDicts = this.layers.Aggregate(Enumerable.Empty<KeyValuePair<RetrievableValuesEnum, DeviceSpecificOid>>(), (a, c) => a.Concat(c));
                 var groupedDicts = concatenatedDicts.GroupBy(e => e.Key, e => e.Value);
-                this.localLookup = groupedDicts.ToDictionary(g => g.Key, v => v.First());
+                this.localLookup = groupedDicts.ToDictionary(g => g.Key, v => v.First()); // this actually does the trick of taking the hierachically first entry only
                 this.MaximumSupportedSnmpVersion = layers.Min(l => l.MaximumSupportedSnmpVersion);
             }
         }

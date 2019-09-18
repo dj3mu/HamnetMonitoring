@@ -1,11 +1,12 @@
-﻿using SnmpSharpNet;
+﻿using System;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
     /// <summary>
     /// Interface to the central querier object that queries for delivers specific data.
     /// </summary>
-    public interface IHamnetQuerier
+    public interface IHamnetQuerier : IDisposable
     {
         /// <summary>
         /// Gets the IP address that this querier talks to.

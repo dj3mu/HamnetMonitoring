@@ -29,6 +29,16 @@ namespace SnmpAbstraction
         IPAddress Address2 { get; }
 
         /// <summary>
+        /// Gets the model and version name of the local side.
+        /// </summary>
+        string ModelAndVersion1 { get; }
+
+        /// <summary>
+        /// Gets the model and version name of the remote side.
+        /// </summary>
+        string ModelAndVersion2 { get; }
+
+        /// <summary>
         /// Gets the RX level which the side having <see cref="MacString1" /> produces at side having <see cref="MacString2" />.
         /// </summary>
         double RxLevel1at2 { get; }
