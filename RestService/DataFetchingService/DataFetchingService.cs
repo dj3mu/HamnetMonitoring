@@ -145,6 +145,10 @@ namespace RestService.DataFetchingService
                 {
                     this.PerformDataAquisition();
                 }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Excpetion caught and ignored in timer-called data aquisition thread: {ex.ToString()}");
+                }
                 finally
                 {
                     Monitor.Exit(this.lockObject);
@@ -193,7 +197,14 @@ namespace RestService.DataFetchingService
             Parallel.ForEach(pairsSlicedAccordingToConfiguration, new ParallelOptions { MaxDegreeOfParallelism = maxParallelQueries },
             pair =>
             {
-                this.QueryLinkOfSingleSubnet(pair);
+                try
+                {
+                    this.QueryLinkOfSingleSubnet(pair);
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Exception caught and ignored in parallel data aquisition thread: {ex.ToString()}");
+                }
             });
 
             this.logger.LogInformation("COMPLETED: Retrieving monitoring data as configured in HamnetDB");
