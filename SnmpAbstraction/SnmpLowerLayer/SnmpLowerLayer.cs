@@ -242,10 +242,13 @@ namespace SnmpAbstraction
                 return;
             }
 
-            log.Info($"Device '{this.Address}': From now on using SNMP community '{community}' and protocol version '{protocolVersion}'");
+#if DEBUG
+            log.Debug($"Device '{this.Address}': From now on using SNMP community '{community}' and protocol version '{protocolVersion}'");
+#endif
             this.QueryParameters = new AgentParameters(community)
             {
-                Version = protocolVersion
+                Version = protocolVersion,
+                DisableReplySourceCheck = true
             };
         }
 

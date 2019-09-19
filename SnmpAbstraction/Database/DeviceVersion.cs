@@ -47,5 +47,11 @@ namespace SnmpAbstraction
         /// </summary>
         [Column("DeviceLowerThanSwVersion")]
         public SemanticVersion LowerThanVersion { get; set; }
+
+        /// <summary>
+        /// Gets the handler class to use for this device (if null a hard-coded default handler will be used).
+        /// </summary>
+        [Column("HandlerClassName")]
+        public string HandlerClassName { get; set; }
     }
 }

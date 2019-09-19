@@ -86,15 +86,24 @@ namespace SnmpAbstraction
 
             log.Info($"Detected device '{lowerLayer.Address}' as MikroTik '{model}' v '{osVersion}'");
 
-            try
+            DeviceVersion deviceVersion;
+            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion);
+            if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
             {
-                return new MikrotikDeviceHandler(lowerLayer, this.ObtainOidTable(model, osVersion), osVersion, model);
+                try
+                {
+                    return new MikrotikDeviceHandler(lowerLayer, oidTable, osVersion, model);
+                }
+                catch(Exception ex)
+                {
+                    // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
+                    // device (i.e. IP address) the exception is for
+                    throw new HamnetSnmpException($"Failed to create MikroTik handler for device '{lowerLayer.Address}': {ex.Message}", ex);
+                }
             }
-            catch(Exception ex)
+            else
             {
-                // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
-                // device (i.e. IP address) the exception is for
-                throw new HamnetSnmpException($"Failed to create MikroTik handler for device '{lowerLayer.Address}': {ex.Message}", ex);
+                return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model);
             }
         }
     }

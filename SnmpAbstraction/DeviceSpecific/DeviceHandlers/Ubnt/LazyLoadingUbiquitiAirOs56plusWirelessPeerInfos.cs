@@ -7,7 +7,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Worker class for lazy-loading interface details for AirOs v 6 and higher.
     /// /// </summary>
-    internal class LazyLoadingUbiquitiAirOs6plusWirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
+    internal class LazyLoadingUbiquitiAirOs56plusWirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -21,7 +21,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public LazyLoadingUbiquitiAirOs6plusWirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
+        public LazyLoadingUbiquitiAirOs56plusWirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
             : base(lowerSnmpLayer, oidLookup)
         {
         }
