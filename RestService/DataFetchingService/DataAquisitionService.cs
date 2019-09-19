@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -176,11 +177,11 @@ namespace RestService.DataFetchingService
 
             this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
 
-            using(QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.CreateContext())
+            using (QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.CreateContext())
             {
                 if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
                 {
-                    using(var transaction = resultDb.Database.BeginTransaction())
+                    using (var transaction = resultDb.Database.BeginTransaction())
                     {
                         resultDb.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
                         resultDb.SaveChanges();
@@ -195,22 +196,56 @@ namespace RestService.DataFetchingService
                 maxParallelQueries = 4;
             }
 
+            NetworkExcludeFile excludes = this.GetExcludes(hamnetDbConfig);
+
             this.logger.LogDebug($"Launching {maxParallelQueries} parallel aquisition threads");
 
             Parallel.ForEach(pairsSlicedAccordingToConfiguration, new ParallelOptions { MaxDegreeOfParallelism = maxParallelQueries },
             pair =>
             {
+                if ((excludes != null) && (excludes.ParsedNetworks.Any(exclude => exclude.Equals(pair.Key.Subnet) || exclude.Contains(pair.Key.Subnet))))
+                {
+                    this.logger.LogDebug($"Skipping subnet {pair.Key.Subnet} due to exclude list");
+                    return;
+                }
+
                 try
                 {
                     this.QueryLinkOfSingleSubnet(pair);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     this.logger.LogError($"Exception caught and ignored in parallel data aquisition thread: {ex.ToString()}");
                 }
             });
 
             this.logger.LogInformation("COMPLETED: Retrieving monitoring data as configured in HamnetDB");
+        }
+
+        /// <summary>
+        /// Gets the excludes if the exclude file exists.
+        /// </summary>
+        /// <param name="hamnetDbConfig">The configuration to take the exclude file name from.</param>
+        /// <returns>The exclude file handler class.</returns>
+        private NetworkExcludeFile GetExcludes(IConfigurationSection hamnetDbConfig)
+        {
+            NetworkExcludeFile excludes = null;
+            string excludeFileName = hamnetDbConfig.GetValue<string>("ExcludeFile")?.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+            if (!string.IsNullOrWhiteSpace(excludeFileName))
+            {
+                if (File.Exists(excludeFileName))
+                {
+                    this.logger.LogDebug($"Reading Exclude file {excludeFileName} parallel aquisition threads");
+                    excludes = new NetworkExcludeFile(excludeFileName);
+                    excludes.Parse();
+                }
+                else
+                {
+                    this.logger.LogDebug($"Exclude file '{excludeFileName}' does not exist. Not using any excludes.");
+                }
+            }
+
+            return excludes;
         }
 
         /// <summary>

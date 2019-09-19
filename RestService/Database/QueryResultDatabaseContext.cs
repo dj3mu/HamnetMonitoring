@@ -28,6 +28,11 @@ namespace RestService.Database
         public DbSet<RssiFailingQuery> RssiFailingQueries { get; set; }
 
         /// <summary>
+        /// Gets access to the monitoring service persistence data.
+        /// </summary>
+        public DbSet<MonitoringPerstistence> MonitoringStatus { get; set; }
+
+        /// <summary>
         /// Construct from DbContextOptions.
         /// </summary>
         /// <param name="options">The options to construct from.</param>
