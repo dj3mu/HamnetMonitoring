@@ -99,13 +99,13 @@ namespace SnmpAbstraction
         /// Backup of current SNMP version when forcing V1.
         /// </summary>
         private SnmpVersion snmpVersionBackup;
-
+        
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         public LazyLoadingDeviceSystemData(ISnmpLowerLayer lowerSnmpLayer)
-            : base(lowerSnmpLayer)
+            : base(lowerSnmpLayer, TimeSpan.Zero, "device model not yet available")
         {
         }
 
@@ -174,6 +174,9 @@ namespace SnmpAbstraction
                 return this.uptime;
             }
         }
+
+        /// <inheritdoc />
+        public override string DeviceModel => $"{this.Model} v {this.Version}";
 
         /// <inheritdoc />
         public override TimeSpan QueryDuration => this.queryDurationBacking;

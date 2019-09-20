@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace HamnetDbAbstraction
@@ -10,9 +9,9 @@ namespace HamnetDbAbstraction
     public class HamnetDbProvider
     {
         /// <summary>
-        /// The singleton lookup to avoid re-instantiation of connections.
+        /// The connection string to use.
         /// </summary>
-        private Dictionary<string, IHamnetDbAccess> accessSingletonLookup = new Dictionary<string, IHamnetDbAccess>();
+        private string connectionString = null;
 
         /// <summary>
         /// Prevent instantiation from outside the singleton getter.
@@ -49,18 +48,12 @@ namespace HamnetDbAbstraction
         /// <returns>A handle to an abstract database interface.</returns>
         private IHamnetDbAccess ManufactureHamnetDbAccess(string connectionStringFile)
         {
-            string connectionString = this.ReadAndValidateConnectionStringFromFile(connectionStringFile);
-
-            IHamnetDbAccess accessor = null;
-            if (!this.accessSingletonLookup.TryGetValue(connectionString, out accessor))
+            if (string.IsNullOrWhiteSpace(this.connectionString))
             {
-                // Different database engine shall be distinguished here, instantiating the matching accessor.
-                // As of now we only support MySQL. But from design perspective we're ready to handle arbitrary engines.
-                 accessor = new MySqlHamnetDbAccessor(connectionString, new FactoryEntryRemovingDisposer(this.accessSingletonLookup, connectionString));
-                 this.accessSingletonLookup.Add(connectionString, accessor);
+                this.connectionString = this.ReadAndValidateConnectionStringFromFile(connectionStringFile);
             }
 
-            return accessor;
+            return new MySqlHamnetDbAccessor(connectionString, null);
         }
 
         /// <summary>
@@ -85,34 +78,6 @@ namespace HamnetDbAbstraction
             }
 
             return connectionString;
-        }
-    }
-
-    /// <summary>
-    /// Helper class to remove an accessor entry from the provider list if it gets explicitly disposed off.
-    /// </summary>
-    internal class FactoryEntryRemovingDisposer : IDisposable
-    {
-        private Dictionary<string, IHamnetDbAccess> accessSingletonLookup;
-
-        private string connectionString;
-
-        /// <summary>
-        /// Constructs taking everything we need to remove the entry from the povider's handler list.
-        /// </summary>
-        /// <param name="accessSingletonLookup">The lookup to remove the handler from.</param>
-        /// <param name="connectionString">The connection string to use in the lookup.</param>
-        public FactoryEntryRemovingDisposer(Dictionary<string, IHamnetDbAccess> accessSingletonLookup, string connectionString)
-        {
-            this.accessSingletonLookup = accessSingletonLookup;
-            this.connectionString = connectionString;
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            // this is why this helper class exists ...
-            this.accessSingletonLookup.Remove(this.connectionString);
         }
     }
 }

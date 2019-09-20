@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
     /// <summary>
     /// Worker class for lazy-loading interface details for AirOS v 4 devices.
     /// /// </summary>
-    internal class LazyLoadingUbiquitiAirOs4WirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
+    internal class LazyLoadingUbiquitiAirOsUpTo56WirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -22,7 +21,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
-        public LazyLoadingUbiquitiAirOs4WirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
+        public LazyLoadingUbiquitiAirOsUpTo56WirelessPeerInfos(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup)
             : base(lowerSnmpLayer, oidLookup)
         {
         }

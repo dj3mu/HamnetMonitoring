@@ -42,12 +42,19 @@ namespace SnmpAbstraction
             //       So this way, we get the amount of peers as well as an index to them.
             var valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressWalkRoot;
             DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            bool singlePeerGet = false;
+            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
-                return false;
+                valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressAppendInterfaceId;
+                if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+                {
+                    return false;
+                }
+
+                singlePeerGet = true;
             }
 
-            var interfaceVbs = this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid);
+            var interfaceVbs = singlePeerGet ? this.LowerSnmpLayer.Query(interfaceIdRootOid.Oid) : this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid);
 
             durationWatch.Stop();
 
@@ -57,8 +64,19 @@ namespace SnmpAbstraction
 
             foreach (Vb item in interfaceVbs)
             {
-                var macOidFragments = item.Oid.Skip(interfaceIdRootOid.Oid.Length).Take(6);
-                int interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 1]);
+                IEnumerable<uint> macOidFragments = null;
+                int interfaceId = int.MinValue;
+                if (singlePeerGet)
+                {
+                    macOidFragments = item.Value.ToString().HexStringToByteArray(' ').Select(b => Convert.ToUInt32(b));
+                    interfaceId = 1;
+                }
+                else
+                {
+                    macOidFragments = item.Oid.Skip(interfaceIdRootOid.Oid.Length).Take(6);
+                    interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 1]);
+                }
+
                 this.PeerInfosBacking.Add(
                     new LazyLoadingMikroTikWirelessPeerInfo(
                         this.LowerSnmpLayer,
@@ -77,7 +95,7 @@ namespace SnmpAbstraction
         {
             var valueToQuery = RetrievableValuesEnum.WirelessClientCount;
             DeviceSpecificOid wirelessClientCountRootOid;
-            if (this.OidLookup.TryGetValue(valueToQuery, out wirelessClientCountRootOid))
+            if (this.OidLookup.TryGetValue(valueToQuery, out wirelessClientCountRootOid) && !wirelessClientCountRootOid.Oid.IsNull)
             {
                 // finally we need to get the count of registered clients
                 // if it's 0, this must be a client (this method will only be called if the registration table
@@ -113,6 +131,23 @@ namespace SnmpAbstraction
                 }
 
                 return returnValue.Value.ToInt() > 0;
+            }
+
+            valueToQuery = RetrievableValuesEnum.WirelessMode;
+            if (this.OidLookup.TryGetValue(valueToQuery, out wirelessClientCountRootOid) && !wirelessClientCountRootOid.Oid.IsNull)
+            {
+                try
+                {
+                    int wirelessModeInt = this.LowerSnmpLayer.QueryAsInt(wirelessClientCountRootOid.Oid, "Wireless mode");
+
+                    return wirelessModeInt == 1;
+                }
+                catch(HamnetSnmpException hmnex)
+                {
+                    // no wireless mode --> dunno
+                    log.Info($"AP / client distinction for wireless interface #{interfaceId} of device '{this.LowerSnmpLayer.Address}': Can't determine mode: Query of OID for '{valueToQuery}' threw exception: {hmnex.Message}");
+                    return null;
+                }
             }
 
             log.Warn($"Unable to get AP / client distinction for wireless interface #{interfaceId} of device '{this.LowerSnmpLayer.Address}': No OID for value of type '{valueToQuery}' available");

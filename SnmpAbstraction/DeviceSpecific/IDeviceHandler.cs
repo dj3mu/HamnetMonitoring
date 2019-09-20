@@ -1,3 +1,4 @@
+using System;
 using SemVersion;
 using SnmpSharpNet;
 
@@ -6,7 +7,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Interface that serves as a handler for a specific device.
     /// </summary>
-    public interface IDeviceHandler
+    public interface IDeviceHandler : IDisposable
     {
         /// <summary>
         /// Gets the IP address that this device handler handles.

@@ -80,7 +80,8 @@ namespace SnmpAbstraction
                         peeringWithSide2.Item1,
                         peeringWithSide2.Item2,
                         peeringWithSide1.Item2))},
-                    this.querier1.Address);
+                    this.querier1.Address,
+                    this.querier1.SystemData.DeviceModel);
 
             var lazyContainerSum = wifiInterfaces1.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
             lazyContainerSum += wifiInterfaces2.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);

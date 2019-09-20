@@ -24,6 +24,11 @@ namespace SnmpAbstraction
         private readonly IQuerierOptions options;
 
         /// <summary>
+        /// To detect redundant calls to <see cref="Dispose()" />.
+        /// </summary>
+        private bool disposedValue = false;
+
+        /// <summary>
         /// Creates a new instance using the specified device handler.
         /// </summary>
         /// <param name="handler">The device handler to use for obtaining SNMP data.</param>
@@ -43,6 +48,13 @@ namespace SnmpAbstraction
             this.handler = handler;
             this.options = options;
         }
+
+        // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
+        // ~HamnetQuerier()
+        // {
+        //   // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in Dispose(bool disposing) weiter oben ein.
+        //   Dispose(false);
+        // }
 
         /// <inheritdoc />
         public IDeviceSystemData SystemData => this.handler.SystemData;
@@ -87,13 +99,38 @@ namespace SnmpAbstraction
                 fetchedDetails.AddRange(linkDetectionAlgorithm.DoQuery().Details);
             }
 
-            return new LinkDetails(fetchedDetails, this.Address);
+            return new LinkDetails(fetchedDetails, this.Address, this.SystemData.DeviceModel);
         }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return this.Address.ToString();
+            return $"{this.Address.ToString()} ({this.SystemData?.DeviceModel})";
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+
+            // TODO: Uncomment only if finalizer is overloaded above.
+            // GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this.disposedValue)
+            {
+                if (disposing)
+                {
+                    if (this.handler != null)
+                    {
+                        this.handler.Dispose();
+                        this.handler = null;
+                    }
+                }
+
+                this.disposedValue = true;
+            }
         }
     }
 }

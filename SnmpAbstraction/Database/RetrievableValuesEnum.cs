@@ -123,5 +123,11 @@
         /// The Interface ID needs to be appended.
         /// </summary>
         WlanRemoteMacAddressAppendInterfaceId = 16,
+
+        /// <summary>
+        /// OID to directly query RX signal strength from.<br/>
+        /// Used by some P2P devices that only and exactly support one remote.
+        /// </summary>
+        RxSignalStrengthImmediateOid = 17
     }
 }

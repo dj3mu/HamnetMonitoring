@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -13,6 +12,11 @@ namespace SnmpAbstraction
         /// Gets the address of the device that produced this result.
         /// </summary>
         IpAddress DeviceAddress { get; }
+
+        /// <summary>
+        /// Gets the model of the device that produced this result.
+        /// </summary>
+        string DeviceModel { get; }
 
         /// <summary>
         /// Gets the total duration of the value queries that have been executed by this object.

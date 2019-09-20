@@ -13,7 +13,24 @@ namespace SnmpAbstraction
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="queryDuration">The duration of the query.</param>
         protected LazyHamnetSnmpQuerierResultBase(ISnmpLowerLayer lowerSnmpLayer, TimeSpan queryDuration)
-            : base(lowerSnmpLayer.Address, queryDuration)
+            : this(lowerSnmpLayer, queryDuration, lowerSnmpLayer.SystemData?.DeviceModel)
+        {
+            if (lowerSnmpLayer == null)
+            {
+                throw new ArgumentNullException(nameof(lowerSnmpLayer), "The handle to the lower layer interface is null");
+            }
+
+            this.LowerSnmpLayer = lowerSnmpLayer;
+        }
+
+        /// <summary>
+        /// Construct for the given device address and query duration.
+        /// </summary>
+        /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
+        /// <param name="queryDuration">The duration of the query.</param>
+        /// <param name="deviceModel">The model and version of the device.</param>
+        protected LazyHamnetSnmpQuerierResultBase(ISnmpLowerLayer lowerSnmpLayer, TimeSpan queryDuration, string deviceModel)
+            : base(lowerSnmpLayer.Address, deviceModel, queryDuration)
         {
             if (lowerSnmpLayer == null)
             {

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using HamnetDbRest;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,37 @@ namespace RestService.Database
         /// Gets access to the RSSI failing queries table.
         /// </summary>
         public DbSet<RssiFailingQuery> RssiFailingQueries { get; set; }
+
+        /// <summary>
+        /// Gets access to the monitoring service persistence data.
+        /// </summary>
+        public DbSet<MonitoringPerstistence> MonitoringStatus { get; set; }
+
+        /// <summary>
+        /// Gets the one and only status dataset (a single row in the MonitoringStatus dataset).
+        /// </summary>
+        public MonitoringPerstistence Status
+        {
+            get
+            {
+                var status = this.MonitoringStatus.FirstOrDefault();
+                if (status == null)
+                {
+                    status = new MonitoringPerstistence
+                    {
+                        LastMaintenanceEnd = DateTime.MinValue,
+                        LastMaintenanceStart = DateTime.MinValue,
+                        LastQueryEnd = DateTime.MinValue,
+                        LastQueryStart = DateTime.MinValue
+                    };
+                    
+                    this.MonitoringStatus.Add(status);
+                    this.SaveChanges();
+                }
+
+                return status;
+            }
+        }
 
         /// <summary>
         /// Construct from DbContextOptions.

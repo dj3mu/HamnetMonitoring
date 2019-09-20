@@ -163,9 +163,19 @@ namespace SnmpAbstraction
 
                 log.Info($"Detected device '{lowerLayer.Address}' as Ubiquiti '{model}' v '{osVersion}'");
 
-                return (model == AirFiberFakeModelString)
-                    ? new UbiquitiAirFiberDeviceHandler(lowerLayer, this.ObtainOidTable(model.Trim(), osVersion), osVersion, model) as IDeviceHandler
-                    : new UbiquitiAirOsDeviceHandler(lowerLayer, this.ObtainOidTable(model.Trim(), osVersion), osVersion, model) as IDeviceHandler;
+                DeviceVersion deviceVersion;
+                IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion);
+                if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
+                {
+                    return (model == AirFiberFakeModelString)
+                        ? new UbiquitiAirFiberDeviceHandler(lowerLayer, oidTable, osVersion, model) as IDeviceHandler
+                        : new UbiquitiAirOsAbove56DeviceHandler(lowerLayer, oidTable, osVersion, model) as IDeviceHandler;
+                }
+                else
+                {
+                    return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model);
+                }
+
             }
             catch(Exception ex)
             {

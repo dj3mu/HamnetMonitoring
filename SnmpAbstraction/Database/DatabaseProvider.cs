@@ -13,13 +13,14 @@ namespace SnmpAbstraction
         /// </summary>
         private static readonly string DeviceDatabasePathAndFile = Path.Combine("Config", "DeviceDatabase.sqlite");
 
+        private string dataBaseFile;
+
         /// <summary>
         /// Prevent construction from outside the singleton getter.
         /// </summary>
         private DatabaseProvider()
         {
-            var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.DeviceDatabase = new DeviceDatabaseContext(Path.Combine(assemblyFolder, DeviceDatabasePathAndFile));
+            this.dataBaseFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), DeviceDatabasePathAndFile);
         }
 
         /// <summary>
@@ -30,6 +31,6 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the device database handle.
         /// </summary>
-        public DeviceDatabaseContext DeviceDatabase { get; }
+        public DeviceDatabaseContext DeviceDatabase => new DeviceDatabaseContext(this.dataBaseFile);
     }
 }

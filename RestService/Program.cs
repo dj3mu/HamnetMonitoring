@@ -15,6 +15,11 @@ namespace HamnetDbRest
     /// </summary>
     public class Program
     {
+        /// <summary>
+        /// The base time for calculation of Unix Time Stamp (by subtracting this time stamp).
+        /// </summary>
+        public static readonly DateTime UnixTimeStampBase = new DateTime(1970, 1, 1);
+
         private static readonly string Log4netConfigurationFile = "Config/log4net.config";
 
         private static Version libraryVersionBacking = null;

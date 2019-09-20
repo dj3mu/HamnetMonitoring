@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -53,6 +54,9 @@ namespace SnmpAbstraction
             // for device detection fall back to the lowest possible version
             this.lowerLayer.AdjustSnmpVersion(SnmpVersion.Ver1);
 
+            List<Exception> collectedExceptions = new List<Exception>();
+            List<string> collectedErrors = new List<string>();
+
             foreach (IDetectableDevice currentDevice in this.detectableDevices)
             {
                 try
@@ -65,14 +69,20 @@ namespace SnmpAbstraction
                     }
                     else
                     {
+                        collectedErrors.Add($"{currentDevice}: Returned 'not applicable'");
                         continue;
                     }
                 }
                 catch(SnmpException ex)
                 {
+                    collectedExceptions.Add(ex);
+
+                    var errorInfo2 = $"SnmpException talking to device '{this.lowerLayer.Address}' during applicability check: {ex.Message}";
+                    collectedErrors.Add($"{currentDevice}: {errorInfo2}");
+
                     if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
                     {
-                        var snmpErrorInfo = $"Timeout talking to device '{this.lowerLayer.Address}' during applicability check";
+                        var snmpErrorInfo = $"Timeout talking to device '{this.lowerLayer.Address}' during applicability check{Environment.NewLine}Collected Errors:{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
                         log.Error(snmpErrorInfo, ex);
 
                         // Re-throwing a different exception is not good practice.
@@ -80,12 +90,24 @@ namespace SnmpAbstraction
                         throw new HamnetSnmpException(snmpErrorInfo, ex);
                     }
 
-                    log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during applicability check: {ex.Message}");
+                    log.Info($"Trying next device: {errorInfo2}");
 
                     continue;
                 }
                 catch(HamnetSnmpException ex)
                 {
+                    var errorInfo2 = $"HamnetSnmpException talking to device '{this.lowerLayer.Address}' during applicability check: {ex.Message}";
+                    collectedErrors.Add($"{currentDevice}: {errorInfo2}");
+
+                    log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during applicability check", ex);
+
+                    continue;
+                }
+                catch(Exception ex)
+                {
+                    var errorInfo2 = $"Exception talking to device '{this.lowerLayer.Address}' during applicability check: {ex.Message}";
+                    collectedErrors.Add($"{currentDevice}: {errorInfo2}");
+
                     log.Info($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during applicability check", ex);
 
                     continue;
@@ -117,7 +139,7 @@ namespace SnmpAbstraction
                 {
                     if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
                     {
-                        var snmpErrorInfo = $"Timeout talking to device '{this.lowerLayer.Address}' during handler creation";
+                        var snmpErrorInfo = $"Timeout talking to device '{this.lowerLayer.Address}' ({this.lowerLayer?.SystemData?.DeviceModel}) during handler creation{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
                         log.Error(snmpErrorInfo, ex);
 
                         // Re-throwing a different exception is not good practice.
@@ -135,7 +157,7 @@ namespace SnmpAbstraction
 
             detectionDuration.Stop();
 
-            var errorInfo = $"Device '{this.lowerLayer.Address}' cannot be identified as a supported/known device after {detectionDuration.ElapsedMilliseconds} ms and trying {this.detectableDevices.Count} devices";
+            var errorInfo = $"Device '{this.lowerLayer.Address}' cannot be identified as a supported/known device after {detectionDuration.ElapsedMilliseconds} ms and trying {this.detectableDevices.Count} devices.{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
             log.Error(errorInfo);
             throw new HamnetSnmpException(errorInfo);
         }
