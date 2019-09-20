@@ -90,9 +90,23 @@ namespace RestService.DataFetchingService
                 this.snmpQuerierOptions = this.snmpQuerierOptions.WithRetries(snmpRetriesConfig);
             }
 
-            this.logger.LogInformation("Timed data fetching service is starting with a refresh interval of {refreshIntervalSecs} seconds");
+            TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(7);
+            using (QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.CreateContext())
+            {
+                // by default waiting a couple of secs before first Hamnet scan
+                var status = resultDb.Status;
+                var nowItIs = DateTime.Now;
+                var timeSinceLastAquisitionEnd = (nowItIs - status.LastQueryEnd);
+                if (timeSinceLastAquisitionEnd < this.refreshInterval)
+                {
+                    // no aquisition required yet (e.g. service restart)
+                    timeToFirstAquisition = this.refreshInterval - timeSinceLastAquisitionEnd;
+                }
 
-            this.timer = new Timer(DoFetchData, null, TimeSpan.FromSeconds(3) /* waiting a couple of secs before first Hamnet scan */, this.refreshInterval);
+                this.logger.LogInformation($"STARTING first aquisition after after restart in {timeToFirstAquisition}: Last aquisition {status.LastQueryEnd}, configured interval {this.refreshInterval}");
+            }
+
+            this.timer = new Timer(DoFetchData, null, timeToFirstAquisition, this.refreshInterval);
 
             return Task.CompletedTask;
         }
