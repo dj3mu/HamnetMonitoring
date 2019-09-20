@@ -74,7 +74,7 @@ namespace HamnetDbRest
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 var context = serviceScope.ServiceProvider.GetRequiredService<QueryResultDatabaseContext>();
-                context.Database.EnsureCreated();
+                context.Database.Migrate();
             }
 
             //app.UseHttpsRedirection();

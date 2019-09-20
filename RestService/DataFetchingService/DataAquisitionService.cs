@@ -44,6 +44,8 @@ namespace RestService.DataFetchingService
 
         private object lockObject = new object();
 
+        private TimeSpan refreshInterval;
+
         /// <summary>
         /// Constructs taking the logger.
         /// </summary>
@@ -65,7 +67,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            var refreshIntervalSecs = this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<int>("RefreshIntervalSecs");
+            this.refreshInterval = TimeSpan.FromSeconds(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<int>("RefreshIntervalSecs"));
 
             var snmpVersion = this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<int>("SnmpVersion");
             if (snmpVersion != 0)
@@ -90,7 +92,7 @@ namespace RestService.DataFetchingService
 
             this.logger.LogInformation("Timed data fetching service is starting with a refresh interval of {refreshIntervalSecs} seconds");
 
-            this.timer = new Timer(DoFetchData, null, TimeSpan.FromSeconds(3) /* waiting a couple of secs before first Hamnet scan */, TimeSpan.FromSeconds(refreshIntervalSecs));
+            this.timer = new Timer(DoFetchData, null, TimeSpan.FromSeconds(3) /* waiting a couple of secs before first Hamnet scan */, this.refreshInterval);
 
             return Task.CompletedTask;
         }
@@ -169,16 +171,29 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void PerformDataAquisition()
         {
-            this.logger.LogInformation("STARTING: Retrieving monitoring data as configured in HamnetDB");
-
             IConfigurationSection hamnetDbConfig = this.configuration.GetSection(AquisitionServiceSectionKey);
 
-            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration = FetchSubnetsWithHostsFromHamnetDb(hamnetDbConfig);
-
-            this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
+            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration;
 
             using (QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.CreateContext())
             {
+                var status = resultDb.Status;
+                var nowItIs = DateTime.Now;
+                if ((nowItIs - status.LastQueryEnd) < this.refreshInterval)
+                {
+                    this.logger.LogInformation($"SKIPPING: Aquisition not yet due: Last aquisition ended {status.LastQueryEnd}, configured interval {this.refreshInterval}");
+                    return;
+                }
+
+                status.LastQueryStart = DateTime.Now;
+                resultDb.SaveChanges();
+
+                this.logger.LogInformation($"STARTING: Retrieving monitoring data as configured in HamnetDB - last run ended at {status.LastQueryEnd}");
+
+                pairsSlicedAccordingToConfiguration = FetchSubnetsWithHostsFromHamnetDb(hamnetDbConfig);
+
+                this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
+
                 if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
                 {
                     using (var transaction = resultDb.Database.BeginTransaction())
@@ -205,7 +220,7 @@ namespace RestService.DataFetchingService
             {
                 if ((excludes != null) && (excludes.ParsedNetworks.Any(exclude => exclude.Equals(pair.Key.Subnet) || exclude.Contains(pair.Key.Subnet))))
                 {
-                    this.logger.LogDebug($"Skipping subnet {pair.Key.Subnet} due to exclude list");
+                    this.logger.LogInformation($"Skipping subnet {pair.Key.Subnet} due to exclude list");
                     return;
                 }
 
@@ -219,7 +234,14 @@ namespace RestService.DataFetchingService
                 }
             });
 
-            this.logger.LogInformation("COMPLETED: Retrieving monitoring data as configured in HamnetDB");
+            using (QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.CreateContext())
+            {
+                var status = resultDb.Status;
+                status.LastQueryEnd = DateTime.Now;
+                resultDb.SaveChanges();
+
+                this.logger.LogInformation($"COMPLETED: Retrieving monitoring data as configured in HamnetDB at {status.LastQueryEnd}, duration {status.LastQueryEnd - status.LastQueryStart}");
+            }
         }
 
         /// <summary>
@@ -340,10 +362,10 @@ namespace RestService.DataFetchingService
         private void DeleteFailingQuery(QueryResultDatabaseContext resultDb, IHamnetDbSubnet subnet)
         {
             var failingSubnetString = subnet.Subnet.ToString();
-            this.logger.LogDebug($"Removing fail entry for subnet '{failingSubnetString}'");
             var entryToRemove = resultDb.RssiFailingQueries.SingleOrDefault(e => e.Subnet == failingSubnetString);
             if (entryToRemove != null)
             {
+                this.logger.LogDebug($"Removing fail entry for subnet '{failingSubnetString}'");
                 resultDb.Remove(entryToRemove);
             }
         }

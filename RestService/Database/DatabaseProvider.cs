@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace RestService.Database
@@ -41,7 +42,7 @@ namespace RestService.Database
         {
             var context = new QueryResultDatabaseContext(this.databaseLocation);
             
-            context.Database.EnsureCreated();
+            context.Database.Migrate();
 
             return context;
         }
