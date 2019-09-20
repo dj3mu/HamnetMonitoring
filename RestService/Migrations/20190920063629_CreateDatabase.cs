@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#pragma warning disable 1591
+
 namespace HamnetDbRest.Migrations
 {
     public partial class CreateDatabase : Migration

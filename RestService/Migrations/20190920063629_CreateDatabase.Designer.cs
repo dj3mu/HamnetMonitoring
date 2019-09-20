@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RestService.Database;
 
+#pragma warning disable 1591
+
 namespace HamnetDbRest.Migrations
 {
     [DbContext(typeof(QueryResultDatabaseContext))]

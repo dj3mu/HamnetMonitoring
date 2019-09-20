@@ -162,6 +162,9 @@ namespace RestService.DataFetchingService
             {
                 try
                 {
+                    // make sure to change back the due time of the timer
+                    this.timer.Change(TimeSpan.Zero, this.refreshInterval);
+                    
                     this.PerformDataAquisition();
                 }
                 catch(Exception ex)
