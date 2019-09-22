@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HamnetDbAbstraction", "Hamn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HamnetDbAbstractionTests", "HamnetDbAbstractionTests\HamnetDbAbstractionTests.csproj", "{A65DBB2D-51AF-4BBA-9899-17E8079E7139}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestService", "RestService\RestService.csproj", "{5B02D108-3150-4DCD-B4C4-E15AF674D39B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HamnetMonitoringService", "HamnetMonitoringService\HamnetMonitoringService.csproj", "{5B02D108-3150-4DCD-B4C4-E15AF674D39B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
