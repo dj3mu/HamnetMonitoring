@@ -46,6 +46,8 @@ namespace RestService.DataFetchingService
 
         private TimeSpan refreshInterval;
 
+        private bool timerReAdjustmentNeeded = false;
+
         /// <summary>
         /// Constructs taking the logger.
         /// </summary>
@@ -101,6 +103,7 @@ namespace RestService.DataFetchingService
                 {
                     // no aquisition required yet (e.g. service restart)
                     timeToFirstAquisition = this.refreshInterval - timeSinceLastAquisitionEnd;
+                    this.timerReAdjustmentNeeded = true;
                 }
 
                 this.logger.LogInformation($"STARTING first aquisition after after restart in {timeToFirstAquisition}: Last aquisition {status.LastQueryEnd}, configured interval {this.refreshInterval}");
@@ -163,8 +166,12 @@ namespace RestService.DataFetchingService
                 try
                 {
                     // make sure to change back the due time of the timer
-                    this.timer.Change(TimeSpan.Zero, this.refreshInterval);
-                    
+                    if (this.timerReAdjustmentNeeded)
+                    {
+                        this.timer.Change(this.refreshInterval, this.refreshInterval);
+                        this.timerReAdjustmentNeeded = false;
+                    }
+
                     this.PerformDataAquisition();
                 }
                 catch(Exception ex)
