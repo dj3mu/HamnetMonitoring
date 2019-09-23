@@ -53,7 +53,7 @@ namespace RestService.DataFetchingService
         {
             var maintenanceIntervalMins = this.configuration.GetSection(MaintenanceServiceSectionKey).GetValue<int>("MaintenanceIntervalMins");
 
-            this.logger.LogInformation("Maintenance service is starting with an interval of {refreshIntervalSecs} minutes");
+            this.logger.LogInformation($"Maintenance service is starting with an interval of {maintenanceIntervalMins} minutes");
 
             this.timer = new Timer(DoMaintenance, null, TimeSpan.FromMinutes(maintenanceIntervalMins / 2), TimeSpan.FromMinutes(maintenanceIntervalMins));
 
@@ -63,7 +63,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogDebug("Maintenance service is stopping.");
+            this.logger.LogInformation("Maintenance service is stopping.");
 
             this.timer?.Change(Timeout.Infinite, 0);
 

@@ -9,6 +9,11 @@ namespace SnmpAbstraction
     internal class DatabaseProvider
     {
         /// <summary>
+        /// Handle to the logger.
+        /// </summary>
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
         /// The device database path and file name.
         /// </summary>
         private static readonly string DeviceDatabasePathAndFile = Path.Combine("Config", "DeviceDatabase.sqlite");
@@ -21,6 +26,8 @@ namespace SnmpAbstraction
         private DatabaseProvider()
         {
             this.dataBaseFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), DeviceDatabasePathAndFile);
+
+            log.Info($"Initialized for Device Database @ '{this.dataBaseFile}'");
         }
 
         /// <summary>

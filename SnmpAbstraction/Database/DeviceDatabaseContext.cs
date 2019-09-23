@@ -90,8 +90,6 @@ namespace SnmpAbstraction
             }
 
             this.DatabasePathAndFile = databasePathAndFile;
-
-            log.Info($"Initialized for Device Database '{this.DatabasePathAndFile}'");
         }
 
         /// <summary>

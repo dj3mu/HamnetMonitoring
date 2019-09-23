@@ -23,14 +23,16 @@ namespace RestService.DataFetchingService
     /// </summary>
     public class DataAquisitionService : IHostedService, IDisposable
     {
+        private const string RssiMetricName = "RSSI";
+
+        private const int RssiMetricId = 1;
+
         /// <summary>
         /// The section key for the Data Aquisition service configuration.
         /// </summary>
         public static readonly string AquisitionServiceSectionKey = "DataAquisitionService";
     
-        private const string RssiMetricName = "RSSI";
-
-        private const int RssiMetricId = 1;
+        private static readonly TimeSpan Hysteresis = TimeSpan.FromSeconds(10);
         
         private readonly ILogger<DataAquisitionService> logger;
 
@@ -42,11 +44,15 @@ namespace RestService.DataFetchingService
 
         private QuerierOptions snmpQuerierOptions = QuerierOptions.Default;
 
-        private object lockObject = new object();
+        private object multiTimerLockingObject = new object();
+
+        private object databaseLockingObject = new object();
 
         private TimeSpan refreshInterval;
 
         private bool timerReAdjustmentNeeded = false;
+
+        private QueryResultDatabaseContext resultDatabaseContext;
 
         /// <summary>
         /// Constructs taking the logger.
@@ -92,22 +98,26 @@ namespace RestService.DataFetchingService
                 this.snmpQuerierOptions = this.snmpQuerierOptions.WithRetries(snmpRetriesConfig);
             }
 
+            this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
+            
             TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(7);
-            using (QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.CreateContext())
-            {
-                // by default waiting a couple of secs before first Hamnet scan
-                var status = resultDb.Status;
-                var nowItIs = DateTime.Now;
-                var timeSinceLastAquisitionEnd = (nowItIs - status.LastQueryEnd);
-                if (timeSinceLastAquisitionEnd < this.refreshInterval)
-                {
-                    // no aquisition required yet (e.g. service restart)
-                    timeToFirstAquisition = this.refreshInterval - timeSinceLastAquisitionEnd;
-                    this.timerReAdjustmentNeeded = true;
-                }
 
-                this.logger.LogInformation($"STARTING first aquisition after after restart in {timeToFirstAquisition}: Last aquisition {status.LastQueryEnd}, configured interval {this.refreshInterval}");
+            // by default waiting a couple of secs before first Hamnet scan
+            var status = this.resultDatabaseContext.Status;
+            var nowItIs = DateTime.Now;
+            var timeSinceLastAquisitionStart = (nowItIs - status.LastQueryStart);
+            if (status.LastQueryStart > status.LastQueryEnd)
+            {
+                this.logger.LogInformation($"STARTING first aquisition immediately: Last aquisition started {status.LastQueryStart} seems not to have ended successfully (last end time {status.LastQueryEnd})");
             }
+            else if (timeSinceLastAquisitionStart < this.refreshInterval)
+            {
+                // no aquisition required yet (e.g. service restart)
+                timeToFirstAquisition = this.refreshInterval - timeSinceLastAquisitionStart;
+                this.timerReAdjustmentNeeded = true;
+            }
+
+            this.logger.LogInformation($"STARTING first aquisition after after restart in {timeToFirstAquisition}: Last aquisition started {status.LastQueryStart}, configured interval {this.refreshInterval}");
 
             this.timer = new Timer(DoFetchData, null, timeToFirstAquisition, this.refreshInterval);
 
@@ -117,7 +127,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogDebug("Timed data fetching service is stopping.");
+            this.logger.LogInformation("Timed data fetching service is stopping.");
 
             this.timer?.Change(Timeout.Infinite, 0);
 
@@ -161,13 +171,14 @@ namespace RestService.DataFetchingService
         /// <param name="state">Required by timer but not used. Using field <see cref="configuration" /> instead.</param>
         private void DoFetchData(object state)
         {
-            if (Monitor.TryEnter(this.lockObject))
+            if (Monitor.TryEnter(this.multiTimerLockingObject))
             {
                 try
                 {
                     // make sure to change back the due time of the timer
                     if (this.timerReAdjustmentNeeded)
                     {
+                        this.logger.LogInformation($"Re-adjusting timer with due time and interval to {this.refreshInterval}");
                         this.timer.Change(this.refreshInterval, this.refreshInterval);
                         this.timerReAdjustmentNeeded = false;
                     }
@@ -180,7 +191,7 @@ namespace RestService.DataFetchingService
                 }
                 finally
                 {
-                    Monitor.Exit(this.lockObject);
+                    Monitor.Exit(this.multiTimerLockingObject);
                     GC.Collect(); // free as much memory as we can
                 }
             }
@@ -195,37 +206,44 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void PerformDataAquisition()
         {
+            this.NewDatabaseContext();
+
             IConfigurationSection hamnetDbConfig = this.configuration.GetSection(AquisitionServiceSectionKey);
 
             Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration;
 
-            using (QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.CreateContext())
+            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
-                var status = resultDb.Status;
+                var status = resultDatabaseContext.Status;
                 var nowItIs = DateTime.Now;
-                if ((nowItIs - status.LastQueryEnd) < this.refreshInterval)
+                var sinceLastScan = nowItIs - status.LastQueryStart;
+                if ((sinceLastScan < this.refreshInterval - Hysteresis) && (status.LastQueryStart <= status.LastQueryEnd))
                 {
-                    this.logger.LogInformation($"SKIPPING: Aquisition not yet due: Last aquisition ended {status.LastQueryEnd}, configured interval {this.refreshInterval}");
+                    this.logger.LogInformation($"SKIPPING: Aquisition not yet due: Last aquisition started {status.LastQueryStart} ({sinceLastScan} ago, hysteresis {Hysteresis}), configured interval {this.refreshInterval}");
                     return;
                 }
+        
+                this.logger.LogInformation($"STARTING: Retrieving monitoring data as configured in HamnetDB - last run: Started {status.LastQueryStart} ({sinceLastScan} ago)");
 
                 status.LastQueryStart = DateTime.Now;
-                resultDb.SaveChanges();
 
-                this.logger.LogInformation($"STARTING: Retrieving monitoring data as configured in HamnetDB - last run ended at {status.LastQueryEnd}");
+                resultDatabaseContext.SaveChanges();
+                transaction.Commit();
 
-                pairsSlicedAccordingToConfiguration = FetchSubnetsWithHostsFromHamnetDb(hamnetDbConfig);
+            }
 
-                this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
 
-                if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
+            pairsSlicedAccordingToConfiguration = FetchSubnetsWithHostsFromHamnetDb(hamnetDbConfig);
+
+            this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
+
+            if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
+            {
+                using (var transaction = resultDatabaseContext.Database.BeginTransaction())
                 {
-                    using (var transaction = resultDb.Database.BeginTransaction())
-                    {
-                        resultDb.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
-                        resultDb.SaveChanges();
-                        transaction.Commit();
-                    }
+                    resultDatabaseContext.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
+                    resultDatabaseContext.SaveChanges();
+                    transaction.Commit();
                 }
             }
 
@@ -258,13 +276,40 @@ namespace RestService.DataFetchingService
                 }
             });
 
-            using (QueryResultDatabaseContext resultDb = DatabaseProvider.Instance.CreateContext())
+            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
-                var status = resultDb.Status;
+                var status = resultDatabaseContext.Status;
+
                 status.LastQueryEnd = DateTime.Now;
-                resultDb.SaveChanges();
 
                 this.logger.LogInformation($"COMPLETED: Retrieving monitoring data as configured in HamnetDB at {status.LastQueryEnd}, duration {status.LastQueryEnd - status.LastQueryStart}");
+
+                resultDatabaseContext.SaveChanges();
+                transaction.Commit();
+            }
+
+            this.DisposeDatabaseContext();
+        }
+
+        /// <summary>
+        /// Creates a new database context for the result database.
+        /// </summary>
+        private void NewDatabaseContext()
+        {
+            this.DisposeDatabaseContext();
+
+            this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
+        }
+
+        /// <summary>
+        /// Disposes off the result database context.
+        /// </summary>
+        private void DisposeDatabaseContext()
+        {
+            if (this.resultDatabaseContext != null)
+            {
+                this.resultDatabaseContext.Dispose();
+                this.resultDatabaseContext = null;
             }
         }
 
@@ -337,105 +382,110 @@ namespace RestService.DataFetchingService
 
             this.logger.LogInformation($"Querying link details for pair {address1} <-> {address2} of subnet {pair.Key.Subnet}");
 
-            using (var resultDb = DatabaseProvider.Instance.CreateContext())
+            Exception hitException = null;
+            try
             {
-                try
+                using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.snmpQuerierOptions))
                 {
-                    using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.snmpQuerierOptions))
+                    // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
+                    //       Else the lazy-loading containers will fail to lazy-query the required values.
+
+                    var linkDetails = querier.FetchLinkDetails(address2.ToString());
+
+                    lock(this.databaseLockingObject)
                     {
-                        // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
-                        //       Else the lazy-loading containers will fail to lazy-query the required values.
-
-                        var linkDetails = querier.FetchLinkDetails(address2.ToString());
-
-                        using (var transaction = resultDb.Database.BeginTransaction())
+                        using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
                         {
-                            this.RecordDetailsInDatabase(resultDb, linkDetails, DateTime.UtcNow);
+                            this.RecordDetailsInDatabase(linkDetails, DateTime.UtcNow);
 
-                            this.DeleteFailingQuery(resultDb, pair.Key);
+                            this.DeleteFailingQuery(pair.Key);
                     
-                            resultDb.SaveChanges();
+                            this.resultDatabaseContext.SaveChanges();
 
                             transaction.Commit();
                         }
                     }
                 }
-                catch (HamnetSnmpException ex)
-                {
-                    this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): Error: {ex.Message}");
-                    this.RecordFailingQuery(resultDb, ex, pair);
-                }
-                catch (SnmpException ex)
-                {
-                    this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): SNMP Error: {ex.Message}");
-                    this.RecordFailingQuery(resultDb, ex, pair);
-                }
-                catch (Exception ex)
-                {
-                    this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): General exception: {ex.Message}");
-                    this.RecordFailingQuery(resultDb, ex, pair);
-                }
+            }
+            catch (HamnetSnmpException ex)
+            {
+                this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): Error: {ex.Message}");
+                hitException = ex;
+            }
+            catch (SnmpException ex)
+            {
+                this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): SNMP Error: {ex.Message}");
+                hitException = ex;
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): General exception: {ex.Message}");
+                hitException = ex;
+            }
+
+            if (hitException != null)
+            {
+                this.RecordFailingQuery(hitException, pair);
             }
         }
 
         /// <summary>
         /// Deletes an entry in the failing query table.
         /// </summary>
-        /// <param name="resultDb">The databse handle.</param>
         /// <param name="subnet">The subnet which serves as key to the entry to delete.</param>
-        private void DeleteFailingQuery(QueryResultDatabaseContext resultDb, IHamnetDbSubnet subnet)
+        private void DeleteFailingQuery(IHamnetDbSubnet subnet)
         {
             var failingSubnetString = subnet.Subnet.ToString();
-            var entryToRemove = resultDb.RssiFailingQueries.SingleOrDefault(e => e.Subnet == failingSubnetString);
+            var entryToRemove = this.resultDatabaseContext.RssiFailingQueries.SingleOrDefault(e => e.Subnet == failingSubnetString);
             if (entryToRemove != null)
             {
                 this.logger.LogDebug($"Removing fail entry for subnet '{failingSubnetString}'");
-                resultDb.Remove(entryToRemove);
+                this.resultDatabaseContext.Remove(entryToRemove);
             }
         }
 
         /// <summary>
         /// Records a failing query.
         /// </summary>
-        /// <param name="resultDb">The databse handle.</param>
-        /// <param name="ex">The exception that caused the failure.</param>
+        /// <param name="exception">The exception that caused the failure.</param>
         /// <param name="pair">The pair of hosts inside the subnet to query.</param>
-        private void RecordFailingQuery(QueryResultDatabaseContext resultDb, Exception ex, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
+        private void RecordFailingQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
         {
-            using (var transaction = resultDb.Database.BeginTransaction())
+            lock(this.databaseLockingObject)
             {
-                RecordFailingQueryEntry(resultDb, ex, pair);
+                using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+                {
+                    this.RecordFailingQueryEntry(exception, pair);
 
-                resultDb.SaveChanges();
+                    this.resultDatabaseContext.SaveChanges();
 
-                transaction.Commit();
+                    transaction.Commit();
+                }
             }
         }
 
         /// <summary>
         /// Removes the RSSI table entry for the given address.
         /// </summary>
-        /// <param name="resultDb">The databse handle.</param>
         /// <param name="address">The address for which to remove the entry.</param>
-        private static void RemoveRssiTableEntryForHost(QueryResultDatabaseContext resultDb, string address)
+        private void RemoveRssiTableEntryForHost(string address)
         {
-            var entryToRemove = resultDb.RssiValues.Find(address);
+            var entryToRemove = this.resultDatabaseContext.RssiValues.Find(address);
             if (entryToRemove != null)
             {
-                resultDb.Remove(entryToRemove);
+                this.resultDatabaseContext.Remove(entryToRemove);
             }
         }
 
         /// <summary>
         /// Records a failing query.
         /// </summary>
-        /// <param name="resultDb">The databse handle.</param>
         /// <param name="ex">The exception that caused the failure.</param>
         /// <param name="pair">The pair of hosts inside the subnet to query.</param>
-        private static void RecordFailingQueryEntry(QueryResultDatabaseContext resultDb, Exception ex, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
+        private void RecordFailingQueryEntry(Exception ex, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
         {
             var failingSubnetString = pair.Key.Subnet.ToString();
-            var failEntry = resultDb.RssiFailingQueries.Find(failingSubnetString);
+            var failEntry = this.resultDatabaseContext.RssiFailingQueries.Find(failingSubnetString);
             if (failEntry == null)
             {
                 failEntry = new RssiFailingQuery
@@ -443,7 +493,7 @@ namespace RestService.DataFetchingService
                     Subnet = failingSubnetString
                 };
 
-                resultDb.RssiFailingQueries.Add(failEntry);
+                this.resultDatabaseContext.RssiFailingQueries.Add(failEntry);
             }
 
             failEntry.TimeStamp = DateTime.UtcNow;
@@ -471,29 +521,27 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Records the link details in the database.
         /// </summary>
-        /// <param name="resultDb">The databse handle.</param>
         /// <param name="linkDetails">The link details to record.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
-        private void RecordDetailsInDatabase(QueryResultDatabaseContext resultDb, ILinkDetails linkDetails, DateTime queryTime)
+        private void RecordDetailsInDatabase(ILinkDetails linkDetails, DateTime queryTime)
         {
             foreach (var item in linkDetails.Details)
             {
-                SetNewRssiForLink(resultDb, queryTime, item, item.Address1.ToString(), item.RxLevel1at2);
-                SetNewRssiForLink(resultDb, queryTime, item, item.Address2.ToString(), item.RxLevel2at1);
+                this.SetNewRssiForLink(queryTime, item, item.Address1.ToString(), item.RxLevel1at2);
+                this.SetNewRssiForLink(queryTime, item, item.Address2.ToString(), item.RxLevel2at1);
             }
         }
 
         /// <summary>
         /// Adds or modifies an RSSI entry for the given link detail.
         /// </summary>
-        /// <param name="resultDb">The databse handle.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
         /// <param name="linkDetail">The link details to record.</param>
         /// <param name="adressToSearch">The host address to search for (and modify if found).</param>
         /// <param name="rssiToSet">The RSSI value to record.</param>
-        private static void SetNewRssiForLink(QueryResultDatabaseContext resultDb, DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet)
+        private void SetNewRssiForLink(DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet)
         {
-            var adressEntry = resultDb.RssiValues.Find(adressToSearch);
+            var adressEntry = this.resultDatabaseContext.RssiValues.Find(adressToSearch);
             if (adressEntry == null)
             {
                 adressEntry = new Rssi
@@ -503,7 +551,7 @@ namespace RestService.DataFetchingService
                     MetricId = RssiMetricId,
                 };
 
-                resultDb.RssiValues.Add(adressEntry);
+                this.resultDatabaseContext.RssiValues.Add(adressEntry);
             }
 
             adressEntry.RssiValue = rssiToSet.ToString("0.0");
