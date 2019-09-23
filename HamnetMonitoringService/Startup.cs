@@ -50,6 +50,7 @@ namespace HamnetDbRest
             }
 
             services.AddTransient<VwRestRssiController>();
+            services.AddTransient<RestController>();
 
             services.AddDbContext<QueryResultDatabaseContext>(opt => opt.UseSqlite(this.Configuration.GetConnectionString("ResultDbConnection")));
         }

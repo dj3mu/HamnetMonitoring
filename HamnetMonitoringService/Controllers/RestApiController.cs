@@ -12,9 +12,9 @@ namespace HamnetDbRest.Controllers
     /// <summary>
     /// Controller class for the &quot;vw_rest_rssi&quot; REST API
     /// </summary>
-    [Route("vw_rest_rssi")]
+    [Route("api/v1")]
     [ApiController]
-    public class VwRestRssiController : ControllerBase
+    public class RestController : ControllerBase
     {
         private readonly ILogger logger;
 
@@ -25,7 +25,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <param name="logger">The logger to use for logging.</param>
         /// <param name="dbContext">The database context to get the data from.</param>
-        public VwRestRssiController(ILogger<VwRestRssiController> logger, QueryResultDatabaseContext dbContext)
+        public RestController(ILogger<RestController> logger, QueryResultDatabaseContext dbContext)
         {
             this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger), "The logger to use is null");
             this.dbContext = dbContext ?? throw new System.ArgumentNullException(nameof(dbContext), "The database context to take the data from is null");
@@ -35,8 +35,8 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET request.
         /// </summary>
         /// <returns>The results of the get request.</returns>
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Rssi>>> GetRssi()
+        [HttpGet("rssi/{host?}")]
+        public async Task<ActionResult<IEnumerable<Rssi>>> GetRssi(string host)
         {
             return await this.dbContext.RssiValues.ToListAsync();
         }
@@ -45,7 +45,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("failing")]
+        [HttpGet("rssi/failing")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.ToListAsync();
@@ -55,7 +55,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("failing/timeout")]
+        [HttpGet("rssi/failing/timeout")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetTimeoutFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout")).ToListAsync();
@@ -65,7 +65,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("failing/nontimeout")]
+        [HttpGet("rssi/failing/nontimeout")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetNonTimeoutFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout")).ToListAsync();

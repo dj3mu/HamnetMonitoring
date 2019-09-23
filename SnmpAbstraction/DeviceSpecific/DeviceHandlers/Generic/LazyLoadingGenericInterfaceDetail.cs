@@ -151,8 +151,8 @@ namespace SnmpAbstraction
 
             VbCollection macQueryResult = this.LowerSnmpLayer.Query(interfaceMacOid);
 
-            var macString = macQueryResult[interfaceMacOid].Value.ToString().Trim();
-            if (macString.Length == 6)
+            var macString = macQueryResult[interfaceMacOid].Value.ToString();
+            if (macString.Length <= 6)
             {
                 this.MacAddressStringBacking = Encoding.ASCII.GetBytes(macString).ToHexString();
             }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -56,11 +58,13 @@ namespace SnmpAbstraction
             foreach (Vb item in interfaceVbs)
             {
                 int interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 7]);
+                IEnumerable<uint> macOidFragments = item.Oid.Skip(item.Oid.Length - 6).Take(6);
+
                 this.PeerInfosBacking.Add(
                     new LazyLoadingUbiquitiAirOs6plusWirelessPeerInfo(
                         this.LowerSnmpLayer,
                         this.OidLookup,
-                        item.Value.ToString().Replace(' ', ':'),
+                        macOidFragments.ToHexString(),
                         interfaceId, // last element of OID contains the interface ID on which this peer is connected
                         this.CheckIsAccessPoint(interfaceId)
                     ));

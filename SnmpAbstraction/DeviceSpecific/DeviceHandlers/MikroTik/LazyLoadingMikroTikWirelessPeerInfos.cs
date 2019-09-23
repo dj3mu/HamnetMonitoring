@@ -130,7 +130,13 @@ namespace SnmpAbstraction
                     return false;
                 }
 
-                return returnValue.Value.ToInt() > 0;
+                int numberOfClients = 0;
+                if (!returnValue.Value.TryToInt(out numberOfClients))
+                {
+                    return false;
+                }
+                
+                return numberOfClients > 0;
             }
 
             valueToQuery = RetrievableValuesEnum.WirelessMode;
