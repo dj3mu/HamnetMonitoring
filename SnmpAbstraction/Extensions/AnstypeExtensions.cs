@@ -48,12 +48,6 @@ namespace SnmpAbstraction
             }
             
             converted = int.MinValue;
-            if (asnType.Type != AsnType.INTEGER)
-            {
-                log.Warn($"Cannot convert an ASN Type '{SnmpConstants.GetTypeName(asnType.Type)}' of value '{asnType.ToString()}' to an integer: Non-matching type");
-                return false;
-            }
-
             if (!int.TryParse(asnType.ToString(), out converted))
             {
                 log.Warn($"Cannot convert an ASN Type '{SnmpConstants.GetTypeName(asnType.Type)}' of value '{asnType.ToString()}' to an integer: Value malformatted or out of range");

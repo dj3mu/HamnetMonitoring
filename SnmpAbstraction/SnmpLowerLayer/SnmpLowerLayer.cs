@@ -238,7 +238,9 @@ namespace SnmpAbstraction
         {
             if ((this.QueryParameters?.Version == protocolVersion) && (this.QueryParameters?.Community == community))
             {
+#if DEBUG
                 log.Debug($"Device '{this.Address}': SNMP community '{community}' and protocol version '{protocolVersion}' already set. No change.");
+#endif
                 return;
             }
 
