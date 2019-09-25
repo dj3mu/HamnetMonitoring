@@ -19,7 +19,8 @@ namespace SnmpAbstraction
         /// <param name="ver2cMaximumValuesPerRequest">A value telling the SNMP Agent how many GETNEXT like variables to retrieve</param>
         /// <param name="ver2cMaximumRequests">A value telling the SNMP Agent how many VBs to include in a single request.<br/>
         /// Only valid on GETBULK requests.</param>
-        public QuerierOptions(int port, SnmpVersion protocolVersion, OctetString community, TimeSpan timeout, int retries, int ver2cMaximumValuesPerRequest, int ver2cMaximumRequests)
+        /// <param name="enableCaching">Value indicating whether to use caching of non-volatile data.</param>
+        public QuerierOptions(int port, SnmpVersion protocolVersion, OctetString community, TimeSpan timeout, int retries, int ver2cMaximumValuesPerRequest, int ver2cMaximumRequests, bool enableCaching)
         {
             this.Port = port;
             this.ProtocolVersion = protocolVersion;
@@ -28,6 +29,7 @@ namespace SnmpAbstraction
             this.Retries = retries;
             this.Ver2cMaximumRequests = ver2cMaximumRequests;
             this.Ver2cMaximumValuesPerRequest = ver2cMaximumValuesPerRequest;
+            this.EnableCaching = enableCaching;
         }
 
         /// <summary>
@@ -64,6 +66,9 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public int Ver2cMaximumRequests { get; } = 5;
 
+        /// <inheritdoc />
+        public bool EnableCaching { get; } = true;
+
         /// <summary>
         /// Creates a new object that is a copy of this object with modified Ver2cMaximumRequests number.
         /// </summary>
@@ -71,7 +76,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified ver2cMaximumRequests number.</returns>
         public QuerierOptions WithVer2cMaximumRequests(int ver2cMaximumRequests)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, ver2cMaximumRequests);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, ver2cMaximumRequests, this.EnableCaching);
         }
 
         /// <summary>
@@ -81,7 +86,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified ver2cMaximumValuesPerRequest number.</returns>
         public QuerierOptions WithVer2cMaximumValuesPerRequest(int ver2cMaximumValuesPerRequest)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
         }
 
         /// <summary>
@@ -91,7 +96,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified port number.</returns>
         public QuerierOptions WithPort(int port)
         {
-            return new QuerierOptions(port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
+            return new QuerierOptions(port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
         }
 
         /// <summary>
@@ -101,7 +106,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified SNMP protocol version.</returns>
         public QuerierOptions WithProtocolVersion(SnmpVersion protocolVersion)
         {
-            return new QuerierOptions(this.Port, protocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
+            return new QuerierOptions(this.Port, protocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
         }
 
         /// <summary>
@@ -111,7 +116,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified community string.</returns>
         public QuerierOptions WithCommunity(OctetString community)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
         }
 
         /// <summary>
@@ -121,7 +126,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified timeout.</returns>
         public QuerierOptions WithTimeout(TimeSpan timeout)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
         }
 
         /// <summary>
@@ -131,7 +136,17 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified retries count.</returns>
         public QuerierOptions WithRetries(int retries)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
+        }
+
+        /// <summary>
+        /// Creates a new object that is a copy of this object with modified caching setting.
+        /// </summary>
+        /// <param name="enableCaching">Value indicating whether to enable caching of non-volatile data.</param>
+        /// <returns>A new object that is a copy of this object with modified caching setting.</returns>
+        public QuerierOptions WithCaching(bool enableCaching)
+        {
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, enableCaching);
         }
     }
 }

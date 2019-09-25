@@ -5,7 +5,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Interface to the details of a single wireless peer.
     /// </summary>
-    public interface IWirelessPeerInfo : IHamnetSnmpQuerierResult, ILazyEvaluated
+    public interface IWirelessPeerInfo : IHamnetSnmpQuerierResult, ILazyEvaluated, ICachableOids
     {
         /// <summary>
         /// Gets the MAC address of the remote side (as Hex string like &quot;b8:27:eb:97:b6:39&quot;).

@@ -63,7 +63,10 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override TimeSpan QueryDuration => this.localQueryDuration;
+        public override TimeSpan GetQueryDuration()
+        {
+            return this.localQueryDuration;
+        }
 
         /// <inheritdoc />
         public override bool? IsAccessPoint
@@ -90,6 +93,8 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override bool RetrieveTxSignalStrength()
         {
+            this.RecordCachableOid(CachableValueMeanings.WirelessTxSignalStrength, new Oid("0"));
+
             // this value is simply not available for UBNT devices, at least not via SNMP (but for some models even not in Web GUI)
             return false;
         }
@@ -128,6 +133,8 @@ namespace SnmpAbstraction
 
             durationWatch.Stop();
 
+            this.RecordCachableOids(CachableValueMeanings.WirelessRxSignalStrength, clientSpecificOids);
+
             this.localQueryDuration += durationWatch.Elapsed;
 
             return true;
@@ -152,6 +159,8 @@ namespace SnmpAbstraction
             this.LinkUptimeBacking = TimeSpan.FromSeconds(this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, link uptime"));
 
             durationWatch.Stop();
+
+            this.RecordCachableOid(CachableValueMeanings.WirelessLinkUptime, interfactTypeOid);
 
             this.localQueryDuration += durationWatch.Elapsed;
 

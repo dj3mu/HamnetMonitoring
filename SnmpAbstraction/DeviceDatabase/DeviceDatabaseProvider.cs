@@ -6,7 +6,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Provider class for databases.
     /// </summary>
-    internal class DatabaseProvider
+    internal class DeviceDatabaseProvider
     {
         /// <summary>
         /// Handle to the logger.
@@ -23,7 +23,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// Prevent construction from outside the singleton getter.
         /// </summary>
-        private DatabaseProvider()
+        private DeviceDatabaseProvider()
         {
             this.dataBaseFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), DeviceDatabasePathAndFile);
 
@@ -33,7 +33,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the singleton instance of the database provider class.
         /// </summary>
-        public static DatabaseProvider Instance { get; } = new DatabaseProvider();
+        public static DeviceDatabaseProvider Instance { get; } = new DeviceDatabaseProvider();
 
         /// <summary>
         /// Gets the device database handle.

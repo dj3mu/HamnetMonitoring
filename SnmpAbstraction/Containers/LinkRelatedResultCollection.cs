@@ -53,22 +53,22 @@ namespace SnmpAbstraction
                 TimeSpan queryDurationSum = TimeSpan.Zero;
                 if (this.InterfaceDetail1 != null)
                 {
-                    queryDurationSum += this.InterfaceDetail1.QueryDuration;
+                    queryDurationSum += this.InterfaceDetail1.GetQueryDuration();
                 }
 
                 if (this.InterfaceDetail2 != null)
                 {
-                    queryDurationSum += this.InterfaceDetail2.QueryDuration;
+                    queryDurationSum += this.InterfaceDetail2.GetQueryDuration();
                 }
 
                 if (this.WirelessPeerInfo1 != null)
                 {
-                    queryDurationSum += this.WirelessPeerInfo1.QueryDuration;
+                    queryDurationSum += this.WirelessPeerInfo1.GetQueryDuration();
                 }
 
                 if (this.WirelessPeerInfo2 != null)
                 {
-                    queryDurationSum += this.WirelessPeerInfo2.QueryDuration;
+                    queryDurationSum += this.WirelessPeerInfo2.GetQueryDuration();
                 }
 
                 return queryDurationSum;

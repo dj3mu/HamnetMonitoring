@@ -52,17 +52,14 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override TimeSpan QueryDuration
+        public override TimeSpan GetQueryDuration()
         {
-            get
+            if (this.InterfaceDetailsBacking == null)
             {
-                if (this.InterfaceDetailsBacking == null)
-                {
-                    return TimeSpan.Zero;
-                }
-
-                return this.InterfaceDetailsBacking.Aggregate(this.localQueryDuration, (value, detail) => value += detail.QueryDuration);
+                return TimeSpan.Zero;
             }
+
+            return this.InterfaceDetailsBacking.Aggregate(this.localQueryDuration, (value, detail) => value += detail.GetQueryDuration());
         }
 
         /// <summary>
