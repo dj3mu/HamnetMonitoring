@@ -29,13 +29,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="SemanticVersion" Version="2.0.0" />
     <PackageReference Include="SnmpSharpNetStandard" Version="0.10.0" />
   </ItemGroup>
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying database and config files to $(OutDir)$(ConfigDir)" Importance="high" />
-    <Copy SourceFiles="Database/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
+    <Copy SourceFiles="DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
     <Copy SourceFiles="$(ProjectDir)../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
   </Target>
 

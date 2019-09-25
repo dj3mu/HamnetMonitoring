@@ -33,7 +33,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQuerySystemDataTest()
         {
-            QueryAndPrintSystemData(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2);
+            //QueryAndPrintSystemData(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false);
+            QueryAndPrintSystemData(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
@@ -131,9 +132,10 @@ namespace SnmpAbstractionTests
         /// </summary>
         /// <param name="address">The address to test with.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use.</param>
-        private static void QueryAndPrintSystemData(IpAddress address, SnmpVersion snmpVersion)
+        /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
+        private static void QueryAndPrintSystemData(IpAddress address, SnmpVersion snmpVersion, bool useCache = false)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion));
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache));
 
             Assert.NotNull(querier, "Create(...) returned null");
 

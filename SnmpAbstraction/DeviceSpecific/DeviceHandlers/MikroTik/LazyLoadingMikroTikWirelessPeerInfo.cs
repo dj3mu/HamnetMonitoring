@@ -36,7 +36,10 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override TimeSpan QueryDuration => this.localQueryDuration;
+        public override TimeSpan GetQueryDuration()
+        {
+            return this.localQueryDuration;
+        }
 
         /// <inheritdoc />
         protected override bool RetrieveTxSignalStrength()
@@ -57,6 +60,8 @@ namespace SnmpAbstraction
             this.TxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, TX signal strength");
 
             durationWatch.Stop();
+
+            this.RecordCachableOid(CachableValueMeanings.WirelessTxSignalStrength, interfactTypeOid);
 
             this.localQueryDuration += durationWatch.Elapsed;
 
@@ -99,6 +104,8 @@ namespace SnmpAbstraction
 
                 var queryResults = this.LowerSnmpLayer.QueryAsInt(clientSpecificOids, "wireless peer info, RX signal strength");
 
+                this.RecordCachableOids(CachableValueMeanings.WirelessRxSignalStrength, clientSpecificOids);
+
                 // Note: As the SNMP cannot return -infinity MikroTik devices return 0.
                 //       Hence we effectively skip 0 values here assuming that stream is not in use.
                 this.RxSignalStrengthBacking = queryResults.Values.Where(v => v != 0).DecibelLogSum();
@@ -132,6 +139,8 @@ namespace SnmpAbstraction
             durationWatch.Stop();
 
             this.localQueryDuration += durationWatch.Elapsed;
+
+            this.RecordCachableOid(CachableValueMeanings.WirelessLinkUptime, interfactTypeOid);
 
             return true;
         }

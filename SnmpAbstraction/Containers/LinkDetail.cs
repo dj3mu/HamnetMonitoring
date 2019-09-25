@@ -44,7 +44,10 @@ namespace SnmpAbstraction
         public double RxLevel2at1 => this.linkRelatedResultCollection?.WirelessPeerInfo1?.RxSignalStrength ?? double.NaN;
 
         /// <inheritdoc />
-        public override TimeSpan QueryDuration => this.linkRelatedResultCollection?.TotalQueryDuration ?? TimeSpan.Zero;
+        public override TimeSpan GetQueryDuration()
+        {
+            return this.linkRelatedResultCollection?.TotalQueryDuration ?? TimeSpan.Zero;
+        }
 
         /// <inheritdoc />
         public TimeSpan LinkUptime => this.linkRelatedResultCollection?.WirelessPeerInfo2?.LinkUptime ?? TimeSpan.Zero;

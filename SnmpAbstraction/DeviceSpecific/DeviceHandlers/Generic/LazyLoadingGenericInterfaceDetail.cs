@@ -54,7 +54,10 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override TimeSpan QueryDuration => this.localQueryDuration;
+        public override TimeSpan GetQueryDuration()
+        {
+            return this.localQueryDuration;
+        }
 
         /// <inheritdoc />
         public IanaInterfaceType InterfaceType
