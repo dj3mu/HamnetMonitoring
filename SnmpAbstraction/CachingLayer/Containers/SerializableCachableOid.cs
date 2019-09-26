@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using SnmpSharpNet;
 
@@ -57,5 +58,30 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         [JsonIgnore]
         public IEnumerable<Oid> Oids  => this.oidsBacking;
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            StringBuilder returnBuilder = new StringBuilder();
+
+            returnBuilder.Append("Cachable OIDs for ").Append(this.Address).Append(", meaning '").Append(this.Meaning).Append("': ");
+
+            bool isFirst = true;
+            foreach (var item in this.oidsBacking)
+            {
+                if (!isFirst)
+                {
+                    returnBuilder.Append(", ");
+                }
+                else
+                {
+                    isFirst = false;
+                }
+
+                returnBuilder.Append(item);
+            }
+
+            return returnBuilder.ToString();
+        }
     }
 }

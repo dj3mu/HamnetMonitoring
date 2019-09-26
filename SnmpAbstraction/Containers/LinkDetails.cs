@@ -26,14 +26,17 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public IReadOnlyList<ILinkDetail> Details { get; }
 
-        public override TimeSpan GetQueryDuration()
+        public override TimeSpan QueryDuration
         {
-            if (this.Details == null)
+            get
             {
-                return TimeSpan.Zero;
-            }
+                if (this.Details == null)
+                {
+                    return TimeSpan.Zero;
+                }
 
-            return this.Details.Aggregate(TimeSpan.Zero, (a, c) => a += c.GetQueryDuration());
+                return this.Details.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
+            }
         }
 
         /// <inheritdoc />

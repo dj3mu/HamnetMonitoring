@@ -62,10 +62,7 @@ namespace SnmpAbstraction
         private readonly TimeSpan queryDuration = TimeSpan.Zero;
 
         /// <inheritdoc />
-        public TimeSpan GetQueryDuration()
-        {
-            return queryDuration;
-        }
+        public TimeSpan QueryDuration => queryDuration;
 
         public string ToConsoleString()
         {
@@ -88,6 +85,14 @@ namespace SnmpAbstraction
             return returnBuilder.ToString();
         }
 
+ 
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return this.ToConsoleString();
+        }
+
+        /// <inheritdoc />
         public void ForceEvaluateAll()
         {
             // NOP here - we're not lazy

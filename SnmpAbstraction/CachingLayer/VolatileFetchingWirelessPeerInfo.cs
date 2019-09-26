@@ -151,12 +151,6 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public TimeSpan GetQueryDuration()
-        {
-            return this.queryDurationBacking;
-        }
-
-        /// <inheritdoc />
         public string ToConsoleString()
         {
             StringBuilder returnBuilder = new StringBuilder(128);

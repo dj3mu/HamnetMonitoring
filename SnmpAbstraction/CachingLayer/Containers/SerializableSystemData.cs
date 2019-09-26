@@ -79,10 +79,8 @@ namespace SnmpAbstraction
         public string DeviceModel { get; set; } = "<device model not available>";
 
         /// <inheritdoc />
-        public TimeSpan GetQueryDuration()
-        {
-            return TimeSpan.Zero;
-        }
+        [JsonIgnore]
+        public TimeSpan QueryDuration { get; set; } = TimeSpan.Zero;
 
         /// <inheritdoc />
         public void ForceEvaluateAll()
@@ -105,6 +103,12 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - System root OID   : ").Append(this.EnterpriseObjectId?.ToString());
 
             return returnBuilder.ToString();
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return this.ToConsoleString();
         }
     }
 }

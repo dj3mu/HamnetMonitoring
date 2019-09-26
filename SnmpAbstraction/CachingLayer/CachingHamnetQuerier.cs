@@ -17,6 +17,11 @@ namespace SnmpAbstraction
         private readonly ISnmpLowerLayer lowerLayer = null;
 
         /// <summary>
+        /// The options of the querier.
+        /// </summary>
+        private readonly IQuerierOptions options;
+
+        /// <summary>
         /// The underlying querier. Only instantiated on demand.
         /// </summary>
         private IHamnetQuerier lowerQuerier = null;
@@ -40,15 +45,21 @@ namespace SnmpAbstraction
         /// The lookup for cachable values.
         /// </summary>
         private Dictionary<CachableValueMeanings, ICachableOid> cachableOidLookup = new Dictionary<CachableValueMeanings, ICachableOid>();
-        private VolatileFetchingWirelessPeerInfos volatileFetchingWirelessPeerInfo;
+
+        /// <summary>
+        /// The volatile data fetching wireless peer info object.
+        /// </summary>
+        private VolatileFetchingWirelessPeerInfos volatileFetchingWirelessPeerInfo = null;
 
         /// <summary>
         /// Initializes using the given lower layer.
         /// </summary>
         /// <param name="lowerLayer">The lower layer to use.</param>
-        public CachingHamnetQuerier(ISnmpLowerLayer lowerLayer)
+        /// <param name="options">The options of the querier.</param>
+        public CachingHamnetQuerier(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
         {
             this.lowerLayer = lowerLayer ?? throw new ArgumentNullException(nameof(lowerLayer), "The lower layer SNMP engine is null");
+            this.options = options ?? throw new ArgumentNullException(nameof(options), "The querier options are null");
         }
 
         // TODO: Only implement if unmanaged resources are to be freed.
@@ -71,10 +82,8 @@ namespace SnmpAbstraction
             get
             {
                 this.InitializeCacheEntry();
-                if (this.cacheEntry.SystemData == null)
-                {
-                    this.LowerQuerierFetchSystemData();
-                }
+
+                this.LowerQuerierFetchSystemData();
 
                 return this.cacheEntry.SystemData;
             }
@@ -86,10 +95,8 @@ namespace SnmpAbstraction
             get
             {
                 this.InitializeCacheEntry();
-                if (this.cacheEntry.InterfaceDetails == null)
-                {
-                    this.LowerQuerierFetchInterfaceDetails();
-                }
+
+                this.LowerQuerierFetchInterfaceDetails();
 
                 return this.cacheEntry.InterfaceDetails;
             }
@@ -101,11 +108,8 @@ namespace SnmpAbstraction
             get
             {
                 this.InitializeCacheEntry();
-                if (this.cacheEntry.WirelessPeerInfos == null)
-                {
-                    this.LowerQuerierFetchWirelessPeerInfo();
-                    this.volatileFetchingWirelessPeerInfo = new VolatileFetchingWirelessPeerInfos(this.cacheEntry.WirelessPeerInfos, this.cachableOidLookup, this.lowerLayer, this.SyncRoot);
-                }
+
+                this.LowerQuerierFetchWirelessPeerInfo();
 
                 return this.volatileFetchingWirelessPeerInfo;
             }
@@ -164,7 +168,17 @@ namespace SnmpAbstraction
         /// </summary>
         private void LowerQuerierFetchSystemData()
         {
-            throw new NotImplementedException();
+            if (this.cacheEntry.SystemData != null)
+            {
+                return;
+            }
+
+            this.InitializeLowerQuerier();
+
+            this.cacheEntry.SystemData = new SerializableSystemData(this.lowerQuerier.SystemData);
+
+            this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
+            this.cacheDatabaseContext.SaveChanges();
         }
 
         /// <summary>
@@ -184,6 +198,29 @@ namespace SnmpAbstraction
         }
 
         /// <summary>
+        /// Initializes the lower querier.
+        /// </summary>
+        private void InitializeLowerQuerier()
+        {
+            if (this.lowerQuerier != null)
+            {
+                return;
+            }
+
+            this.lowerQuerier = SnmpQuerierFactory.Instance.Create(
+                this.lowerLayer,
+                new QuerierOptions(
+                    this.options.Port,
+                    this.options.ProtocolVersion,
+                    this.options.Community,
+                    this.options.Timeout,
+                    this.options.Retries,
+                    this.options.Ver2cMaximumValuesPerRequest,
+                    this.options.Ver2cMaximumRequests,
+                    false));
+        }
+
+        /// <summary>
         /// Initializes the cache.
         /// </summary>
         private void InitializeCacheEntry()
@@ -195,7 +232,8 @@ namespace SnmpAbstraction
                 return;
             }
 
-            this.cacheEntry = cacheDatabaseContext.CacheData.Find(this.Address);
+            this.cacheEntry = this.cacheDatabaseContext.CacheData.FirstOrDefault(e => e.Address == this.Address);
+
             if (this.cacheEntry == null)
             {
                 this.cacheEntry = new CacheData { Address = this.Address, CachableOids = this.cachableOidLookup.Values };

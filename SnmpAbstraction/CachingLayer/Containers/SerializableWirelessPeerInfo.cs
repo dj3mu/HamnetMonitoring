@@ -73,10 +73,7 @@ namespace SnmpAbstraction
         private TimeSpan queryDuration = TimeSpan.Zero;
 
         /// <inheritdoc />
-        public TimeSpan GetQueryDuration()
-        {
-            return queryDuration;
-        }
+        public TimeSpan QueryDuration => queryDuration;
 
         /// <inheritdoc />
         public void SetQueryDuration(TimeSpan value)
@@ -107,6 +104,12 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - TX signal [dBm]: ").Append(this.TxSignalStrength.ToString("0.0 dBm"));
 
             return returnBuilder.ToString();
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return this.ToConsoleString();
         }
     }
 }

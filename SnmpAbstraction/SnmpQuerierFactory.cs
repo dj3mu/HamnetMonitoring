@@ -81,10 +81,26 @@ namespace SnmpAbstraction
 
             ISnmpLowerLayer lowerLayer = new SnmpLowerLayer(new IpAddress(address), options);
 
+            return this.Create(lowerLayer, options);
+        }
+
+        /// <summary>
+        /// Creates a new querier using the given lower layer and options.
+        /// </summary>
+        /// <param name="lowerLayer">The IP address of the device to query.</param>
+        /// <param name="options">The options for the query.</param>
+        /// <returns>An <see cref="IHamnetQuerier" /> that talks to the given address.</returns>
+        internal IHamnetQuerier Create(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
+        {
+            if (lowerLayer == null)
+            {
+                throw new ArgumentNullException(nameof(lowerLayer), "lowerLayer is null");
+            }
+
             IHamnetQuerier querier = null;            
             if (options.EnableCaching)
             {
-                querier = new CachingHamnetQuerier(lowerLayer);
+                querier = new CachingHamnetQuerier(lowerLayer, options);
             }
             else
             {
@@ -93,7 +109,7 @@ namespace SnmpAbstraction
 
                 if (handler == null)
                 {
-                    var errorInfo = $"Cannot obtain a feasible device handler for device '{address}'";
+                    var errorInfo = $"Cannot obtain a feasible device handler for device '{lowerLayer.Address}'";
                     log.Error(errorInfo);
                     throw new HamnetSnmpException(errorInfo);
                 }

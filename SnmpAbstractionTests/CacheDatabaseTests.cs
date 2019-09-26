@@ -56,6 +56,7 @@ namespace Tests
                 Location = "Test-Location",
                 Model = "Test-Model",
                 Name = "Test-Name",
+                QueryDuration = TimeSpan.FromSeconds(2),
                 Uptime = TimeSpan.FromMinutes(2),
                 Version = new SemanticVersion(1, 3, 5, "p7", "b9")
             };
@@ -96,7 +97,7 @@ namespace Tests
                 Assert.AreEqual(testSystemData.Location, retrievedSystemData.Location, "Error in Location");
                 Assert.AreEqual(testSystemData.Model, retrievedSystemData.Model, "Error in Model");
                 Assert.AreEqual(testSystemData.Name, retrievedSystemData.Name, "Error in Name");
-                Assert.AreNotEqual(testSystemData.GetQueryDuration(), retrievedSystemData.GetQueryDuration(), "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
+                Assert.AreNotEqual(testSystemData.QueryDuration, retrievedSystemData.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
                 Assert.AreNotEqual(testSystemData.Uptime, retrievedSystemData.Uptime, "Error in Uptime: Seems it has been serialized even though marked as ignore");
                 Assert.AreEqual(testSystemData.Version, retrievedSystemData.Version, "Error in Version");
             }
@@ -168,7 +169,7 @@ namespace Tests
                 Assert.AreEqual(firstPeerExpected.InterfaceId, firstPeerRetrieved.InterfaceId, "Error in InterfaceId");
                 Assert.AreEqual(firstPeerExpected.IsAccessPoint, firstPeerRetrieved.IsAccessPoint, "Error in IsAccessPoint");
                 Assert.AreNotEqual(firstPeerExpected.LinkUptime, firstPeerRetrieved.LinkUptime, "Error in LinkUptime: Seems it has been serialized even though marked as ignore");
-                Assert.AreNotEqual(firstPeerExpected.GetQueryDuration(), firstPeerRetrieved.GetQueryDuration(), "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
+                Assert.AreNotEqual(firstPeerExpected.QueryDuration, firstPeerRetrieved.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
                 Assert.AreEqual(firstPeerExpected.RemoteMacString, firstPeerRetrieved.RemoteMacString, "Error in RemoteMacString");
                 Assert.AreNotEqual(firstPeerExpected.RxSignalStrength, firstPeerRetrieved.RxSignalStrength, "Error in RxSignalStrength: Seems it has been serialized even though marked as ignore");
                 Assert.AreNotEqual(firstPeerExpected.TxSignalStrength, firstPeerRetrieved.TxSignalStrength, "Error in TxSignalStrength: Seems it has been serialized even though marked as ignore");
@@ -240,7 +241,7 @@ namespace Tests
                 Assert.AreEqual(firstPeerExpected.DeviceModel, firstPeerRetrieved.DeviceModel, "Error in DeviceModel");
                 Assert.AreEqual(firstPeerExpected.InterfaceId, firstPeerRetrieved.InterfaceId, "Error in InterfaceId");
                 Assert.AreEqual(firstPeerExpected.MacAddressString, firstPeerRetrieved.MacAddressString, "Error in MacAddressString");
-                Assert.AreNotEqual(firstPeerExpected.GetQueryDuration(), firstPeerRetrieved.GetQueryDuration(), "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
+                Assert.AreNotEqual(firstPeerExpected.QueryDuration, firstPeerRetrieved.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
                 Assert.AreEqual(firstPeerExpected.InterfaceName, firstPeerRetrieved.InterfaceName, "Error in InterfaceName");
                 Assert.AreEqual(firstPeerExpected.InterfaceType, firstPeerRetrieved.InterfaceType, "Error in InterfaceType");
             }
