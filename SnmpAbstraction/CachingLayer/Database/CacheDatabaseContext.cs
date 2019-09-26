@@ -32,7 +32,11 @@ namespace SnmpAbstraction
             DefaultValueHandling = DefaultValueHandling.Include,
             FloatFormatHandling = FloatFormatHandling.String,
             FloatParseHandling = FloatParseHandling.Double,
+#if DEBUG
+            Formatting = Formatting.Indented,
+#else
             Formatting = Formatting.None,
+#endif
             MissingMemberHandling = MissingMemberHandling.Error,
             NullValueHandling = NullValueHandling.Include,
             ObjectCreationHandling = ObjectCreationHandling.Auto,
@@ -41,6 +45,7 @@ namespace SnmpAbstraction
             StringEscapeHandling = StringEscapeHandling.Default,
             TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
             TypeNameHandling = TypeNameHandling.None,
+
             Converters = new JsonConverter[]
             {
                 // full converters

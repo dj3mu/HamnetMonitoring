@@ -45,10 +45,7 @@ namespace SnmpAbstraction
         public object SyncRoot { get; }
 
         /// <inheritdoc />
-        public TimeSpan GetQueryDuration()
-        {
-            return this.queryDurationBacking;
-        }
+        public TimeSpan QueryDuration => this.queryDurationBacking;
 
         /// <inheritdoc />
         public void ForceEvaluateAll()

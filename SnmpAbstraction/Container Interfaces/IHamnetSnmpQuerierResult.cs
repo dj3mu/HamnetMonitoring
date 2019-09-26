@@ -22,7 +22,7 @@ namespace SnmpAbstraction
         /// Gets the total duration of the value queries that have been executed by this object.
         /// </summary>
         /// <remarks>The value may increase continuously as queries might be done lazily when needed.</remarks>
-        TimeSpan GetQueryDuration();
+        TimeSpan QueryDuration { get; }
 
         /// <summary>
         /// Gets the data as a string using human-readable formatting.

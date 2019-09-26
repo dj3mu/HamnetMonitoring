@@ -41,10 +41,7 @@ namespace SnmpAbstraction
         private readonly TimeSpan queryDuration;
 
         /// <inheritdoc />
-        public virtual TimeSpan GetQueryDuration()
-        {
-            return queryDuration;
-        }
+        public virtual TimeSpan QueryDuration => queryDuration;
 
         /// <inheritdoc />
         public virtual string DeviceModel { get; }
@@ -70,7 +67,7 @@ namespace SnmpAbstraction
             StringBuilder returnBuilder = new StringBuilder(128);
             returnBuilder.Append("Device ").Append(this.DeviceAddress).Append(" (").Append(this.DeviceModel).AppendLine("):");
             returnBuilder.AppendLine(SnmpAbstraction.IndentLines(this.ToTextString()));
-            returnBuilder.Append(SnmpAbstraction.IndentLines("--> Query took ")).Append(this.GetQueryDuration().TotalMilliseconds).Append(" ms");
+            returnBuilder.Append(SnmpAbstraction.IndentLines("--> Query took ")).Append(this.QueryDuration.TotalMilliseconds).Append(" ms");
 
             return returnBuilder.ToString();
         }

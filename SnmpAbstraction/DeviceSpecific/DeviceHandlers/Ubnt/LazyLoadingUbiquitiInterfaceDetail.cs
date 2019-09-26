@@ -39,10 +39,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override TimeSpan GetQueryDuration()
-        {
-            return this.localQueryDuration;
-        }
+        public override TimeSpan QueryDuration => this.localQueryDuration;
 
         /// <inheritdoc />
         protected override bool RetrieveInterfaceName()

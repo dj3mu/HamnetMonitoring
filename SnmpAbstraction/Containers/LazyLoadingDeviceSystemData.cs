@@ -179,10 +179,7 @@ namespace SnmpAbstraction
         public override string DeviceModel => $"{this.Model} v {this.Version}";
 
         /// <inheritdoc />
-        public override TimeSpan GetQueryDuration()
-        {
-            return this.queryDurationBacking;
-        }
+        public override TimeSpan QueryDuration => this.queryDurationBacking;
 
         /// <inheritdoc />
         public string Model => this.ModifyableModel;
