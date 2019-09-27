@@ -89,7 +89,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public string ToConsoleString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(256);
 
@@ -103,12 +103,6 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - System root OID   : ").Append(this.EnterpriseObjectId?.ToString());
 
             return returnBuilder.ToString();
-        }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return this.ToConsoleString();
         }
     }
 }

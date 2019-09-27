@@ -62,27 +62,14 @@ namespace SnmpAbstraction
         public ICachableOid this[CachableValueMeanings key] => this.cachableOidLookup[key];
 
         /// <inheritdoc />
-        public string ToConsoleString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(128);
             returnBuilder.Append("Device ").Append(this.DeviceAddress).Append(" (").Append(this.DeviceModel).AppendLine("):");
-            returnBuilder.AppendLine(SnmpAbstraction.IndentLines(this.ToTextString()));
+            returnBuilder.AppendLine(SnmpAbstraction.IndentLines(this.ToString()));
             returnBuilder.Append(SnmpAbstraction.IndentLines("--> Query took ")).Append(this.QueryDuration.TotalMilliseconds).Append(" ms");
 
             return returnBuilder.ToString();
-        }
-        
-        /// <summary>
-        /// Prints the result body to the given <see cref="TextWriter" /> using
-        /// human-readable formatting.
-        /// </summary>
-        /// <returns>A string with the human readable data.</returns>
-        public abstract string ToTextString();
-        
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return this.ToConsoleString();
         }
 
         /// <inheritdoc />

@@ -217,7 +217,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override string ToTextString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(256);
 

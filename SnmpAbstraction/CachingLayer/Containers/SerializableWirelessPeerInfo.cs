@@ -92,7 +92,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public string ToConsoleString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(128);
 
@@ -104,12 +104,6 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - TX signal [dBm]: ").Append(this.TxSignalStrength.ToString("0.0 dBm"));
 
             return returnBuilder.ToString();
-        }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return this.ToConsoleString();
         }
     }
 }

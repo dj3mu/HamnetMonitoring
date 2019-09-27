@@ -75,7 +75,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public string ToConsoleString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(128);
 
@@ -84,12 +84,6 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - MAC : ").Append(this.MacAddressString?.ToString());
 
             return returnBuilder.ToString();
-        }
- 
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return this.ToConsoleString();
         }
    }
 }

@@ -63,7 +63,8 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public TimeSpan QueryDuration => queryDuration;
 
-        public string ToConsoleString()
+        /// <inheritdoc />
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder((this.interfaceDetailsBacking?.Count ?? 1) * 128);
 
@@ -77,17 +78,11 @@ namespace SnmpAbstraction
             {
                 foreach (var item in this.interfaceDetailsBacking)
                 {
-                    returnBuilder.AppendLine().AppendLine(SnmpAbstraction.IndentLines(item.ToConsoleString()));
+                    returnBuilder.AppendLine().AppendLine(SnmpAbstraction.IndentLines(item.ToString()));
                 }
             }
 
             return returnBuilder.ToString();
-        }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return this.ToConsoleString();
         }
 
         /// <inheritdoc />

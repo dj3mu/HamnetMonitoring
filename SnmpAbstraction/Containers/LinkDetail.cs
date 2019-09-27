@@ -63,7 +63,7 @@ namespace SnmpAbstraction
         public string ModelAndVersion2 => this.linkRelatedResultCollection.InterfaceDetail2.DeviceModel;
 
         /// <inheritdoc />
-        public override string ToTextString()
+        public override string ToString()
         {
             if (this.linkRelatedResultCollection == null)
             {

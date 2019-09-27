@@ -40,7 +40,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override string ToTextString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder((this.Details?.Count ?? 1) * 128);
 
@@ -54,7 +54,7 @@ namespace SnmpAbstraction
             {
                 foreach (var item in this.Details)
                 {
-                    returnBuilder.AppendLine().AppendLine(SnmpAbstraction.IndentLines(item.ToConsoleString()));
+                    returnBuilder.AppendLine().AppendLine(SnmpAbstraction.IndentLines(item.ToString()));
                 }
             }
 

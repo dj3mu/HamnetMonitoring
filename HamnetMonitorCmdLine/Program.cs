@@ -316,7 +316,7 @@
                 resultAsLazyEval.ForceEvaluateAll();
             }
 
-            Console.Out.WriteLine(result.ToConsoleString());
+            Console.Out.WriteLine(new BlockTextFormatter().Format(result));
 
             if (options.PrintStats)
             {

@@ -151,7 +151,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public string ToConsoleString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(128);
 
