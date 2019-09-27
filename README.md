@@ -1,194 +1,28 @@
-# `Hamnet` SNMP Query Tool
+# `Hamnet` SNMP Monitoring Tools
 
-From past experience it was noticed that monitoring of `Hamnet` nodes is not straight forward. None of the Open Source available tools seems to support what is needed. Instead the generic approach of such tools offers a lot of features that are actually irrelevant for `Hamnet` use.
+The `Hamnet` is the Internet of the Radio Amateurs [(German Wikipedia)](https://de.wikipedia.org/wiki/HAMNET) based solely on radio links on licensed (unattended automatic Amateur Radio station) or ISM (standard WLAN frequencies).
 
-Additionally it turned out that a lot of traffic is caused by the monitoring tool querying plenty of values that are not actually important to *the* `Hamnet` itself. This is a problem is `Hamnet` links can be quite limited in bandwidth. So a requirement is to cause as few traffic for monitoring as possible.
+From past experience it was noticed that monitoring of `Hamnet` nodes is not straight forward. None of the tools available seems to support what is needed. Instead the generic approach of such tools offers a lot of features that are actually irrelevant for `Hamnet` use.
 
-For example: None of the tools supports detection and retrieval of the statistics of the two sides of a `Hamnet` RF link. Hard-coding them is possible but whenever the hardware changes, manual adaption of monitoring would be required. 
+Additionally it turned out that a lot of traffic can be caused by the monitoring tools, querying plenty of values that are not actually important to *the* `Hamnet` itself. This is a problem as `Hamnet` links can be quite limited in bandwidth. So a requirement is to cause as few traffic for monitoring as possible.  
+Another requirement is to be able to auto-provision the monitoring from the central [Hamnet Database](https://hamnetdb.net).
 
-So we decided to create our own tool supporting only the really required features for `Hamnet` use while transmitting as few data as possible.
+For example: None of the tools supports detection and retrieval of the statistics of the two sides of a `Hamnet` RF link. Hard-coding them is possible but whenever the hardware changes, (mostly manual) adaption of monitoring would be required. 
+
+So we decided to create our own tool supporting only the really required features for `Hamnet` monitoring use while exchanging as few data as possible with the involved nodes.
 
 
 ## Beta State
-The tool is still in beta state. Actually, as of 2019-09-13, it is still under havy development and the Device Database might still need additional entries.
+The tool is still in beta state. Actually, as of 2019-09-26, it is still under development.
 
+## Components
+There are independent tool components. Each of which can exists fully on its own without the need for another tool to be present.
 
-## Usage
-### Commands
-The tool supports the following sub-commands:
-| Command    | Description                                                     |
-|------------|-----------------------------------------------------------------|
-| SystemData | Query for basic system data. Effectively that is almost only the data which is generically available and used to finally identify the device. However, the full device identification will also be executed. This command requires at least one host to be specified (`-h`).<br/>Note: The command does a full query for all available data. Lazy-loading is forced. |
-| InterfaceData | Query for data of the local network interfaces of the device. This includes all kinds of interfaces. This command requires at least one host to be specified (`-h`).<br/>Note: The command does a full query for all available data. Lazy-loading is forced. |
-| WirelessPeers | Query for data of the currently active, wireless peers of the device. This command requires at least one host to be specified (`-h`).<br/>Note: The command does a full query for all available data. Lazy-loading is forced. |
-| LinkDetails | Query for detail data of the radio link between that two or more given devices. This command requires at least TWO hosts to be specified (`-h`).<br>This command is the main reason why the tool exists: It provides and algorithm to detect whether there's a radio link between the devices and extract its most important properties (e.g. RX Level).<br/>Note: Only the absolute necessary data for determining the link details are queried. Lazy-loading is active. |
+### Command Line
+There's a [command line tool](HamnetMonitorCmdLine/README.md) for manual execution of query operations.
 
-### Global options
-| Option     | Description                                                     |
-|------------|-----------------------------------------------------------------|
-| -h, --host | Specify one or more hosts to be queried. Sub-commands which don't require more than one host, will be executed individually for each specified host. Sub-commands that require more than one host will be executed once considering the whole host list. |
-| -s, --snmpversion | Allows to specifiy the SNMP protocol version. Defaults to 2 (i.e. SNMP v 2c).<br/>Note: The device detection will always be done with version 1. Once detected, the protocol will fall back to the lowest of the version specified here or given in the device database for the detected device. So it's safe to specify higher protocols than supported by the device.<br/>Attention: SNMP v 3 has never been tested up to now. |
-| --stats | Print SNMP PDU statistics at the end of the command execution. |
-
-
-### Examples:
-#### Query Link Details
-```
-> HamnetMonitorCmdLine  LinkDetails --stats -s 2 -h 44.143.111.34 44.143.111.38
-Device 44.143.111.34:
-  Link Details:
-    Device 44.143.111.34:
-      Link between side #1 (44.143.111.34) and side #2 (44.143.111.38):
-      Side #1 MAC: E4:8D:8C:3D:F8:F5
-      Side #2 MAC: 4C:5E:0C:83:F5:87
-      Side of AP : 1
-      Rx level of side #1 at side #2: -63.5 dBm
-      Rx level of side #2 at side #1: -65.5 dBm
-      Link Uptime: 5.07:26:32
-      --> Query took 153.453 ms
-
-  --> Query took 153.453 ms
-
-Overall statistics:
-===================
-  Total Requests : 29
-  Total Responses: 49
-  Total Errors   : 0
-
-Per request-type statistics:
-============================
-
-Get:
-  Total Requests : 24
-  Total Responses: 24
-  Total Errors   : 0
-
-GetBulk:
-  Total Requests : 5
-  Total Responses: 25
-  Total Errors   : 0
-
-Per device statistics:
-======================
-
-44.143.111.34:
-  Total Requests : 15
-  Total Responses: 27
-  Total Errors   : 0
-
-44.143.111.38:
-  Total Requests : 14
-  Total Responses: 22
-  Total Errors   : 0
-```
-
-
-#### Query System Data
-```
->HamnetMonitorCmdLine  SystemData -h 44.143.111.34 44.143.111.38
-Device 44.143.111.34:
-    - System Model                     : RB912UAG-5HPnD
-    - System SW Version                : 6.44.1
-    - System Name        (queried=True): OE5XGR link WKB
-    - System location    (queried=True): JN68LD
-    - System description (queried=True): RouterOS RB912UAG-5HPnD
-    - System admin       (queried=True): oe5hpm@oevsv.at
-    - System uptime      (queried=True): 66.23:11:58
-    - System root OID    (queried=True): 1.3.6.1.4.1.14988.1
-  --> Query took 162.7719 ms
-Device 44.143.111.38:
-    - System Model                     : RB911G-5HPnD
-    - System SW Version                : 6.44.1
-    - System Name        (queried=True): router.dm0wkb
-    - System location    (queried=True):
-    - System description (queried=True): RouterOS RB911G-5HPnD
-    - System admin       (queried=True): dm5hr@darc.de
-    - System uptime      (queried=True): 114.20:53:39
-    - System root OID    (queried=True): 1.3.6.1.4.1.14988.1
-  --> Query took 130.8001 ms
-```
-
-
-#### Query Interface data
-```
->HamnetMonitorCmdLine  InterfaceData -h 44.143.111.34
-Device 44.143.111.34:
-  Interface Details:
-    Device 44.143.111.34:
-      Interface #1 (ether1):
-        - Type: EthernetCsmacd
-        - MAC : E4:8D:8C:3D:F8:F4
-      --> Query took 69.9352 ms
-
-    Device 44.143.111.34:
-      Interface #2 (wlan1):
-        - Type: Ieee80211
-        - MAC : E4:8D:8C:3D:F8:F5
-      --> Query took 48.9571 ms
-
-    Device 44.143.111.34:
-      Interface #6 (wds-dm0wkb):
-        - Type: Other
-        - MAC : E4:8D:8C:3D:F8:F5
-      --> Query took 41.939 ms
-
-    Device 44.143.111.34:
-      Interface #8 (br-transfer-wkb):
-        - Type: Bridge
-        - MAC : E4:8D:8C:3D:F8:F5
-      --> Query took 46.1594 ms
-
-    Device 44.143.111.34:
-      Interface #9 (vlan20-transfer-wkb):
-        - Type: L2vlan
-        - MAC : E4:8D:8C:3D:F8:F4
-      --> Query took 47.9297 ms
-
-  --> Query took 325.715 ms
-  ```
-
-
-#### Query Wireless Peers
-  ```
->HamnetMonitorCmdLine  WirelessPeers -h 44.143.111.34
-Device 44.143.111.34:
-  Peer Infos:
-    Device 44.143.111.34:
-      Peer 4C:5E:0C:83:F5:87:
-        - Mode           : AP
-        - On interface ID: 2
-        - Link Uptime    : 5.07:30:31
-        - RX signal [dBm]: -65.2 dBm
-        - TX signal [dBm]: -64.0 dBm
-      --> Query took 91.7855 ms
-
-  --> Query took 33.8324 ms
-```
-
-## Building and installing
-To build you need the _DotNet Core SDK_ installed. Currently the tool is developed using DotNet Core v 2.2.
-
-To build simply run:
-```
-> dotnet restore
-> dotnet build
-```
-from the repository root folder.
-
-To publish as a stand-alone application run:
-```
-> dotnet restore
-> dotnet publish -c Release -r <linux-x64|win10-x64>
-```
-Use the `-r` arguments according to the target platform. This will produce a subfolder
-```
-HamnetMonitorCmdLine/bin/Release/netcoreapp2.2/<linux-x64|win10-x64>/publish
-```
-which contains the executable as well as all dependencies.
-
-To install, simply copy the `publish` folder with all its content and subfolders to the target system.
-
-The tool creates a log file the the current folder using [log4net](https://logging.apache.org/log4net/).
+### Background Service
+There's a [background service](HamnetMonitoringService/README.md) for continuous monitoring including auto-provisioning from [Hamnet Database](https://hamnetdb.net).
 
 
 ## Device Database schema
@@ -196,15 +30,42 @@ The device database is a SQLite database containing the device- and even device-
 specific mappings of "Retrievable Values" to SNMP OIDs.
 
 As of now there's no schema description available yet. You may use any kind of SQLite
-browser tool to look into the schema and change values.  
-Please apologize!
+browser tool to look into the database and change values.  
+Final plan is to have a command line interface to create or remove entries for specific devices. However, such tool is not yet available.  
+I apologize!
 
 
-## Getting involved
-The project has been started by DJ3MU.
+## For developers
+The project has been started by DJ3MU.  
+It's written in C# as Dotnet Core application. It's using quite a couple of useful Nuget package for which I want to take the change to say "Thank you" to the package developers.
+
+The code does not in any way claim to be perfect. I've tried to obey software design concepts as much as I could. But I'm really open to all kinds of improvement requests. Feel free to contact me or submit pull requests and I'll do my best to improve.
 
 Everybody is encouraged to actively use the tool and report back bugs and/or new requirements.
 
+### Building and deploying
+From the root folder of repository run
+```shell
+dotnet build
+```
+To publish to a [self-contained, frame-work-dependent executable](https://docs.microsoft.com/en-us/dotnet/core/deploying/#framework-dependent-executables-fde) (i.e. an executable with all required DLLs inside same folder) use
+```shell
+dotnet publish -c Release -r win10-x64
+```
+for or
+```shell
+dotnet publish -c Release -r linux-x64
+```
+For more platforms see the dotnet core [runtime identifier catalog](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog).
+
+
+## Configuration Management
 Even though I've started on a single master branch, the tool is now using a [GitFlow](https://datasift.github.io/gitflow/IntroducingGitFlow.html) development model.
 
-Pull requests are ppreciated.
+Continuous integration is still to be set up.
+
+There are a couple of Unit Tests available. But they leave a lot of space for improvements.
+
+Even a release concept is still to be implemented. There's currently no packaging of the self-contained publish result for Linux (RPM / Debian packages) or Windows (msi or exe).
+
+Pull requests are appreciated.
