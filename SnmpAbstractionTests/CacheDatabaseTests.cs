@@ -72,7 +72,6 @@ namespace Tests
                 context.CacheData.Add(new CacheData
                 {
                     Address = testSystemData.DeviceAddress,
-                    CachableOids = null,
                     InterfaceDetails = null,
                     WirelessPeerInfos = null,
                     SystemData = testSystemData
@@ -124,7 +123,12 @@ namespace Tests
                         LinkUptime = TimeSpan.FromMinutes(5),
                         RemoteMacString = "Test-RemoteMacString",
                         RxSignalStrength = 8.15,
-                        TxSignalStrength = 5.18
+                        TxSignalStrength = 5.18,
+                        Oids = new Dictionary<CachableValueMeanings, ICachableOid>
+                        {
+                            { CachableValueMeanings.WirelessLinkUptime, new CachableOid(new IpAddress("9.8.7.6"), CachableValueMeanings.WirelessLinkUptime, new [] { new Oid("1.2.3.4.5.6"), new Oid("9.8.7.6.5.4") })},
+                            { CachableValueMeanings.WirelessRxSignalStrength, new CachableOid(new IpAddress("4.5.6.7"), CachableValueMeanings.WirelessRxSignalStrength, new [] { new Oid("73.74.75.76") })}
+                        }
                     } as IWirelessPeerInfo
                 }
             };
@@ -140,7 +144,6 @@ namespace Tests
                 context.CacheData.Add(new CacheData
                 {
                     Address = testPeerInfos.DeviceAddress,
-                    CachableOids = null,
                     InterfaceDetails = null,
                     WirelessPeerInfos = testPeerInfos,
                     SystemData = null
@@ -169,12 +172,15 @@ namespace Tests
                 Assert.AreEqual(firstPeerExpected.InterfaceId, firstPeerRetrieved.InterfaceId, "Error in InterfaceId");
                 Assert.AreEqual(firstPeerExpected.IsAccessPoint, firstPeerRetrieved.IsAccessPoint, "Error in IsAccessPoint");
                 Assert.AreNotEqual(firstPeerExpected.LinkUptime, firstPeerRetrieved.LinkUptime, "Error in LinkUptime: Seems it has been serialized even though marked as ignore");
-                Assert.AreNotEqual(firstPeerExpected.QueryDuration, firstPeerRetrieved.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
                 Assert.AreEqual(firstPeerExpected.RemoteMacString, firstPeerRetrieved.RemoteMacString, "Error in RemoteMacString");
                 Assert.AreNotEqual(firstPeerExpected.RxSignalStrength, firstPeerRetrieved.RxSignalStrength, "Error in RxSignalStrength: Seems it has been serialized even though marked as ignore");
                 Assert.AreNotEqual(firstPeerExpected.TxSignalStrength, firstPeerRetrieved.TxSignalStrength, "Error in TxSignalStrength: Seems it has been serialized even though marked as ignore");
 
-                Assert.IsTrue(firstPeerExpected.Oids.All(o => firstPeerRetrieved.Oids.Contains(o)), "Error in Oids");
+                Assert.AreEqual(firstPeerExpected.Oids.Count, firstPeerRetrieved.Oids.Count, "Error in Oids");
+
+                var firstOidExpected = firstPeerRetrieved.Oids.First();
+                var firstOidRetrieved = firstPeerRetrieved.Oids.First();
+                Assert.AreEqual(firstOidExpected.Value.Address, firstOidRetrieved.Value.Address, "Error in Oids");
             }
         }
 
@@ -213,7 +219,6 @@ namespace Tests
                 context.CacheData.Add(new CacheData
                 {
                     Address = testInterfaceDetails.DeviceAddress,
-                    CachableOids = null,
                     InterfaceDetails = testInterfaceDetails,
                     WirelessPeerInfos = null,
                     SystemData = null
@@ -244,63 +249,6 @@ namespace Tests
                 Assert.AreNotEqual(firstPeerExpected.QueryDuration, firstPeerRetrieved.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
                 Assert.AreEqual(firstPeerExpected.InterfaceName, firstPeerRetrieved.InterfaceName, "Error in InterfaceName");
                 Assert.AreEqual(firstPeerExpected.InterfaceType, firstPeerRetrieved.InterfaceType, "Error in InterfaceType");
-            }
-        }
-
-        /// <summary>
-        /// Test for storing system data
-        /// </summary>
-        [Test]
-        public void CachableOidsRoundTripTest()
-        {
-            var cachableOids = new List<ICachableOid>
-            {
-                new SerializableCachableOid(new Oid("2.3.4.5.6.7.8.9.0"), new Oid("17.3.4.5.6.7.8.9.0"))
-                {
-                    Address = new IpAddress("1.2.3.4"),
-                    Meaning = CachableValueMeanings.WirelessRxSignalStrength
-                }
-            };
-
-            using (var context = new CacheDatabaseContext(this.database))
-            {
-                context.Database.EnsureDeleted();
-
-                context.Database.EnsureCreated();
-
-                Assert.NotNull(context, "The database context is null");
-
-                context.CacheData.Add(new CacheData
-                {
-                    Address = cachableOids.First().Address,
-                    CachableOids = cachableOids,
-                    InterfaceDetails = null,
-                    WirelessPeerInfos = null,
-                    SystemData = null
-                });
-
-                context.SaveChanges();
-            }
-
-            using (var context = new CacheDatabaseContext(this.database))
-            {
-                Assert.NotNull(context, "The database context is null");
-
-                var retrievedCachableOids = context.CacheData.First().CachableOids;
-
-                Assert.NotNull(retrievedCachableOids, "Retrieved cachable OIDs is null");
-
-                Assert.AreEqual(cachableOids.Count(), retrievedCachableOids.Count(), "Wrong count of OIDs");
-
-                var firstOidExpected = cachableOids.First();
-                var firstOidRetrieved = retrievedCachableOids.First();
-
-                Assert.AreEqual(firstOidExpected.Address, firstOidRetrieved.Address, "Error in Value.Address");
-                Assert.AreEqual(firstOidExpected.IsSingleOid, firstOidRetrieved.IsSingleOid, "Error in Value.IsSingleOid");
-                Assert.AreEqual(firstOidExpected.Meaning, firstOidRetrieved.Meaning, "Error in Value.Meaning");
-                Assert.Throws<InvalidOperationException>(() => { firstOidExpected.Oid.Equals(firstOidRetrieved.Oid); }, "No exception when accessing Oid property on an object containing more than one OID");
-
-                Assert.IsTrue(firstOidExpected.Oids.All(o => firstOidRetrieved.Oids.Contains(o)), "Error in Value.Oids");
             }
         }
     }

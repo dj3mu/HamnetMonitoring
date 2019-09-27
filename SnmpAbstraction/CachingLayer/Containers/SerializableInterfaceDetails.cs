@@ -28,6 +28,8 @@ namespace SnmpAbstraction
             }
 
             this.interfaceDetailsBacking = inputInfos.Details.Select(p => new SerializableInterfaceDetail(p) as IInterfaceDetail).ToList();
+            this.DeviceModel = inputInfos.DeviceModel;
+            this.DeviceAddress = inputInfos.DeviceAddress;
         }
 
         /// <summary>

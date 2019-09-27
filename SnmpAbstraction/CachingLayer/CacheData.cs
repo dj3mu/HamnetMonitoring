@@ -18,12 +18,6 @@ namespace SnmpAbstraction
         public IpAddress Address { get; set; }
 
         /// <summary>
-        /// Gets cachable OID data.
-        /// </summary>
-        [Column("CachableOids")]
-        public IEnumerable<ICachableOid> CachableOids { get; set; }
-
-        /// <summary>
         /// Gets device system data.
         /// </summary>
         [Column("SystemData")]

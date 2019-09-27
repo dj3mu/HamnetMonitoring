@@ -38,6 +38,7 @@ namespace SnmpAbstraction
             this.IsAccessPoint = peerInfo.IsAccessPoint;
             this.DeviceAddress = peerInfo.DeviceAddress;
             this.DeviceModel = peerInfo.DeviceModel;
+            this.Oids = peerInfo.Oids;
 
             // we're intentionally not setting signal levels, uptime, OIDs and query duration
             // those would change continuously and require re-querying or wouldn't make sense at all
@@ -47,6 +48,7 @@ namespace SnmpAbstraction
         public string RemoteMacString { get; set; }
 
         /// <inheritdoc />
+        [JsonProperty("MacAddressString", Required = Required.AllowNull)]
         public int? InterfaceId { get; set; }
 
         /// <inheritdoc />
@@ -82,8 +84,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        [JsonIgnore]
-        public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids { get; set; } = new Dictionary<CachableValueMeanings, ICachableOid>();
+        public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids { get; set; }
 
         /// <inheritdoc />
         public void ForceEvaluateAll()

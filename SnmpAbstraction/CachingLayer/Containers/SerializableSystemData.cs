@@ -82,6 +82,8 @@ namespace SnmpAbstraction
         [JsonIgnore]
         public TimeSpan QueryDuration { get; set; } = TimeSpan.Zero;
 
+        public SnmpVersion MaximumSnmpVersion { get; set; }
+
         /// <inheritdoc />
         public void ForceEvaluateAll()
         {
@@ -101,6 +103,7 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - System admin      : ").AppendLine(this.Contact);
             returnBuilder.Append("  - System uptime     : ").AppendLine(this.Uptime?.ToString());
             returnBuilder.Append("  - System root OID   : ").Append(this.EnterpriseObjectId?.ToString());
+            returnBuilder.Append("  - Max. SNMP version : ").Append(this.MaximumSnmpVersion);
 
             return returnBuilder.ToString();
         }

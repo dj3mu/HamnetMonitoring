@@ -243,12 +243,13 @@ namespace SnmpAbstraction
 
             returnBuilder.Append("  - System Model      : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Model) ? NotAvailableString : deviceSystemData.Model);
             returnBuilder.Append("  - System SW Version : ").AppendLine((deviceSystemData.Version == null) ? NotAvailableString : deviceSystemData.Version.ToString());
-            returnBuilder.Append("  - System Name       : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Model) ? NotAvailableString : deviceSystemData.Name);
-            returnBuilder.Append("  - System location   : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Model) ? NotAvailableString : deviceSystemData.Location);
-            returnBuilder.Append("  - System description: ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Model) ? NotAvailableString : deviceSystemData.Description);
-            returnBuilder.Append("  - System admin      : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Model) ? NotAvailableString : deviceSystemData.Contact);
-            returnBuilder.Append("  - System uptime     : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Model) ? NotAvailableString : deviceSystemData.Uptime?.ToString());
-            returnBuilder.Append("  - System root OID   : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Model) ? NotAvailableString : deviceSystemData.EnterpriseObjectId?.ToString());
+            returnBuilder.Append("  - System Name       : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Name) ? NotAvailableString : deviceSystemData.Name);
+            returnBuilder.Append("  - System location   : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Location) ? NotAvailableString : deviceSystemData.Location);
+            returnBuilder.Append("  - System description: ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Description) ? NotAvailableString : deviceSystemData.Description);
+            returnBuilder.Append("  - System admin      : ").AppendLine(string.IsNullOrWhiteSpace(deviceSystemData.Contact) ? NotAvailableString : deviceSystemData.Contact);
+            returnBuilder.Append("  - System uptime     : ").AppendLine(deviceSystemData.Uptime.HasValue ? deviceSystemData.Uptime?.ToString() : NotAvailableString);
+            returnBuilder.Append("  - System root OID   : ").AppendLine(deviceSystemData.EnterpriseObjectId == null ? NotAvailableString : deviceSystemData.EnterpriseObjectId?.ToString());
+            returnBuilder.Append("  - Max. SNMP version : ").AppendLine(deviceSystemData.MaximumSnmpVersion.ToString());
 
             return returnBuilder.ToString();
         }

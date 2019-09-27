@@ -7,9 +7,9 @@ using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
-    internal class VolatileFetchingWirelessPeerInfos : IWirelessPeerInfos
+    internal class VolatileFetchingInterfaceDetails : IInterfaceDetails
     {
-        private readonly IWirelessPeerInfos underlyingWirelessPeerInfo;
+        private readonly IInterfaceDetails underlyingInterfaceDetails;
         
         private readonly ISnmpLowerLayer lowerLayer;
 
@@ -18,27 +18,22 @@ namespace SnmpAbstraction
         /// <summary>
         /// Construct for a lower layer and a cache data set (from which we return the non-volatile data).
         /// </summary>
-        public VolatileFetchingWirelessPeerInfos(IWirelessPeerInfos wirelessPeerInfos, ISnmpLowerLayer lowerLayer)
+        public VolatileFetchingInterfaceDetails(IInterfaceDetails interfaceDetails, ISnmpLowerLayer lowerLayer)
         {
             this.lowerLayer = lowerLayer ?? throw new System.ArgumentNullException(nameof(lowerLayer), "lower layer is null");
-            this.underlyingWirelessPeerInfo = wirelessPeerInfos ?? throw new System.ArgumentNullException(nameof(wirelessPeerInfos), "underlying wireless peer info is null");
+            this.underlyingInterfaceDetails = interfaceDetails ?? throw new System.ArgumentNullException(nameof(interfaceDetails), "underlying interface details is null");
 
-            this.Details = wirelessPeerInfos.Details.Select(underlyingPeerInfo => new VolatileFetchingWirelessPeerInfo(underlyingPeerInfo, this.lowerLayer)).ToList();
+            this.Details = interfaceDetails.Details.Select(underlyingInterfaceDetail => new VolatileFetchingInterfaceDetail(underlyingInterfaceDetail, this.lowerLayer)).ToList();
         }
 
         /// <inheritdoc />
-        public IReadOnlyList<IWirelessPeerInfo> Details { get; }
+        public IReadOnlyList<IInterfaceDetail> Details { get; }
 
         /// <inheritdoc />
-        public IpAddress DeviceAddress => this.underlyingWirelessPeerInfo.DeviceAddress;
+        public IpAddress DeviceAddress => this.underlyingInterfaceDetails.DeviceAddress;
 
         /// <inheritdoc />
-        public string DeviceModel => this.underlyingWirelessPeerInfo.DeviceModel;
-
-        /// <summary>
-        /// Gets the thread synchronization object.
-        /// </summary>
-        public object SyncRoot { get; }
+        public string DeviceModel => this.underlyingInterfaceDetails.DeviceModel;
 
         /// <inheritdoc />
         public TimeSpan QueryDuration => this.queryDurationBacking;
@@ -50,7 +45,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public IEnumerator<IWirelessPeerInfo> GetEnumerator()
+        public IEnumerator<IInterfaceDetail> GetEnumerator()
         {
             return this.Details.GetEnumerator();
         }
@@ -60,7 +55,7 @@ namespace SnmpAbstraction
         {
             StringBuilder returnBuilder = new StringBuilder((this.Details?.Count ?? 1) * 128);
 
-            returnBuilder.Append("Peer Infos:");
+            returnBuilder.Append("Interface Details:");
 
             if (this.Details == null)
             {

@@ -49,7 +49,7 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         [JsonIgnore]
-        public bool IsSingleOid => this.oidsBacking.Count > 1;
+        public bool IsSingleOid => this.oidsBacking.Count == 1;
 
         /// <inheritdoc />
         [JsonIgnore]

@@ -20,6 +20,8 @@ namespace SnmpAbstraction
 
         private string dataBaseFile;
 
+        private object lockObject = new object();
+
         /// <summary>
         /// Prevent construction from outside the singleton getter.
         /// </summary>
@@ -42,11 +44,14 @@ namespace SnmpAbstraction
         {
             get
             {
-                var context = new CacheDatabaseContext(this.dataBaseFile);
-                
-                context.Database.EnsureCreated();
+                lock(this.lockObject)
+                {
+                    var context = new CacheDatabaseContext(this.dataBaseFile);
+                    
+                    context.Database.EnsureCreated();
 
-                return context;
+                    return context;
+                }
             }
         }
     }

@@ -15,18 +15,14 @@ namespace SnmpAbstraction
 
         private readonly IWirelessPeerInfo underlyingPeerInfo;
 
-        private readonly IReadOnlyDictionary<CachableValueMeanings, ICachableOid> cachableOids;
-
         private readonly ISnmpLowerLayer lowerLayer;
 
         private TimeSpan queryDurationBacking = TimeSpan.Zero;
 
-        public VolatileFetchingWirelessPeerInfo(IWirelessPeerInfo underlyingPeerInfo, IReadOnlyDictionary<CachableValueMeanings, ICachableOid> cachableOids, ISnmpLowerLayer lowerLayer, object syncRoot)
+        public VolatileFetchingWirelessPeerInfo(IWirelessPeerInfo underlyingPeerInfo, ISnmpLowerLayer lowerLayer)
         {
             this.underlyingPeerInfo = underlyingPeerInfo ?? throw new System.ArgumentNullException(nameof(underlyingPeerInfo));
-            this.cachableOids = cachableOids ?? throw new System.ArgumentNullException(nameof(cachableOids));
             this.lowerLayer = lowerLayer ?? throw new System.ArgumentNullException(nameof(lowerLayer));
-            this.SyncRoot = syncRoot ?? throw new ArgumentNullException(nameof(syncRoot));
         }
 
         /// <inheritdoc />
@@ -42,12 +38,9 @@ namespace SnmpAbstraction
             {
                 var neededValue = CachableValueMeanings.WirelessTxSignalStrength;
                 ICachableOid queryOid = null;
-                lock(this.SyncRoot)
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    if (!this.cachableOids.TryGetValue(neededValue, out queryOid))
-                    {
-                        throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
-                    }
+                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -73,12 +66,9 @@ namespace SnmpAbstraction
             {
                 var neededValue = CachableValueMeanings.WirelessRxSignalStrength;
                 ICachableOid queryOid = null;
-                lock(this.SyncRoot)
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    if (!this.cachableOids.TryGetValue(neededValue, out queryOid))
-                    {
-                        throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
-                    }
+                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -104,12 +94,9 @@ namespace SnmpAbstraction
             {
                 var neededValue = CachableValueMeanings.WirelessLinkUptime;
                 ICachableOid queryOid = null;
-                lock(this.SyncRoot)
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    if (!this.cachableOids.TryGetValue(neededValue, out queryOid))
-                    {
-                        throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
-                    }
+                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -138,11 +125,6 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids => this.underlyingPeerInfo.Oids;
-
-        /// <summary>
-        /// Gets the thread synchronization object.
-        /// </summary>
-        public object SyncRoot { get; }
 
         /// <inheritdoc />
         public void ForceEvaluateAll()

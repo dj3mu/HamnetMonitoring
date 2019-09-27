@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Microsoft.Data.Sqlite;
@@ -131,13 +130,6 @@ namespace SnmpAbstraction
                 .HasConversion(
                     systemDataObject => JsonConvert.SerializeObject(systemDataObject, SerializerSettings),
                     systemDataString => JsonConvert.DeserializeObject<SerializableSystemData>(systemDataString, SerializerSettings));
-
-            modelBuilder
-                .Entity<CacheData>()
-                .Property(e => e.CachableOids)
-                .HasConversion(
-                    cachableOidsObject => JsonConvert.SerializeObject(cachableOidsObject, SerializerSettings),
-                    cachableOidsString => JsonConvert.DeserializeObject<IEnumerable<ICachableOid>>(cachableOidsString, SerializerSettings));
 
             modelBuilder
                 .Entity<CacheData>()

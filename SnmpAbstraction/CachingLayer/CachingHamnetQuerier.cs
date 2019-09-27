@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -11,6 +12,8 @@ namespace SnmpAbstraction
     /// </summary>
     internal class CachingHamnetQuerier : IHamnetQuerier
     {
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         /// The SNMP lower layer used to query volatile data.
         /// </summary>
@@ -40,7 +43,7 @@ namespace SnmpAbstraction
         /// The cache entry for our device.
         /// </summary>
         private CacheData cacheEntry;
-        
+
         /// <summary>
         /// The lookup for cachable values.
         /// </summary>
@@ -50,6 +53,11 @@ namespace SnmpAbstraction
         /// The volatile data fetching wireless peer info object.
         /// </summary>
         private VolatileFetchingWirelessPeerInfos volatileFetchingWirelessPeerInfo = null;
+
+        /// <summary>
+        /// The volatile data fetching interface details object.
+        /// </summary>
+        private VolatileFetchingInterfaceDetails volatileFetchingInterfaceDetails;
 
         /// <summary>
         /// Initializes using the given lower layer.
@@ -71,6 +79,11 @@ namespace SnmpAbstraction
         /// <summary>
         /// Thread sync / locking object.
         /// </summary>
+        internal CachingHamnetQuerier(object syncRoot)
+        {
+            this.SyncRoot = syncRoot;
+
+        }
         public object SyncRoot { get; } = new object();
 
         /// <inheritdoc />
@@ -118,7 +131,35 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public ILinkDetails FetchLinkDetails(params string[] remoteHostNamesOrIps)
         {
-            throw new System.NotImplementedException();
+            if (remoteHostNamesOrIps.Length == 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(remoteHostNamesOrIps), "No remote IP address specified at all: You need to specify at least two host names or addresses for fetching link details");
+            }
+
+            List<IHamnetQuerier> remoteQueriers = remoteHostNamesOrIps.Select(remoteHostNamesOrIp =>
+            {
+                IPAddress outAddress;
+                if (!remoteHostNamesOrIp.TryGetResolvedConnecionIPAddress(out outAddress))
+                {
+                    log.Error($"Cannot resolve host name or IP string '{remoteHostNamesOrIp}' to a valid IPAddres. Skipping that remote for link detail fetching");
+                }
+
+                return SnmpQuerierFactory.Instance.Create(outAddress, this.options);
+            }).ToList();
+
+            if (remoteQueriers.Count == 0)
+            {
+                throw new InvalidOperationException($"No remote IP address available at all after resolving {remoteHostNamesOrIps.Length} host name or address string to IP addresses");
+            }
+
+            List<ILinkDetail> fetchedDetails = new List<ILinkDetail>(remoteQueriers.Count);
+            foreach (var remoteQuerier in remoteQueriers)
+            {
+                var linkDetectionAlgorithm = new LinkDetectionAlgorithm(this, remoteQuerier);
+                fetchedDetails.AddRange(linkDetectionAlgorithm.DoQuery().Details);
+            }
+
+            return new LinkDetails(fetchedDetails, this.Address, this.SystemData.DeviceModel);
         }
 
         /// <inheritdoc />
@@ -186,7 +227,27 @@ namespace SnmpAbstraction
         /// </summary>
         private void LowerQuerierFetchInterfaceDetails()
         {
-            throw new NotImplementedException();
+            if (this.volatileFetchingInterfaceDetails != null)
+            {
+                return;
+            }
+
+            if (this.cacheEntry.InterfaceDetails == null)
+            {
+                this.InitializeLowerQuerier();
+
+                var lowerLayerInterfaceDetails = this.lowerQuerier.NetworkInterfaceDetails;
+
+                // we force immediate evaluation in order to ensure that really all cachable OIDs have been set.
+                lowerLayerInterfaceDetails.ForceEvaluateAll();
+
+                this.cacheEntry.InterfaceDetails = new SerializableInterfaceDetails(lowerLayerInterfaceDetails);
+
+                this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
+                this.cacheDatabaseContext.SaveChanges();
+            }
+
+            this.volatileFetchingInterfaceDetails = new VolatileFetchingInterfaceDetails(this.cacheEntry.InterfaceDetails, this.lowerLayer);
         }
 
         /// <summary>
@@ -194,7 +255,27 @@ namespace SnmpAbstraction
         /// </summary>
         private void LowerQuerierFetchWirelessPeerInfo()
         {
-            throw new NotImplementedException();
+            if (this.volatileFetchingWirelessPeerInfo != null)
+            {
+                return;
+            }
+
+            if (this.cacheEntry.WirelessPeerInfos == null)
+            {
+                this.InitializeLowerQuerier();
+
+                var lowerLayerWirelessPeerInfos = this.lowerQuerier.WirelessPeerInfos;
+
+                // we force immediate evaluation in order to ensure that really all cachable OIDs have been set.
+                lowerLayerWirelessPeerInfos.ForceEvaluateAll();
+
+                this.cacheEntry.WirelessPeerInfos = new SerializableWirelessPeerInfos(lowerLayerWirelessPeerInfos);
+
+                this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
+                this.cacheDatabaseContext.SaveChanges();
+            }
+
+            this.volatileFetchingWirelessPeerInfo = new VolatileFetchingWirelessPeerInfos(this.cacheEntry.WirelessPeerInfos, this.lowerLayer);
         }
 
         /// <summary>
@@ -236,29 +317,16 @@ namespace SnmpAbstraction
 
             if (this.cacheEntry == null)
             {
-                this.cacheEntry = new CacheData { Address = this.Address, CachableOids = this.cachableOidLookup.Values };
+                this.cacheEntry = new CacheData { Address = this.Address };
                 this.cacheDatabaseContext.CacheData.Add(this.cacheEntry);
                 this.cacheDatabaseContext.SaveChanges();
             }
-            else
-            {
-                // only need to do this in else branch as in if we've just initialized the database from the field
-                this.GetOidLookupFromDatabase();
-            }
-        }
 
-        /// <summary>
-        /// New sets or updates the cachableOidLookup.
-        /// </summary>
-        private void GetOidLookupFromDatabase()
-        {
-            lock(this.SyncRoot)
+            if (this.cacheEntry.SystemData != null)
             {
-                this.cachableOidLookup.Clear();
-                foreach (ICachableOid coid in this.cacheEntry.CachableOids)
-                {
-                    this.cachableOidLookup.Add(coid.Meaning, coid);
-                }
+                var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;
+                log.Info($"Device '{this.lowerLayer.Address}': Setting SNMP protocol version to {this.cacheEntry.SystemData.MaximumSnmpVersion} due cache database SystemData.MaximumSnmpVersion setting");
+                internalLowerLayer.AdjustSnmpVersion(this.cacheEntry.SystemData.MaximumSnmpVersion);
             }
         }
 

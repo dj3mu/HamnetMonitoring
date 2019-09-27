@@ -49,5 +49,10 @@ namespace SnmpAbstraction
         /// Gets the device's software version.
         /// </summary>
         SemanticVersion Version { get; }
+
+        /// <summary>
+        /// Gets the device's maximum supported SNMP version.
+        /// </summary>
+        SnmpVersion MaximumSnmpVersion { get; }
     }
 }

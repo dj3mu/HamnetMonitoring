@@ -29,6 +29,8 @@ namespace SnmpAbstraction
             }
 
             this.peerInfosBacking = inputInfos.Details.Select(p => new SerializableWirelessPeerInfo(p) as IWirelessPeerInfo).ToList();
+            this.DeviceAddress = inputInfos.DeviceAddress;
+            this.DeviceModel = inputInfos.DeviceModel;
         }
 
         /// <summary>
