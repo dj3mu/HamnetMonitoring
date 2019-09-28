@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using SnmpSharpNet;
@@ -34,5 +35,11 @@ namespace SnmpAbstraction
         /// </summary>
         [Column("InterfaceDetails")]
         public IInterfaceDetails InterfaceDetails { get; set; }
+
+        /// <summary>
+        /// Gets the date and time of last modification of this table row.
+        /// </summary>
+        [Column("LastModification")]
+        public DateTime LastModification { get; set; }
     }
 }

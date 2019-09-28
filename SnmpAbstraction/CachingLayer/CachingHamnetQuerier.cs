@@ -189,11 +189,11 @@ namespace SnmpAbstraction
 
                     if (this.cacheDatabaseContext != null)
                     {
-                        if (this.cacheEntry != null)
-                        {
-                            this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
-                            this.cacheDatabaseContext.SaveChanges();
-                        }
+                        //if (this.cacheEntry != null)
+                        //{
+                        //    this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
+                        //    this.cacheDatabaseContext.SaveChanges();
+                        //}
 
                         this.cacheDatabaseContext.Dispose();
                         this.cacheDatabaseContext = null;
@@ -217,6 +217,7 @@ namespace SnmpAbstraction
             this.InitializeLowerQuerier();
 
             this.cacheEntry.SystemData = new SerializableSystemData(this.lowerQuerier.SystemData);
+            this.cacheEntry.LastModification = DateTime.UtcNow;
 
             this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
             this.cacheDatabaseContext.SaveChanges();
@@ -242,6 +243,7 @@ namespace SnmpAbstraction
                 lowerLayerInterfaceDetails.ForceEvaluateAll();
 
                 this.cacheEntry.InterfaceDetails = new SerializableInterfaceDetails(lowerLayerInterfaceDetails);
+                this.cacheEntry.LastModification = DateTime.UtcNow;
 
                 this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
                 this.cacheDatabaseContext.SaveChanges();
@@ -270,6 +272,7 @@ namespace SnmpAbstraction
                 lowerLayerWirelessPeerInfos.ForceEvaluateAll();
 
                 this.cacheEntry.WirelessPeerInfos = new SerializableWirelessPeerInfos(lowerLayerWirelessPeerInfos);
+                this.cacheEntry.LastModification = DateTime.UtcNow;
 
                 this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
                 this.cacheDatabaseContext.SaveChanges();
@@ -317,17 +320,21 @@ namespace SnmpAbstraction
 
             if (this.cacheEntry == null)
             {
-                this.cacheEntry = new CacheData { Address = this.Address };
+                this.cacheEntry = new CacheData { Address = this.Address, LastModification = DateTime.UtcNow };
                 this.cacheDatabaseContext.CacheData.Add(this.cacheEntry);
                 this.cacheDatabaseContext.SaveChanges();
             }
 
-            if (this.cacheEntry.SystemData != null)
+            if (this.cacheEntry.SystemData == null)
             {
-                var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;
-                log.Info($"Device '{this.lowerLayer.Address}': Setting SNMP protocol version to {this.cacheEntry.SystemData.MaximumSnmpVersion} due cache database SystemData.MaximumSnmpVersion setting");
-                internalLowerLayer.AdjustSnmpVersion(this.cacheEntry.SystemData.MaximumSnmpVersion);
+                this.LowerQuerierFetchSystemData();
             }
+
+            var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;
+#if DEBUG
+            log.Debug($"Device '{this.lowerLayer.Address}': Setting SNMP protocol version to {this.cacheEntry.SystemData.MaximumSnmpVersion} due cache database SystemData.MaximumSnmpVersion setting");
+#endif
+            internalLowerLayer.AdjustSnmpVersion(this.cacheEntry.SystemData.MaximumSnmpVersion);
         }
 
         /// <summary>
