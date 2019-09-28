@@ -46,5 +46,11 @@ namespace SnmpAbstraction
         /// Only valid on GETBULK requests.
         /// </summary>
         int Ver2cMaximumRequests { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether to use caching of data in a cache database to avoid frequent querying of non-volatile data.
+        /// Volatile data (e.g. RSSI) will not be cached at all.
+        /// </summary>
+        bool EnableCaching { get; }
     }
 }

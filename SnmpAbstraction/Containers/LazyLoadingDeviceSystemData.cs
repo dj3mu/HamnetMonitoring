@@ -187,6 +187,9 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public SemanticVersion Version => this.ModifyableVersion;
 
+        /// <inheritdoc />
+        public SnmpVersion MaximumSnmpVersion => this.ModifyableMaximumSnmpVersion;
+
         /// <summary>
         /// Backing property for Version that is settable from outside (by Device Detector).
         /// </summary>
@@ -205,6 +208,15 @@ namespace SnmpAbstraction
         /// </remarks>
         internal string ModifyableModel { get; set; }
 
+        /// <summary>
+        /// Backing property for a maximum SNMP Version that is settable from outside (by Device Detector).
+        /// </summary>
+        /// <remarks>This seems kind of violation of immutability. But the Model and Version retrieval
+        /// unfortunately is device-specific and hence done in DetectableDevice only.
+        /// As this object is never passed out anywhere to our API users it seems a feasible trade-off to far more complex implementation.
+        /// </remarks>
+        internal SnmpVersion ModifyableMaximumSnmpVersion { get; set; }
+
         /// <inheritdoc />
         public override void ForceEvaluateAll()
         {
@@ -217,7 +229,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override string ToTextString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(256);
 

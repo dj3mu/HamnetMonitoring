@@ -98,6 +98,8 @@ namespace RestService.DataFetchingService
                 this.snmpQuerierOptions = this.snmpQuerierOptions.WithRetries(snmpRetriesConfig);
             }
 
+            this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<bool>("UseQueryCaching"));
+
             this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
             
             TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(7);

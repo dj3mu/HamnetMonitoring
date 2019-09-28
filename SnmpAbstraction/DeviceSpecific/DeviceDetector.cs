@@ -122,6 +122,7 @@ namespace SnmpAbstraction
                     var internalSystemData = internalLowerLayer.InternalSystemData;
                     internalSystemData.ModifyableModel = handler.Model;
                     internalSystemData.ModifyableVersion = handler.OsVersion;
+                    internalSystemData.ModifyableMaximumSnmpVersion = handlerBase.OidLookup.MaximumSupportedSnmpVersion;
 
                     if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
                     {

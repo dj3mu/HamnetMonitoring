@@ -22,12 +22,18 @@
         /// Gets the SNMP protocol version to use.
         /// </summary>
         [Option('v', "snmpversion", Required = false, HelpText = "The version of the SNMP protocol to use. Defaults to version 2.")]
-        public int? SnmpVersion { get; } = null;
+        public int? SnmpVersion { get; set; } = null;
+
+        /// <summary>
+        /// Gets flag
+        /// </summary>
+        [Option('c', "caching", Required = false, HelpText = "Choose whether to use the cache database or not.")]
+        public bool UseCaching { get; set; } = true;
 
         /// <summary>
         /// Gets a value indicating whether to print PDU stats before terminating.
         /// </summary>
         [Option("stats", Required = false, HelpText = "Display request and response SNMP PDU stats before terminating.")]
-        public bool PrintStats { get; } = false;
+        public bool PrintStats { get; set; } = false;
     }
 }
