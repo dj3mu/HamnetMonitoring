@@ -1,0 +1,57 @@
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using SnmpAbstraction;
+
+namespace HamnetDbRest.Controllers
+{
+    /// <summary>
+    /// Controller class for the &quot;vw_rest_rssi&quot; REST API
+    /// </summary>
+    [Route("api/v1/linktest")]
+    [ApiController]
+    public class LinkTestController : ControllerBase
+    {
+        private readonly ILogger logger;
+
+        /// <summary>
+        /// Instantiates the controller taking a logger.
+        /// </summary>
+        /// <param name="logger">The logger to use for logging.</param>
+        public LinkTestController(ILogger<RestController> logger)
+        {
+            this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger), "The logger to use is null");
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("ping/{host}")]
+        public async Task<ActionResult<IStatusReply>> PingHost(string host)
+        {
+            return await new PingTest(host).Execute();
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("link/{host1}/{host2}")]
+        public async Task<ActionResult<IStatusReply>> LinkTest(string host1, string host2)
+        {
+            return await new LinkTest(host1, host2).Execute();
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("network/{net}")]
+        public async Task<ActionResult<IStatusReply>> NetworkTest(string net)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
