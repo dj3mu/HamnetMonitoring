@@ -74,6 +74,7 @@ namespace SnmpAbstraction
             if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthImmediateOid, out singleOid) && !singleOid.Oid.IsNull)
             {
                 this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid, "RSSI single value");
+                this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
             }
             else
             {
