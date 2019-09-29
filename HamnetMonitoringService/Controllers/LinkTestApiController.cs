@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SnmpAbstraction;
 
@@ -15,13 +16,17 @@ namespace HamnetDbRest.Controllers
     {
         private readonly ILogger logger;
 
+        private readonly IConfiguration configuration;
+
         /// <summary>
         /// Instantiates the controller taking a logger.
         /// </summary>
         /// <param name="logger">The logger to use for logging.</param>
-        public LinkTestController(ILogger<RestController> logger)
+        /// <param name="configuration">The configuration settings.</param>
+        public LinkTestController(ILogger<RestController> logger, IConfiguration configuration)
         {
             this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger), "The logger to use is null");
+            this.configuration = configuration ?? throw new System.ArgumentNullException(nameof(configuration), "The configuration to use is null");
         }
 
         /// <summary>
@@ -51,7 +56,7 @@ namespace HamnetDbRest.Controllers
         [HttpGet("network/{net}")]
         public async Task<ActionResult<IStatusReply>> NetworkTest(string net)
         {
-            throw new NotImplementedException();
+            return await new NetworkTest(net, this.logger, this.configuration).Execute();
         }
     }
 }

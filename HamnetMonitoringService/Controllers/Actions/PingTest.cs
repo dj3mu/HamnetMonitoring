@@ -85,13 +85,13 @@ namespace HamnetDbRest.Controllers
             public TimeSpan RoundtripTime { get; }
 
             /// <inheritdoc />
-            public int TimeToLive => this.reply.Options.Ttl;
+            public int? TimeToLive => this.reply?.Options?.Ttl;
 
             /// <inheritdoc />
-            public bool DontFragment => this.reply.Options.DontFragment;
+            public bool? DontFragment => this.reply?.Options?.DontFragment;
 
             /// <inheritdoc />
-            public int BufferSize => this.reply.Buffer.Length;
+            public int? BufferSize => this.reply?.Buffer?.Length;
 
             /// <inheritdoc />
             public string Status { get; }

@@ -27,16 +27,16 @@ namespace HamnetDbRest.Controllers
         /// <summary>
         /// The time-to-live value that has been used with the ping.
         /// </summary>
-        int TimeToLive { get; }
+        int? TimeToLive { get; }
 
         /// <summary>
         /// The &quot;don't fragment&quot; setting used with the ping.
         /// </summary>
-        bool DontFragment { get; }
+        bool? DontFragment { get; }
 
         /// <summary>
         /// The buffer size (amount of data) used with the ping.
         /// </summary>
-        int BufferSize { get; }
+        int? BufferSize { get; }
     }
 }

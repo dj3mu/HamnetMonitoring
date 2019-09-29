@@ -111,4 +111,24 @@ URI path: `/api/v1/linktest/network/<network>`
 
 Queries the HamnetDB for the radio nodes with active _monitoring_ flag inside the given `<network>`. The `<network>` can be CIDR notation or IP/netmask where forward slash must, obviously, be URL-escaped.
 
-... to be continued ...
+For example the request URI path `/api/v1/linktest/network/44.224.10.64%2F29` could return
+
+```json
+{
+    "details": [
+        {
+            "macString1": "64:D1:54:7C:D6:E5",
+            "macString2": "64:D1:54:5F:7B:B6",
+            "address1": "44.224.10.66",
+            "address2": "44.224.10.69",
+            "modelAndVersion1": "RBLHG5HPnD v 6.44.1",
+            "modelAndVersion2": "RBDynaDishG-5HacDr3 v 6.43.8",
+            "rxLevel1at2": -80.544595368907054,
+            "rxLevel2at1": -71.806689519339045,
+            "linkUptime": "00:16:34",
+            "sideOfAccessPoint": 2
+        }
+    ],
+    "errorDetails": []
+}
+```
