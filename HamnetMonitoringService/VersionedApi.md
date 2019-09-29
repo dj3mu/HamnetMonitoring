@@ -135,6 +135,7 @@ For example the request URI path `/api/v1/linktest/network/44.224.10.64%2F29` co
 
 ### Supported querier options
 For the `<options>` URL query string the following values are supported to configure the behaviour of the querier:
+
 | Option name | Default | Description                                                          |
 |-------------|---------|----------------------------------------------------------------------|
 | Port        | 161     | The UDP port number to use for the SNMP requests.                    |
@@ -145,3 +146,4 @@ For the `<options>` URL query string the following values are supported to confi
 | Ver2cMaximumValuesPerRequest | 0 | The maximum number of values per SNMPv2c request. Ignored in case of SNMPv1 |
 | Ver2cMaximumRequests | 5 | The maximum number of SNMPv2c requests. Ignored in case of SNMPv1 |
 | EnableCaching | true | If **true**, the cache database will be used to reduce network traffic (if details of the device are already available in cache). If **false** all required data will be re-queried from the devices including identification of the device and SW version. |
+

@@ -3,12 +3,14 @@ A command line tool for manual execution of query operations.
 
 ### Commands
 The tool supports the following sub-commands:
+
 | Command    | Description                                                     |
 |------------|-----------------------------------------------------------------|
 | SystemData | Query for basic system data. Effectively that is almost only the data which is generically available and used to finally identify the device. However, the full device identification will also be executed. This command requires at least one host to be specified (`-h`).<br/>Note: The command does a full query for all available data. Lazy-loading is forced. |
 | InterfaceData | Query for data of the local network interfaces of the device. This includes all kinds of interfaces. This command requires at least one host to be specified (`-h`).<br/>Note: The command does a full query for all available data. Lazy-loading is forced. |
 | WirelessPeers | Query for data of the currently active, wireless peers of the device. This command requires at least one host to be specified (`-h`).<br/>Note: The command does a full query for all available data. Lazy-loading is forced. |
 | LinkDetails | Query for detail data of the radio link between that two or more given devices. This command requires at least TWO hosts to be specified (`-h`).<br>This command is the main reason why the tool exists: It provides and algorithm to detect whether there's a radio link between the devices and extract its most important properties (e.g. RX Level).<br/>Note: Only the absolute necessary data for determining the link details are queried. Lazy-loading is active. |
+
 
 ### Global options
 | Option     | Description                                                     |
