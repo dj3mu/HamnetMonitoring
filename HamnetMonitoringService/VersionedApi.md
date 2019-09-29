@@ -80,11 +80,11 @@ Tries to ping the given `<hostname or IP>` and returns the results. For example,
 ```
 
 ### Link Test
-URI path: `/api/v1/linktest/link/<host or IP #1>/<host or IP #2>`
+URI path: `/api/v1/linktest/link/<host or IP #1>/<host or IP #2>?<options>`
 
 Tries to obtain the full link details of a radio link between the two given IP addresses or host names.
 
-For example the request URI path `/api/v1/linktest/link/44.137.69.173/44.137.69.170` could return
+For example the request URI path `/api/v1/linktest/link/44.137.69.173/44.137.69.170&EnableCaching=false` could return
 
 ```json
 {
@@ -107,7 +107,7 @@ For example the request URI path `/api/v1/linktest/link/44.137.69.173/44.137.69.
 ```
 
 ### HamnetDB-based link test
-URI path: `/api/v1/linktest/network/<network>`
+URI path: `/api/v1/linktest/network/<network>?<options>`
 
 Queries the HamnetDB for the radio nodes with active _monitoring_ flag inside the given `<network>`. The `<network>` can be CIDR notation or IP/netmask where forward slash must, obviously, be URL-escaped.
 
@@ -132,3 +132,16 @@ For example the request URI path `/api/v1/linktest/network/44.224.10.64%2F29` co
     "errorDetails": []
 }
 ```
+
+### Supported querier options
+For the `<options>` URL query string the following values are supported to configure the behaviour of the querier:
+| Option name | Default | Description                                                          |
+|-------------|---------|----------------------------------------------------------------------|
+| Port        | 161     | The UDP port number to use for the SNMP requests.                    |
+| SnmpVersion | 1       | The SNMP version to use. Supported values: 0 -> SNMPv1, 1 -> SNMPv2c |
+| Community   | public  | The SNMP community string                                            |
+| Timeout     | 0:0:10  | The timeout per SNMP request packet. After this amount if time without reply, a retry will be done.
+| Retries     | 3       | The number of retries to send the SNMP request (e.g. in case of timeout) |
+| Ver2cMaximumValuesPerRequest | 0 | The maximum number of values per SNMPv2c request. Ignored in case of SNMPv1 |
+| Ver2cMaximumRequests | 5 | The maximum number of SNMPv2c requests. Ignored in case of SNMPv1 |
+| EnableCaching | true | If **true**, the cache database will be used to reduce network traffic (if details of the device are already available in cache). If **false** all required data will be re-queried from the devices including identification of the device and SW version. |

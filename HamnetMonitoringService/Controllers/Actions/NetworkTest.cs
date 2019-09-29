@@ -23,29 +23,32 @@ namespace HamnetDbRest.Controllers
 
         private readonly IConfiguration configuration;
         
+        private IQuerierOptions querierOptions;
+
         /// <summary>
         /// Construct for a specific host.
         /// </summary>
         /// <param name="network">The network to test in CIDR or IP/Netmask notation.</param>
         /// <param name="logger">The logger to use.</param>
         /// <param name="configuration">The service configuration.</param>
-        public NetworkTest(string network, ILogger logger, IConfiguration configuration)
+        /// <param name="querierOptions">The options to the Hamnet querier.</param>
+        public NetworkTest(string network, ILogger logger, IConfiguration configuration, IQuerierOptions querierOptions)
         {
             if (string.IsNullOrWhiteSpace(network))
             {
                 throw new ArgumentNullException(nameof(network), "Network to test is null, empty or white-space-only");
             }
 
-            var networkToUse = WebUtility.UrlDecode(network);
             IPNetwork subnet = null;
-            if (!IPNetwork.TryParse(networkToUse, out subnet))
+            if (!IPNetwork.TryParse(network, out subnet))
             {
-                throw new ArgumentException($"Specified network '{networkToUse}' is not a valid IP network specification", nameof(network));
+                throw new ArgumentException($"Specified network '{network}' is not a valid IP network specification", nameof(network));
             }
 
             this.logger = logger;
             this.configuration = configuration;
             this.network = subnet;
+            this.querierOptions = querierOptions ?? new FromUrlQueryQuerierOptions();
         }
 
         /// <summary>
@@ -108,7 +111,7 @@ namespace HamnetDbRest.Controllers
             IPAddress address1 = pair.Value.First().Address;
             IPAddress address2 = pair.Value.Last().Address;
 
-            using(var querier = SnmpQuerierFactory.Instance.Create(address1, QuerierOptions.Default))
+            using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.querierOptions))
             {
                 var linkDetails = querier.FetchLinkDetails(address2.ToString());
 

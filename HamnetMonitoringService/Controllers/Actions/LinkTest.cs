@@ -14,12 +14,15 @@ namespace HamnetDbRest.Controllers
         
         private string host2;
 
+        private IQuerierOptions querierOptions;
+
         /// <summary>
         /// Construct for a specific host.
         /// </summary>
         /// <param name="host1">The first host or IP of the link.</param>
         /// <param name="host2">The second host or IP of the link.</param>
-        public LinkTest(string host1, string host2)
+        /// <param name="querierOptions">The options to the Hamnet querier.</param>
+        public LinkTest(string host1, string host2, IQuerierOptions querierOptions)
         {
             if (string.IsNullOrWhiteSpace(host1))
             {
@@ -33,6 +36,7 @@ namespace HamnetDbRest.Controllers
 
             this.host1 = host1;
             this.host2 = host2;
+            this.querierOptions = querierOptions ?? new FromUrlQueryQuerierOptions();
         }
 
         /// <summary>
@@ -48,7 +52,7 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                var querier = SnmpQuerierFactory.Instance.Create(this.host1, QuerierOptions.Default);
+                var querier = SnmpQuerierFactory.Instance.Create(this.host1, this.querierOptions);
 
                 var linkDetails = querier.FetchLinkDetails(this.host2);
 

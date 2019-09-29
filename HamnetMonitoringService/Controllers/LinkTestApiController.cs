@@ -1,9 +1,8 @@
-﻿using System;
+﻿using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SnmpAbstraction;
 
 namespace HamnetDbRest.Controllers
 {
@@ -36,7 +35,7 @@ namespace HamnetDbRest.Controllers
         [HttpGet("ping/{host}")]
         public async Task<ActionResult<IStatusReply>> PingHost(string host)
         {
-            return await new PingTest(host).Execute();
+            return await new PingTest(WebUtility.UrlDecode(host)).Execute();
         }
 
         /// <summary>
@@ -44,9 +43,9 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet("link/{host1}/{host2}")]
-        public async Task<ActionResult<IStatusReply>> LinkTest(string host1, string host2)
+        public async Task<ActionResult<IStatusReply>> LinkTest(string host1, string host2, [FromQuery]FromUrlQueryQuerierOptions options)
         {
-            return await new LinkTest(host1, host2).Execute();
+            return await new LinkTest(WebUtility.UrlDecode(host1), WebUtility.UrlDecode(host2), options).Execute();
         }
 
         /// <summary>
@@ -56,7 +55,7 @@ namespace HamnetDbRest.Controllers
         [HttpGet("network/{net}")]
         public async Task<ActionResult<IStatusReply>> NetworkTest(string net)
         {
-            return await new NetworkTest(net, this.logger, this.configuration).Execute();
+            return await new NetworkTest(WebUtility.UrlDecode(net), this.logger, this.configuration, null).Execute();
         }
     }
 }
