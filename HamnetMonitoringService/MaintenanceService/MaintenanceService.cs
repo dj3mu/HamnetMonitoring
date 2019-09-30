@@ -215,6 +215,18 @@ namespace RestService.DataFetchingService
             var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
             cacheMaintenance.RemoveFromCacheIfModificationOlderThan(configurationSection.GetValue<TimeSpan>("CacheInvalidAfter"));
 
+            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+            {
+                var status = resultDatabaseContext.Status;
+
+                status.LastMaintenanceEnd = DateTime.Now;
+
+                this.logger.LogInformation($"COMPLETED: Database maintenance at {status.LastMaintenanceEnd}, duration {status.LastMaintenanceEnd - status.LastMaintenanceStart}");
+
+                resultDatabaseContext.SaveChanges();
+                transaction.Commit();
+            }
+
             this.DisposeDatabaseContext();
         }
 

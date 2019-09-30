@@ -12,9 +12,28 @@ Returns the server version information, uptime, highest supported API version an
 
 ```json
 {
-    "serverVersion": "0.1.61-beta+e5af27fb23",
-    "processUptime": "00:00:03.6829132",
-    "maximumSupportedApiVersion": 1
+    "serverVersion": "0.1.62-beta+a9a3d6b411",
+    "processUptime": "00:00:03.3108184",
+    "maximumSupportedApiVersion": 1,
+    "databaseStatistic": {
+        "ResultDatabase": {
+            "UniqueRssiValues": "834",
+            "TotalFailures": "99",
+            "TimeoutFailures": "91",
+            "NonTimeoutFailures": "8",
+            "LastAquisitionStart": "30.09.2019 14:59:11",
+            "LastAquisitionEnd": "30.09.2019 14:51:38",
+            "LastMaintenanceStart": "30.09.2019 21:34:03",
+            "LastMaintenanceEnd": "01.01.0001 00:00:00"
+        },
+        "CacheDatabase": {
+            "UniqueCacheEntries": "957"
+        },
+        "DeviceDatabase": {
+            "NumberOfUniqueDevices": "78",
+            "NumberOfUniqueDevicesVersions": "86"
+        }
+    }
 }
 ```
 

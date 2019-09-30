@@ -103,5 +103,20 @@ namespace SnmpAbstraction.CachingLayer
                 }
             }
         }
+
+        /// <summary>
+        /// Gets some statistics info about that database.
+        /// </summary>
+        /// <returns>Key-value-pairs with the statistics information.</returns>
+        public IReadOnlyDictionary<string, string> CacheStatistics()
+        {
+            using (var dbContext = CacheDatabaseProvider.Instance.CacheDatabase)
+            {
+                return new Dictionary<string, string>
+                {
+                    { "UniqueCacheEntries", dbContext.CacheData.Count().ToString() }
+                };
+            }
+        }
     }
 }

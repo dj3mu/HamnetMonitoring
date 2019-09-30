@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace HamnetDbRest.Controllers
 {
@@ -21,5 +22,17 @@ namespace HamnetDbRest.Controllers
         /// Gets the uptime of the current server process.
         /// </summary>
         TimeSpan ProcessUptime { get; }
+
+        /// <summary>
+        /// Gets the database statistics
+        /// </summary>
+        IReadOnlyDictionary<string, IDatabasestatistic> DatabaseStatistic { get; }
+    }
+
+    /// <summary>
+    /// Interface to a single database statistic.
+    /// </summary>
+    public interface IDatabasestatistic : IReadOnlyDictionary<string, string>
+    {
     }
 }
