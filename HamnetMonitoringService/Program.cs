@@ -85,6 +85,11 @@ namespace HamnetDbRest
         }
 
         /// <summary>
+        /// Gets a constant string to identify a process-wide monitor (e.g. lock during maitenance).
+        /// </summary>
+        public static string ProgramWideMutexName { get; } = "HamnetMonitoringService-ProcessWideMonitor";
+
+        /// <summary>
         /// The entry method.
         /// </summary>
         /// <param name="args">The command line arguments.</param>

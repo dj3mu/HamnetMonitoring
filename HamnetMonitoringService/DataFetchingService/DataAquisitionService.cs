@@ -38,6 +38,8 @@ namespace RestService.DataFetchingService
 
         private readonly IConfiguration configuration;
         
+        private readonly Mutex mutex = new Mutex(false, Program.ProgramWideMutexName);
+
         private bool disposedValue = false;
 
         private Timer timer;
@@ -102,7 +104,7 @@ namespace RestService.DataFetchingService
 
             this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
             
-            TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(7);
+            TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(11);
 
             // by default waiting a couple of secs before first Hamnet scan
             var status = this.resultDatabaseContext.Status;
@@ -119,7 +121,7 @@ namespace RestService.DataFetchingService
                 this.timerReAdjustmentNeeded = true;
             }
 
-            this.logger.LogInformation($"STARTING first aquisition after after restart in {timeToFirstAquisition}: Last aquisition started {status.LastQueryStart}, configured interval {this.refreshInterval}");
+            this.logger.LogInformation($"STARTING first aquisition after restart in {timeToFirstAquisition}: Last aquisition started {status.LastQueryStart}, configured interval {this.refreshInterval}");
 
             this.timer = new Timer(DoFetchData, null, timeToFirstAquisition, this.refreshInterval);
 
@@ -173,10 +175,13 @@ namespace RestService.DataFetchingService
         /// <param name="state">Required by timer but not used. Using field <see cref="configuration" /> instead.</param>
         private void DoFetchData(object state)
         {
+            // NOTE: The Monitor handles multiple concurrent runs while the mutex prevents running of aquisition and maintenance at the same time.
             if (Monitor.TryEnter(this.multiTimerLockingObject))
             {
                 try
                 {
+                    this.mutex.WaitOne();
+
                     // make sure to change back the due time of the timer
                     if (this.timerReAdjustmentNeeded)
                     {
@@ -193,7 +198,10 @@ namespace RestService.DataFetchingService
                 }
                 finally
                 {
+                    this.mutex.ReleaseMutex();
+
                     Monitor.Exit(this.multiTimerLockingObject);
+
                     GC.Collect(); // free as much memory as we can
                 }
             }
@@ -231,9 +239,7 @@ namespace RestService.DataFetchingService
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
-
             }
-
 
             pairsSlicedAccordingToConfiguration = FetchSubnetsWithHostsFromHamnetDb(hamnetDbConfig);
 

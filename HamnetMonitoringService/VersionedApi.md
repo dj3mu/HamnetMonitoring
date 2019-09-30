@@ -2,6 +2,23 @@
 Adressed via URI root path `/api/v<version>`.  
 `<version>` starts at 1 and every incompatible change (e.g. removal or renaming of fields) will result in an increment of the version number.
 
+
+## Server Status and API version
+URI path: `/api/status`
+
+This request is an exception to the versioned API and it is guaranteed, that this request produces backward-compatible results, forever. Use this request to determine the API version to use for talking to the server.
+
+Returns the server version information, uptime, highest supported API version and, in future, probably some more server status information. Example:
+
+```json
+{
+    "serverVersion": "0.1.61-beta+e5af27fb23",
+    "processUptime": "00:00:03.6829132",
+    "maximumSupportedApiVersion": 1
+}
+```
+
+
 ## API Version 1
 All URI paths of this version are starting with `/api/v1`.
 

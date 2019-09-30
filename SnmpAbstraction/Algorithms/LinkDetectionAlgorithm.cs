@@ -87,7 +87,8 @@ namespace SnmpAbstraction
             lazyContainerSum += wifiInterfaces2.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
             lazyContainerSum += wlPeerInfo1.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
             lazyContainerSum += wlPeerInfo2.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
-            log.Info($"LinkDetectionQuery: Lazy container sum = {lazyContainerSum.TotalMilliseconds} ms");
+
+            log.Debug($"LinkDetectionQuery: Lazy container sum = {lazyContainerSum.TotalMilliseconds} ms");
 
             return returnDetails;
         }
