@@ -1,0 +1,21 @@
+next-version: 1.0
+assembly-versioning-scheme: MajorMinorPatch
+mode: ContinuousDelivery
+branches:
+  develop:
+    mode: ContinuousDelivery
+    tag: alpha
+  feature:
+    mode: ContinuousDelivery
+    tag: afeat
+  master:
+    mode: ContinuousDelivery
+  release:
+    mode: ContinuousDelivery
+    tag: beta
+  support:
+    mode: ContinuousDelivery
+    tag: alpha
+ignore:
+  sha: []
+merge-message-formats: {}

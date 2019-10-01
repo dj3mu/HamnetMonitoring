@@ -24,13 +24,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IPNetwork2" Version="2.4.0.133" />
-    <PackageReference Include="CommandLineParser" Version="2.6.0" />
-    <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.25">
+    <PackageReference Include="GitVersionTask" Version="5.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="IPNetwork2" Version="2.4.0.133" />
+    <PackageReference Include="CommandLineParser" Version="2.6.0" />
+    <PackageReference Include="log4net" Version="2.0.8" />
   </ItemGroup>
 
   <ItemGroup>
