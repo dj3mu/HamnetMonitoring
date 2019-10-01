@@ -77,7 +77,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            this.refreshInterval = TimeSpan.FromSeconds(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<int>("RefreshIntervalSecs"));
+            this.refreshInterval = TimeSpan.Parse(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<string>("RefreshInterval"));
 
             var snmpVersion = this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<int>("SnmpVersion");
             if (snmpVersion != 0)

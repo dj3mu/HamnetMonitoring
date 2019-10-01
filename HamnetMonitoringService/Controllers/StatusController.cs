@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RestService.Database;
+using RestService.DataFetchingService;
 using SnmpAbstraction;
 using SnmpAbstraction.CachingLayer;
 
@@ -60,6 +62,10 @@ namespace HamnetDbRest.Controllers
                 ProcessUptime = DateTime.Now - Process.GetCurrentProcess().StartTime
             };
 
+            this.AddConfiguration(reply, DataAquisitionService.AquisitionServiceSectionKey);
+            this.AddConfiguration(reply, MaintenanceService.MaintenanceServiceSectionKey);
+            this.AddConfiguration(reply, "ConnectionStrings");
+
             var statusTableRow = this.dbContext.MonitoringStatus.First();
 
             var queryResultStats = new DatabaseStatistic()
@@ -68,10 +74,10 @@ namespace HamnetDbRest.Controllers
                 { "TotalFailures", this.dbContext.RssiFailingQueries.Count().ToString() },
                 { "TimeoutFailures", this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
                 { "NonTimeoutFailures", this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
-                { "LastAquisitionStart", statusTableRow.LastQueryStart.ToString() },
-                { "LastAquisitionEnd", statusTableRow.LastQueryEnd.ToString() },
-                { "LastMaintenanceStart", statusTableRow.LastMaintenanceStart.ToString() },
-                { "LastMaintenanceEnd", statusTableRow.LastMaintenanceEnd.ToString() },
+                { "LastAquisitionStart", statusTableRow.LastQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastAquisitionEnd", statusTableRow.LastQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastMaintenanceStart", statusTableRow.LastMaintenanceStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastMaintenanceEnd", statusTableRow.LastMaintenanceEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
             };
 
             reply.Add("ResultDatabase", queryResultStats);
@@ -83,6 +89,22 @@ namespace HamnetDbRest.Controllers
             reply.Add("DeviceDatabase", new DatabaseStatistic(devDbMaintenance.CacheStatistics()));
 
             return reply;
+        }
+
+        /// <summary>
+        /// Adds the given configuration section using given section key.
+        /// </summary>
+        /// <param name="reply">The reply to receive the section settings.</param>
+        /// <param name="sectionKey">The status output key to use for the section values.</param>
+        private void AddConfiguration(ServerStatusReply reply, string sectionKey)
+        {
+            ConfigurationInfo configuration = new ConfigurationInfo();
+            foreach (var item in this.configuration.GetSection(sectionKey).GetChildren())
+            {
+                configuration.Add(item.Key, item.Value);
+            }
+
+            reply.Add(sectionKey, configuration);
         }
     }
 }

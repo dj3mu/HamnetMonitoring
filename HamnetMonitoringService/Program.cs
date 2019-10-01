@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Xml;
 using log4net;
 using Microsoft.AspNetCore.Hosting;
@@ -95,6 +97,15 @@ namespace HamnetDbRest
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
+            CultureInfo culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+            culture.DateTimeFormat.ShortDatePattern = "yyyy-MM-dd";
+            culture.DateTimeFormat.LongDatePattern = "yyyy-MM-dd";
+            culture.DateTimeFormat.FirstDayOfWeek = DayOfWeek.Monday;
+            culture.DateTimeFormat.FullDateTimePattern = "yyyy-MM-ddTHH\\:mm\\:sszzz";
+            culture.DateTimeFormat.LongTimePattern = "HH\\:mm\\:sszzz";
+            culture.DateTimeFormat.ShortTimePattern = "HH:mm:ssK";
+            Thread.CurrentThread.CurrentCulture = culture;
+
             var configuration = new ConfigurationBuilder()
                 .AddCommandLine(args)
                 .SetBasePath(Directory.GetCurrentDirectory())

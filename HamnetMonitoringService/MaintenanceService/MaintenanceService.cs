@@ -71,7 +71,7 @@ namespace RestService.DataFetchingService
         public Task StartAsync(CancellationToken cancellationToken)
         {
             var section = this.configuration.GetSection(MaintenanceServiceSectionKey);
-            this.maintenanceInterval = TimeSpan.FromSeconds(section.GetValue<int>("MaintenanceIntervalMins"));
+            this.maintenanceInterval = TimeSpan.Parse(section.GetValue<string>("MaintenanceInterval"));
 
             this.dryRunMode = section.GetValue<bool>("DryRun");
 
@@ -92,7 +92,7 @@ namespace RestService.DataFetchingService
                 this.timerReAdjustmentNeeded = true;
             }
 
-            this.logger.LogInformation($"STARTING: Next maintenance run after restart in {timeToFirstMaintenance}: Last aquisition started {status.LastQueryStart}, configured interval {this.maintenanceInterval}");
+            this.logger.LogInformation($"STARTING: Next maintenance run after restart in {timeToFirstMaintenance}: Last maintenance started {status.LastQueryStart}, configured interval {this.maintenanceInterval}");
 
             this.timer = new Timer(DoMaintenance, null, timeToFirstMaintenance, this.maintenanceInterval);
 
