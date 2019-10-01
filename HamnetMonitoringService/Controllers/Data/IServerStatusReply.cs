@@ -20,9 +20,34 @@ namespace HamnetDbRest.Controllers
         string ServerVersion { get; }
 
         /// <summary>
+        /// Gets the processe's start time.
+        /// </summary>
+        DateTime ProcessStartTime { get; }
+
+        /// <summary>
         /// Gets the uptime of the current server process.
         /// </summary>
         TimeSpan ProcessUptime { get; }
+
+        /// <summary>
+        /// Gets the CPU time consumed by the current service process.
+        /// </summary>
+        TimeSpan ProcessCpuTime { get; }
+
+        /// <summary>
+        /// Gets the processe's working set size.
+        /// </summary>
+        long ProcessWorkingSet { get; }
+
+        /// <summary>
+        /// Gets the processe's private set size.
+        /// </summary>
+        long ProcessPrivateSet { get; }
+
+        /// <summary>
+        /// Gets the processe's number of threads.
+        /// </summary>
+        int ProcessThreads { get; }
 
         /// <summary>
         /// Gets the database statistics

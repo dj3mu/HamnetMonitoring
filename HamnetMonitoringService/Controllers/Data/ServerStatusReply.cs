@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace HamnetDbRest.Controllers
 {
@@ -16,10 +17,25 @@ namespace HamnetDbRest.Controllers
         public string ServerVersion { get; set; }
 
         /// <inheritdoc />
+        public int MaximumSupportedApiVersion { get; set; }
+
+        /// <inheritdoc />
+        public DateTime ProcessStartTime { get; set; }
+
+        /// <inheritdoc />
         public TimeSpan ProcessUptime { get; set; }
 
         /// <inheritdoc />
-        public int MaximumSupportedApiVersion { get; set; }
+        public TimeSpan ProcessCpuTime { get; set; }
+
+        /// <inheritdoc />
+        public long ProcessWorkingSet { get; set; }
+
+        /// <inheritdoc />
+        public long ProcessPrivateSet { get; set; }
+
+        /// <inheritdoc />
+        public int ProcessThreads { get; set; }
 
         /// <summary>
         /// Adds the given database statistics for a database with the given key.

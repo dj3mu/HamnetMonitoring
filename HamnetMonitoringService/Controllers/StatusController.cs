@@ -55,11 +55,17 @@ namespace HamnetDbRest.Controllers
         /// <returns>The collected version information.</returns>
         private ActionResult<IServerStatusReply> GetVersionInformation()
         {
+            var myProcess = Process.GetCurrentProcess();
             var reply = new ServerStatusReply
             {
                 MaximumSupportedApiVersion = 1, // change this when creating new API version
                 ServerVersion = Program.LibraryInformationalVersion,
-                ProcessUptime = DateTime.Now - Process.GetCurrentProcess().StartTime
+                ProcessUptime = DateTime.Now - myProcess.StartTime,
+                ProcessCpuTime = myProcess.TotalProcessorTime,
+                ProcessWorkingSet = myProcess.WorkingSet64,
+                ProcessPrivateSet = myProcess.PrivateMemorySize64,
+                ProcessThreads = myProcess.Threads.Count,
+                ProcessStartTime = myProcess.StartTime,
             };
 
             this.AddConfiguration(reply, DataAquisitionService.AquisitionServiceSectionKey);
