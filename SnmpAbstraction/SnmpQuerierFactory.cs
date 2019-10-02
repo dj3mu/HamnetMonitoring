@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Net.Sockets;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -26,12 +25,22 @@ namespace SnmpAbstraction
         public static SnmpQuerierFactory Instance { get; } = new SnmpQuerierFactory();
 
         /// <summary>
-        /// Creates a new querier to the given address using the given options.
+        /// Creates a new querier to the given host name or address string using default options and allowing caching.
+        /// </summary>
+        /// <param name="hostNameOrAddress">The host name or IP address of the device to query.</param>
+        /// <returns>An <see cref="IHamnetQuerier" /> that talks to the given address.</returns>
+        public IHamnetQuerier Create(string hostNameOrAddress)
+        {
+            return this.Create(hostNameOrAddress, null);
+        }
+
+        /// <summary>
+        /// Creates a new querier to the given address using the given options and cache settings.
         /// </summary>
         /// <param name="hostNameOrAddress">The host name or IP address of the device to query.</param>
         /// <param name="options">The options for the query.</param>
         /// <returns>An <see cref="IHamnetQuerier" /> that talks to the given address.</returns>
-        public IHamnetQuerier Create(string hostNameOrAddress, IQuerierOptions options = null)
+        public IHamnetQuerier Create(string hostNameOrAddress, IQuerierOptions options)
         {
             if (string.IsNullOrWhiteSpace(hostNameOrAddress))
             {
@@ -48,12 +57,22 @@ namespace SnmpAbstraction
         }
 
         /// <summary>
+        /// Creates a new querier to the given address using default options and given cache usage setting.
+        /// </summary>
+        /// <param name="address">The IP address of the device to query.</param>
+        /// <returns>An <see cref="IHamnetQuerier" /> that talks to the given address.</returns>
+        public IHamnetQuerier Create(IPAddress address)
+        {
+            return this.Create(address, null);
+        }
+
+        /// <summary>
         /// Creates a new querier to the given address using the given options.
         /// </summary>
         /// <param name="address">The IP address of the device to query.</param>
         /// <param name="options">The options for the query.</param>
         /// <returns>An <see cref="IHamnetQuerier" /> that talks to the given address.</returns>
-        public IHamnetQuerier Create(IPAddress address, IQuerierOptions options = null)
+        public IHamnetQuerier Create(IPAddress address, IQuerierOptions options)
         {
             if (address == null)
             {
@@ -62,17 +81,41 @@ namespace SnmpAbstraction
 
             ISnmpLowerLayer lowerLayer = new SnmpLowerLayer(new IpAddress(address), options);
 
-            var detector = new DeviceDetector(lowerLayer);
-            var handler = detector.Detect();
+            return this.Create(lowerLayer, options);
+        }
 
-            if (handler == null)
+        /// <summary>
+        /// Creates a new querier using the given lower layer and options.
+        /// </summary>
+        /// <param name="lowerLayer">The IP address of the device to query.</param>
+        /// <param name="options">The options for the query.</param>
+        /// <returns>An <see cref="IHamnetQuerier" /> that talks to the given address.</returns>
+        internal IHamnetQuerier Create(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
+        {
+            if (lowerLayer == null)
             {
-                var errorInfo = $"Cannot obtain a feasible device handler for device '{address}'";
-                log.Error(errorInfo);
-                throw new HamnetSnmpException(errorInfo);
+                throw new ArgumentNullException(nameof(lowerLayer), "lowerLayer is null");
             }
 
-            var querier = new HamnetQuerier(handler, lowerLayer.Options);
+            IHamnetQuerier querier = null;            
+            if (options.EnableCaching)
+            {
+                querier = new CachingHamnetQuerier(lowerLayer, options);
+            }
+            else
+            {
+                var detector = new DeviceDetector(lowerLayer);
+                var handler = detector.Detect();
+
+                if (handler == null)
+                {
+                    var errorInfo = $"Cannot obtain a feasible device handler for device '{lowerLayer.Address}'";
+                    log.Error(errorInfo);
+                    throw new HamnetSnmpException(errorInfo);
+                }
+
+                querier = new HamnetQuerier(handler, lowerLayer.Options);
+            }
 
             return querier;
         }

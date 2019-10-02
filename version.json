@@ -20,7 +20,7 @@
       }
     },
     "release" : {
-      "branchName" : "v{version}",
+      "branchName" : "release/{version}",
       "versionIncrement" : "minor",
       "firstUnstableTag" : "alpha"
     }

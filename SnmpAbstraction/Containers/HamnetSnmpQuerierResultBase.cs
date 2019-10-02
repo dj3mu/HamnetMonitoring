@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using SnmpSharpNet;
 
@@ -7,9 +9,14 @@ namespace SnmpAbstraction
 {
     /// <summary>
     /// Base class for all <see cref="IHamnetSnmpQuerierResult" />.
-    /// </summary>
-    internal abstract class HamnetSnmpQuerierResultBase : IHamnetSnmpQuerierResult
+    /// /// </summary>
+    internal abstract class HamnetSnmpQuerierResultBase : IHamnetSnmpQuerierResult, ICachableOids
     {
+        /// <summary>
+        /// Lookup for cachable OIDs.
+        /// </summary>
+        private readonly Dictionary<CachableValueMeanings, ICachableOid> cachableOidLookup = new Dictionary<CachableValueMeanings, ICachableOid>();
+
         /// <summary>
         /// Construct for the given device address and query duration.
         /// </summary>
@@ -24,41 +31,68 @@ namespace SnmpAbstraction
             }
 
             this.DeviceAddress = address;
-            this.QueryDuration = queryDuration;
+            this.queryDuration = queryDuration;
             this.DeviceModel = deviceModel;
         }
 
         /// <inheritdoc />
         public IpAddress DeviceAddress { get; }
 
+        private readonly TimeSpan queryDuration;
+
         /// <inheritdoc />
-        public virtual TimeSpan QueryDuration { get; }
+        public virtual TimeSpan QueryDuration => queryDuration;
 
         /// <inheritdoc />
         public virtual string DeviceModel { get; }
 
         /// <inheritdoc />
-        public string ToConsoleString()
+        public IEnumerable<CachableValueMeanings> Keys => this.cachableOidLookup.Keys;
+
+        /// <inheritdoc />
+        public IEnumerable<ICachableOid> Values => this.cachableOidLookup.Values;
+
+        /// <inheritdoc />
+        public int Count => this.cachableOidLookup.Count;
+
+        /// <inheritdoc />
+        public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids => this.cachableOidLookup;
+
+        /// <inheritdoc />
+        public ICachableOid this[CachableValueMeanings key] => this.cachableOidLookup[key];
+
+        /// <inheritdoc />
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder(128);
             returnBuilder.Append("Device ").Append(this.DeviceAddress).Append(" (").Append(this.DeviceModel).AppendLine("):");
-            returnBuilder.AppendLine(SnmpAbstraction.IndentLines(this.ToTextString()));
+            returnBuilder.AppendLine(SnmpAbstraction.IndentLines(this.ToString()));
             returnBuilder.Append(SnmpAbstraction.IndentLines("--> Query took ")).Append(this.QueryDuration.TotalMilliseconds).Append(" ms");
 
             return returnBuilder.ToString();
         }
-        
-        /// <summary>
-        /// Prints the result body to the given <see cref="TextWriter" /> using
-        /// human-readable formatting.
-        /// </summary>
-        /// <returns>A string with the human readable data.</returns>
-        public abstract string ToTextString();
-        
+
         /// <inheritdoc />
-        public override string ToString()
+        /// <summary>
+        /// Adds the given <see paramref="oid" /> as OID for the given value meaning.
+        /// </summary>
+        /// <param name="meaning">The value meaning that is requested by the given OID.</param>
+        /// <param name="oid">The OID that can be used to request the given value.</param>
+        protected void RecordCachableOid(CachableValueMeanings meaning, Oid oid)
         {
-            return this.ToConsoleString();
+            // intentionally add or silently replace an existing value
+            this.cachableOidLookup[meaning] = new CachableOid(this.DeviceAddress, meaning, oid);
+        }
+
+        /// <summary>
+        /// Adds the given <see paramref="oid" /> as OID for the given value meaning.
+        /// </summary>
+        /// <param name="meaning">The value meaning that is requested by the given OID.</param>
+        /// <param name="oids">The OID that can be used to request the given value.</param>
+        protected void RecordCachableOids(CachableValueMeanings meaning, IEnumerable<Oid> oids)
+        {
+            // intentionally add or silently replace an existing value
+            this.cachableOidLookup[meaning] = new CachableOid(this.DeviceAddress, meaning, oids);
         }
     }
 }

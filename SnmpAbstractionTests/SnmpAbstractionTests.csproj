@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.25">
+    <PackageReference Include="GitVersionTask" Version="5.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -35,7 +35,7 @@
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying database and config files to $(OutDir)$(ConfigDir)" Importance="high" />
-    <Copy SourceFiles="$(ProjectDir)/../SnmpAbstraction/Database/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
+    <Copy SourceFiles="$(ProjectDir)/../SnmpAbstraction/DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
     <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
   </Target>
 

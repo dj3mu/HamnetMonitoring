@@ -58,6 +58,8 @@ namespace SnmpAbstraction
 
             durationWatch.Stop();
 
+            this.RecordCachableOid(CachableValueMeanings.WirelessTxSignalStrength, interfactTypeOid);
+
             this.localQueryDuration += durationWatch.Elapsed;
 
             return true;
@@ -72,6 +74,7 @@ namespace SnmpAbstraction
             if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthImmediateOid, out singleOid) && !singleOid.Oid.IsNull)
             {
                 this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid, "RSSI single value");
+                this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
             }
             else
             {
@@ -98,6 +101,8 @@ namespace SnmpAbstraction
                 });
 
                 var queryResults = this.LowerSnmpLayer.QueryAsInt(clientSpecificOids, "wireless peer info, RX signal strength");
+
+                this.RecordCachableOids(CachableValueMeanings.WirelessRxSignalStrength, clientSpecificOids);
 
                 // Note: As the SNMP cannot return -infinity MikroTik devices return 0.
                 //       Hence we effectively skip 0 values here assuming that stream is not in use.
@@ -132,6 +137,8 @@ namespace SnmpAbstraction
             durationWatch.Stop();
 
             this.localQueryDuration += durationWatch.Elapsed;
+
+            this.RecordCachableOid(CachableValueMeanings.WirelessLinkUptime, interfactTypeOid);
 
             return true;
         }

@@ -23,11 +23,5 @@ namespace SnmpAbstraction
         /// </summary>
         /// <remarks>The value may increase continuously as queries might be done lazily when needed.</remarks>
         TimeSpan QueryDuration { get; }
-
-        /// <summary>
-        /// Gets the data as a string using human-readable formatting.
-        /// Mainly intended for creating Console output.
-        /// </summary>
-        string ToConsoleString();
     }
 }

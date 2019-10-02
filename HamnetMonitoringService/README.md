@@ -7,4 +7,9 @@ Configuration is done using an `appsettings.json` file for the service settings 
 
 
 ## Configuration file settings
-_This chapter will be added later_
+The service is configured using a file called `appsettings.json`. The settings are mostly self-explaining from the key name. Documentation will be added only later.
+
+## REST API
+There are two kinds of APIs provided:
+* The [legacy API](LegacyApi.md) emulates the API of the previous monitoring tools.
+* The [versioned API](VersionedApi.md) provides the data using versioned URLs and offers extended functionalities like real-time link testing.

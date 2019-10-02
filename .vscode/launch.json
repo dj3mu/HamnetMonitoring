@@ -49,9 +49,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/RestService/bin/Debug/netcoreapp2.2/RestService.dll",
+            "program": "${workspaceFolder}/HamnetMonitoringService/bin/Debug/netcoreapp2.2/HamnetMonitoringService.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/RestService/bin/Debug/netcoreapp2.2",
+            "cwd": "${workspaceFolder}/HamnetMonitoringService/bin/Debug/netcoreapp2.2",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false

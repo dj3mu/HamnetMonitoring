@@ -112,6 +112,8 @@ namespace SnmpAbstraction
             this.peerMacBacking = macOidFragments.ToHexString();
             this.RxSignalStrengthBacking = rxSignalStrengthEntry.Value.ToInt();
 
+            this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, rxSignalStrengthEntry.Oid);
+
             valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressAppendInterfaceId;
             DeviceSpecificOid wlanRemoteMacAddressRootOid;
             if (!this.OidLookup.TryGetValue(valueToQuery, out wlanRemoteMacAddressRootOid))
@@ -134,6 +136,8 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override bool RetrieveTxSignalStrength()
         {
+            this.RecordCachableOid(CachableValueMeanings.WirelessTxSignalStrength, new Oid("0"));
+
             // this value is simply not available for UBNT devices, at least not via SNMP (but for some models even not in Web GUI)
             return false;
         }
@@ -147,6 +151,8 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override bool RetrieveLinkUptime()
         {
+            this.RecordCachableOid(CachableValueMeanings.WirelessLinkUptime, new Oid("0"));
+
             // this value is simply not available for UBNT AirOS v 4.x devices, at least not via SNMP (but for some models even not in Web GUI)
             return false;
         }

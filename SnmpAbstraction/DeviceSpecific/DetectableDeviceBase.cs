@@ -62,7 +62,7 @@ namespace SnmpAbstraction
         /// <returns>The OID lookup table for the specified device name and version.</returns>
         protected IDeviceSpecificOidLookup ObtainOidTable(string deviceName, SemanticVersion version, out DeviceVersion deviceVersion)
         {
-            using(var database = DatabaseProvider.Instance.DeviceDatabase)
+            using(var database = DeviceDatabaseProvider.Instance.DeviceDatabase)
             {
                 int foundDeviceId = -1;
                 if (!database.TryFindDeviceId(deviceName, out foundDeviceId))

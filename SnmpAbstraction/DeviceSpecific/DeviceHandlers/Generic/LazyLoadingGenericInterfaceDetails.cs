@@ -98,7 +98,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override string ToTextString()
+        public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder((this.InterfaceDetailsBacking?.Count ?? 1) * 128);
 
@@ -118,7 +118,7 @@ namespace SnmpAbstraction
                 {
                     foreach (var item in this.InterfaceDetailsBacking)
                     {
-                        returnBuilder.AppendLine().AppendLine(SnmpAbstraction.IndentLines(item.ToConsoleString()));
+                        returnBuilder.AppendLine().AppendLine(SnmpAbstraction.IndentLines(item.ToString()));
                     }
                 }
             }

@@ -12,7 +12,7 @@ namespace HamnetDbRest.Controllers
     /// <summary>
     /// Controller class for the &quot;vw_rest_rssi&quot; REST API
     /// </summary>
-    [Route("api/v1")]
+    [Route("api/v1/rssi")]
     [ApiController]
     public class RestController : ControllerBase
     {
@@ -35,7 +35,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET request.
         /// </summary>
         /// <returns>The results of the get request.</returns>
-        [HttpGet("rssi/{host?}")]
+        [HttpGet("{host?}")]
         public async Task<ActionResult<IEnumerable<Rssi>>> GetRssi(string host)
         {
             return await this.dbContext.RssiValues.ToListAsync();
@@ -45,7 +45,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("rssi/failing")]
+        [HttpGet("failing")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.ToListAsync();
@@ -55,7 +55,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("rssi/failing/timeout")]
+        [HttpGet("failing/timeout")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetTimeoutFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
@@ -65,7 +65,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET /failing request.
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
-        [HttpGet("rssi/failing/nontimeout")]
+        [HttpGet("failing/nontimeout")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetNonTimeoutFailingRssiQueries()
         {
             return await this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
