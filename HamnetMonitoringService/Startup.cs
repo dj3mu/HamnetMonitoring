@@ -53,6 +53,7 @@ namespace HamnetDbRest
             services.AddTransient<RestController>();
             services.AddTransient<LinkTestController>();
             services.AddTransient<StatusController>();
+            services.AddTransient<CacheInfoApiController>();
 
             services.AddDbContext<QueryResultDatabaseContext>(opt => opt.UseSqlite(this.Configuration.GetConnectionString("ResultDbConnectionString")));
         }

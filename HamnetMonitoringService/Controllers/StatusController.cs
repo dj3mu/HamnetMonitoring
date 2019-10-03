@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using RestService.Database;
 using RestService.DataFetchingService;
 using SnmpAbstraction;
-using SnmpAbstraction.CachingLayer;
 
 namespace HamnetDbRest.Controllers
 {
@@ -60,7 +58,7 @@ namespace HamnetDbRest.Controllers
             {
                 MaximumSupportedApiVersion = 1, // change this when creating new API version
                 ServerVersion = Program.LibraryInformationalVersion,
-                ProcessUptime = DateTime.Now - myProcess.StartTime,
+                ProcessUptime = DateTime.UtcNow - myProcess.StartTime,
                 ProcessCpuTime = myProcess.TotalProcessorTime,
                 ProcessWorkingSet = myProcess.WorkingSet64,
                 ProcessPrivateSet = myProcess.PrivateMemorySize64,

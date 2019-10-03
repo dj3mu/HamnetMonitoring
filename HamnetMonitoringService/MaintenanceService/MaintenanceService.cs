@@ -9,9 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RestService.Database;
-using RestService.Model;
 using SnmpAbstraction;
-using SnmpAbstraction.CachingLayer;
 
 namespace RestService.DataFetchingService
 {
@@ -81,7 +79,7 @@ namespace RestService.DataFetchingService
 
             // by default waiting a couple of secs before first Hamnet scan
             var status = this.resultDatabaseContext.Status;
-            var nowItIs = DateTime.Now;
+            var nowItIs = DateTime.UtcNow;
             var timeSinceLastMaintenanceStart = (nowItIs - status.LastMaintenanceStart);
             if (status.LastMaintenanceStart > status.LastMaintenanceEnd)
             {
@@ -196,7 +194,7 @@ namespace RestService.DataFetchingService
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var status = resultDatabaseContext.Status;
-                var nowItIs = DateTime.Now;
+                var nowItIs = DateTime.UtcNow;
                 var sinceLastScan = nowItIs - status.LastMaintenanceStart;
                 if ((sinceLastScan < this.maintenanceInterval - Hysteresis) && (status.LastMaintenanceStart <= status.LastMaintenanceEnd))
                 {
@@ -206,7 +204,7 @@ namespace RestService.DataFetchingService
         
                 this.logger.LogInformation($"STARTING: Data maintenance - last run: Started {status.LastMaintenanceStart} ({sinceLastScan} ago)");
 
-                status.LastMaintenanceStart = DateTime.Now;
+                status.LastMaintenanceStart = DateTime.UtcNow;
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
@@ -223,7 +221,7 @@ namespace RestService.DataFetchingService
             {
                 var status = resultDatabaseContext.Status;
 
-                status.LastMaintenanceEnd = DateTime.Now;
+                status.LastMaintenanceEnd = DateTime.UtcNow;
 
                 this.logger.LogInformation($"COMPLETED: Database maintenance at {status.LastMaintenanceEnd}, duration {status.LastMaintenanceEnd - status.LastMaintenanceStart}");
 
