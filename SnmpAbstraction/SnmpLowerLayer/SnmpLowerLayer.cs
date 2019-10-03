@@ -127,14 +127,14 @@ namespace SnmpAbstraction
 
             if (response == null)
             {
-                throw new HamnetSnmpException($"Query for {oids.Count()} OIDs from {this.Address} produced 'null' response");
+                throw new HamnetSnmpException($"Query for {oids.Count()} OIDs from {this.Address} produced 'null' response", this.Address?.ToString());
             }
 
             // ErrorStatus other then 0 is an error returned by the Agent - see SnmpConstants for error definitions
             if (response.Pdu.ErrorStatus != 0)
             {
                 // agent reported an error with the request
-                var ex = new HamnetSnmpException($"Error in SNMP reply from device '{this.Address}': Error status {response.Pdu.ErrorStatus} at index {response.Pdu.ErrorIndex}, requested OIDs were '{string.Join(", ", response.Pdu.VbList.Select(o => o.Oid.ToString()))}'");
+                var ex = new HamnetSnmpException($"Error in SNMP reply from device '{this.Address}': Error status {response.Pdu.ErrorStatus} at index {response.Pdu.ErrorIndex}, requested OIDs were '{string.Join(", ", response.Pdu.VbList.Select(o => o.Oid.ToString()))}'", this.Address?.ToString());
                 log.Info(ex.Message);
                 throw ex;
             }
@@ -354,7 +354,7 @@ namespace SnmpAbstraction
                 }
                 else
                 {
-                    throw new HamnetSnmpException($"No response received from SNMP agent for device '{this.Address}'");
+                    throw new HamnetSnmpException($"No response received from SNMP agent for device '{this.Address}'", this.Address?.ToString());
                 }
             }
             
@@ -439,7 +439,7 @@ namespace SnmpAbstraction
                 }
                 else
                 {
-                    throw new HamnetSnmpException($"No response received from SNMP agent for device '{this.Address}'");
+                    throw new HamnetSnmpException($"No response received from SNMP agent for device '{this.Address}'", this.Address?.ToString());
                 }
             }
 

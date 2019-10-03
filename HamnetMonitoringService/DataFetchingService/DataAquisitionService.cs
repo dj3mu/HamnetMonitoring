@@ -494,11 +494,13 @@ namespace RestService.DataFetchingService
         {
             var failingSubnetString = pair.Key.Subnet.ToString();
             var failEntry = this.resultDatabaseContext.RssiFailingQueries.Find(failingSubnetString);
+            var hamnetSnmpEx = ex as HamnetSnmpException;
             if (failEntry == null)
             {
                 failEntry = new RssiFailingQuery
                 {
-                    Subnet = failingSubnetString
+                    Subnet = failingSubnetString,
+                    AffectedHosts = (hamnetSnmpEx != null) ? hamnetSnmpEx.AffectedHosts : pair.Value.Select(h => h.Address?.ToString()).ToArray()
                 };
 
                 this.resultDatabaseContext.RssiFailingQueries.Add(failEntry);

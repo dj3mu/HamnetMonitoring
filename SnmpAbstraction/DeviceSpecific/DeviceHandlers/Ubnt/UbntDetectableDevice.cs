@@ -158,13 +158,13 @@ namespace SnmpAbstraction
                 {
                     var info = $"Model (retrieved using OID '{modelOid}') is null, empty or white-space-only";
                     log.Warn(info);
-                    throw new HamnetSnmpException(info);
+                    throw new HamnetSnmpException(info, lowerLayer?.Address?.ToString());
                 }
 
                 log.Info($"Detected device '{lowerLayer.Address}' as Ubiquiti '{model}' v '{osVersion}'");
 
                 DeviceVersion deviceVersion;
-                IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion);
+                IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion, lowerLayer?.Address);
                 if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
                 {
                     return (model == AirFiberFakeModelString)
@@ -181,7 +181,7 @@ namespace SnmpAbstraction
             {
                 // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                 // device (i.e. IP address) the exception is for
-                throw new HamnetSnmpException($"Failed to create handler for Ubiquiti device '{lowerLayer.Address}': {ex.Message}", ex);
+                throw new HamnetSnmpException($"Failed to create handler for Ubiquiti device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer?.Address?.ToString());
             }
         }
 

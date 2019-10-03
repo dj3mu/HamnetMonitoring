@@ -88,7 +88,7 @@ namespace SnmpAbstraction
             log.Info($"Detected device '{lowerLayer.Address}' as ALIX '{model}' v '{osVersion}'");
 
             DeviceVersion deviceVersion;
-            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion);
+            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion, lowerLayer.Address);
             if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
             {
                 try
@@ -99,7 +99,7 @@ namespace SnmpAbstraction
                 {
                     // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                     // device (i.e. IP address) the exception is for
-                    throw new HamnetSnmpException($"Failed to create ALIX handler for device '{lowerLayer.Address}': {ex.Message}", ex);
+                    throw new HamnetSnmpException($"Failed to create ALIX handler for device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer?.Address?.ToString());
                 }
             }
             else

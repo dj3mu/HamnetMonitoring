@@ -116,6 +116,12 @@ namespace RestService.Database
             modelBuilder.Entity<Rssi>()
                 .HasIndex(r => r.ForeignId).IsUnique();
 
+            modelBuilder.Entity<RssiFailingQuery>()
+                .Property(e => e.AffectedHosts)
+                .HasConversion(
+                    affectedHostsObject => string.Join(',', affectedHostsObject),
+                    affectedHostsString => affectedHostsString.Split(',', StringSplitOptions.RemoveEmptyEntries));
+
             //// Conversions of Minimum Device Version to SemanticVersion
             //modelBuilder
             //    .Entity<Rssi>()

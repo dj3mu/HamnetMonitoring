@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RestService.Database;
+using RestService.Model;
 using SnmpAbstraction;
 using SnmpAbstraction.CachingLayer;
 
@@ -215,6 +217,8 @@ namespace RestService.DataFetchingService
             var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
             cacheMaintenance.RemoveFromCacheIfModificationOlderThan(configurationSection.GetValue<TimeSpan>("CacheInvalidAfter"));
 
+            this.RemoveCacheEntriesForFailures(cacheMaintenance);
+
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var status = resultDatabaseContext.Status;
@@ -228,6 +232,23 @@ namespace RestService.DataFetchingService
             }
 
             this.DisposeDatabaseContext();
+        }
+
+        /// <summary>
+        /// Removes the cache entries for failures recorded in the result database
+        /// </summary>
+        /// <param name="cacheMaintenance">The cache maintenance object that supports deletion of entries.</param>
+        private void RemoveCacheEntriesForFailures(CacheMaintenance cacheMaintenance)
+        {
+            var failures = this.resultDatabaseContext.RssiFailingQueries;
+            var affectedHosts = failures.Select(q => q.AffectedHosts);
+            List<IPAddress> toDelete = new List<IPAddress>();
+            foreach (IReadOnlyCollection<string> item in affectedHosts)
+            {
+                toDelete.AddRange(item.Select(ah => IPAddress.Parse(ah)));
+            }
+
+            cacheMaintenance.DeleteForAddress(toDelete.Distinct());
         }
 
         /// <summary>

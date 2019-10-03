@@ -85,7 +85,7 @@ namespace SnmpAbstraction
 
                         // Re-throwing a different exception is not good practice.
                         // But here we have a good reason: We need to add the IP address which timed out as that information is not contained in the SnmpException itself.
-                        throw new HamnetSnmpException(snmpErrorInfo, ex);
+                        throw new HamnetSnmpException(snmpErrorInfo, ex, this.lowerLayer?.Address?.ToString());
                     }
 
                     log.Info($"Trying next device: {errorInfo2}");
@@ -143,7 +143,7 @@ namespace SnmpAbstraction
 
                         // Re-throwing a different exception is not good practice.
                         // But here we have a good reason: We need to add the IP address which timed out as that information is not contained in the SnmpException itself.
-                        throw new HamnetSnmpException(snmpErrorInfo, ex);
+                        throw new HamnetSnmpException(snmpErrorInfo, ex, this.lowerLayer?.Address?.ToString());
                     }
 
                     log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation: {ex.Message}");
@@ -158,7 +158,7 @@ namespace SnmpAbstraction
 
             var errorInfo = $"Device '{this.lowerLayer.Address}' cannot be identified as a supported/known device after {detectionDuration.ElapsedMilliseconds} ms and trying {detectableDevices.Count()} devices.{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
             log.Error(errorInfo);
-            throw new HamnetSnmpException(errorInfo);
+            throw new HamnetSnmpException(errorInfo, this.lowerLayer?.Address?.ToString());
         }
     }
 }

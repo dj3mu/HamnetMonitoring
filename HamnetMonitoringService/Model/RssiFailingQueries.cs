@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
 
 namespace RestService.Model
@@ -27,5 +27,11 @@ namespace RestService.Model
         /// </summary>
         [Required, JsonProperty(PropertyName = "ErrorInfo")]
         public string ErrorInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of affected hosts
+        /// </summary>
+        [JsonProperty(PropertyName = "AffectedHosts")]
+        public IReadOnlyCollection<string> AffectedHosts { get; set; }
     }
 }
