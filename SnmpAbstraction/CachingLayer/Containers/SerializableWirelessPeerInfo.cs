@@ -64,6 +64,7 @@ namespace SnmpAbstraction
         public TimeSpan LinkUptime { get; set; } = TimeSpan.Zero;
 
         /// <inheritdoc />
+        [JsonProperty(Required = Required.AllowNull)]
         public bool? IsAccessPoint { get; set; }
 
         /// <inheritdoc />

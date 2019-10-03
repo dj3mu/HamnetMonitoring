@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -21,15 +22,6 @@ namespace SnmpAbstraction
         /// The communication layer.
         /// </summary>
         private readonly ISnmpLowerLayer lowerLayer;
-
-        /// <summary>
-        /// Represents the list of detectable device objects that will be queried for applicability one after the other.
-        /// </summary>
-        private readonly List<IDetectableDevice> detectableDevices = new List<IDetectableDevice>
-        {
-            new MikrotikDetectableDevice(),
-            new UbntDetectableDevice()
-        };
 
         /// <summary>
         /// Creates of detector using the given lower communication layer.
@@ -57,8 +49,14 @@ namespace SnmpAbstraction
             List<Exception> collectedExceptions = new List<Exception>();
             List<string> collectedErrors = new List<string>();
 
-            foreach (IDetectableDevice currentDevice in this.detectableDevices)
+            var type = typeof(IDetectableDevice);
+            var detectableDevices = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(p => type.IsAssignableFrom(p) && !p.IsAbstract && !p.IsInterface);
+
+            foreach (Type currentType in detectableDevices)
             {
+                IDetectableDevice currentDevice = (IDetectableDevice)Activator.CreateInstance(currentType);
+
                 try
                 {
                     if (currentDevice.IsApplicable(this.lowerLayer))
@@ -158,7 +156,7 @@ namespace SnmpAbstraction
 
             detectionDuration.Stop();
 
-            var errorInfo = $"Device '{this.lowerLayer.Address}' cannot be identified as a supported/known device after {detectionDuration.ElapsedMilliseconds} ms and trying {this.detectableDevices.Count} devices.{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
+            var errorInfo = $"Device '{this.lowerLayer.Address}' cannot be identified as a supported/known device after {detectionDuration.ElapsedMilliseconds} ms and trying {detectableDevices.Count()} devices.{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
             log.Error(errorInfo);
             throw new HamnetSnmpException(errorInfo);
         }
