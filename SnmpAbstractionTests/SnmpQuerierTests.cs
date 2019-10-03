@@ -35,9 +35,11 @@ namespace SnmpAbstractionTests
         [Test]
         public void AlixQuerySystemDataTest()
         {
-            //QueryAndPrintSystemData(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
+            QueryAndPrintSystemData(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
             QueryAndPrintSystemData(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
-            //QueryAndPrintSystemData(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
+            QueryAndPrintSystemData(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
+
+            QueryAndPrintSystemData(new IpAddress("44.224.90.30"), SnmpVersion.Ver2, true);
         }
 
         /// <summary>

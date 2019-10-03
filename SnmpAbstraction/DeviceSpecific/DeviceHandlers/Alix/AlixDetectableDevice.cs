@@ -16,7 +16,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// String in system description to detect Alix devices
         /// </summary>
-        private static readonly string[] AlixDetectionStrings = { "H4L HAMNET", "ALIX" };
+        private static readonly string[] AlixDetectionStrings = { "H4L HAMNET", "ALIX", "adult playground" };
 
         private static readonly Regex OsVersionExtractionRegex = new Regex(@"\s+([0-9.]+)\s+");
 
