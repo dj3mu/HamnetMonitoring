@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
 using HamnetDbRest;
+using InfluxDB.LineProtocol.Client;
+using InfluxDB.LineProtocol.Payload;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -31,6 +33,11 @@ namespace RestService.DataFetchingService
         /// The section key for the Data Aquisition service configuration.
         /// </summary>
         public static readonly string AquisitionServiceSectionKey = "DataAquisitionService";
+
+        /// <summary>
+        /// The section key for the Influx database configuration.
+        /// </summary>
+        public static readonly string InfluxSectionKey = "Influx";
     
         private static readonly TimeSpan Hysteresis = TimeSpan.FromSeconds(10);
         
@@ -55,6 +62,8 @@ namespace RestService.DataFetchingService
         private bool timerReAdjustmentNeeded = false;
 
         private QueryResultDatabaseContext resultDatabaseContext;
+
+        private LineProtocolClient influxClient = null;
 
         /// <summary>
         /// Constructs taking the logger.
@@ -103,7 +112,9 @@ namespace RestService.DataFetchingService
             this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<bool>("UseQueryCaching"));
 
             this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
-            
+
+            this.CreateInfluxClient(configuration);
+
             TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(11);
 
             // by default waiting a couple of secs before first Hamnet scan
@@ -535,10 +546,25 @@ namespace RestService.DataFetchingService
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
         private void RecordDetailsInDatabase(ILinkDetails linkDetails, DateTime queryTime)
         {
+            LineProtocolPayload influxPayload = null;
+            if (this.influxClient != null)
+            {
+                influxPayload = new LineProtocolPayload();
+            }
+
             foreach (var item in linkDetails.Details)
             {
-                this.SetNewRssiForLink(queryTime, item, item.Address1.ToString(), item.RxLevel1at2);
-                this.SetNewRssiForLink(queryTime, item, item.Address2.ToString(), item.RxLevel2at1);
+                this.SetNewRssiForLink(queryTime, item, item.Address1.ToString(), item.RxLevel1at2, influxPayload);
+                this.SetNewRssiForLink(queryTime, item, item.Address2.ToString(), item.RxLevel2at1, influxPayload);
+            }
+
+            if ((this.influxClient != null) && (influxPayload != null))
+            {
+                var result = this.influxClient.WriteAsync(influxPayload).Result;
+                if (!result.Success)
+                {
+                    this.logger.LogError($"Error writing Influx data: {result.ErrorMessage}");
+                }
             }
         }
 
@@ -549,7 +575,8 @@ namespace RestService.DataFetchingService
         /// <param name="linkDetail">The link details to record.</param>
         /// <param name="adressToSearch">The host address to search for (and modify if found).</param>
         /// <param name="rssiToSet">The RSSI value to record.</param>
-        private void SetNewRssiForLink(DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet)
+        /// <param name="influxPayload">The Influx payload container or null if Influx is not in use.</param>
+        private void SetNewRssiForLink(DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet, LineProtocolPayload influxPayload)
         {
             var adressEntry = this.resultDatabaseContext.RssiValues.Find(adressToSearch);
             if (adressEntry == null)
@@ -567,6 +594,80 @@ namespace RestService.DataFetchingService
             adressEntry.RssiValue = rssiToSet.ToString("0.0");
             adressEntry.TimeStampString = queryTime.ToUniversalTime().ToString("yyyy-MM-ddTHH\\:mm\\:sszzz");
             adressEntry.UnixTimeStamp = (ulong)queryTime.ToUniversalTime().Subtract(Program.UnixTimeStampBase).TotalSeconds;
+
+            if (influxPayload != null)
+            {
+                influxPayload.Add(
+                    new LineProtocolPoint(
+                        "RSSI",
+                        new Dictionary<string, object>
+                        {
+                            { "value", rssiToSet }
+                        },
+                        new Dictionary<string, string>
+                        {
+                            { "host", adressToSearch }
+                        },
+                        queryTime.ToUniversalTime()));
+            }
+        }
+
+        /// <summary>
+        /// Creates the Influx client or sets the field to null if Influx is not configured.
+        /// </summary>
+        /// <param name="configuration">The configuration object to get the Influx settings from.</param>
+        private void CreateInfluxClient(IConfiguration configuration)
+        {
+            IConfigurationSection influxSection = configuration.GetSection(InfluxSectionKey);
+            if ((influxSection == null) || (!influxSection.GetChildren().Any()))
+            {
+                this.logger.LogInformation($"Influx database disabled: No or empty '{InfluxSectionKey}' section in configration");
+
+                this.influxClient = null;
+                return;
+            }
+
+            string currentKey = "DatabaseUri";
+            string databaseUri = influxSection.GetValue<string>(currentKey);
+            if (string.IsNullOrWhiteSpace(databaseUri))
+            {
+                this.logger.LogInformation($"Influx database disabled: No key '{currentKey}' in '{InfluxSectionKey}' configration section");
+
+                this.influxClient = null;
+                return;
+            }
+
+            currentKey = "DatabaseName";
+            string databaseName = influxSection.GetValue<string>(currentKey);
+            if (string.IsNullOrWhiteSpace(databaseName))
+            {
+                this.logger.LogInformation($"Influx database disabled: No key '{currentKey}' in '{InfluxSectionKey}' configration section");
+
+                this.influxClient = null;
+                return;
+            }
+
+            string databaseUser = influxSection.GetValue<string>("DatabaseUser");
+            if (string.IsNullOrWhiteSpace(databaseUser))
+            {
+                databaseUser = null;
+            }
+
+            string databasePassword = influxSection.GetValue<string>("DatabasePassword");
+            if (string.IsNullOrWhiteSpace(databasePassword))
+            {
+                databasePassword = null;
+            }
+
+            if ((databaseUser == null) && (databasePassword != null))
+            {
+                this.logger.LogError($"Influx database disabled: Inconsistent Influx database configuration: Found password but no user name in '{InfluxSectionKey}' configration section");
+                return;
+            }
+
+            this.logger.LogInformation($"Initialized Influx reporting to URI '{databaseUri}', database '{databaseName}'");
+
+            this.influxClient = new LineProtocolClient(new Uri(databaseUri), databaseName, databaseUser, databasePassword);
         }
     }
 }
