@@ -108,7 +108,7 @@ namespace RestService.DataFetchingService
 
             // by default waiting a couple of secs before first Hamnet scan
             var status = this.resultDatabaseContext.Status;
-            var nowItIs = DateTime.Now;
+            var nowItIs = DateTime.UtcNow;
             var timeSinceLastAquisitionStart = (nowItIs - status.LastQueryStart);
             if (status.LastQueryStart > status.LastQueryEnd)
             {
@@ -225,7 +225,7 @@ namespace RestService.DataFetchingService
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var status = resultDatabaseContext.Status;
-                var nowItIs = DateTime.Now;
+                var nowItIs = DateTime.UtcNow;
                 var sinceLastScan = nowItIs - status.LastQueryStart;
                 if ((sinceLastScan < this.refreshInterval - Hysteresis) && (status.LastQueryStart <= status.LastQueryEnd))
                 {
@@ -235,7 +235,7 @@ namespace RestService.DataFetchingService
         
                 this.logger.LogInformation($"STARTING: Retrieving monitoring data as configured in HamnetDB - last run: Started {status.LastQueryStart} ({sinceLastScan} ago)");
 
-                status.LastQueryStart = DateTime.Now;
+                status.LastQueryStart = DateTime.UtcNow;
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
@@ -288,7 +288,7 @@ namespace RestService.DataFetchingService
             {
                 var status = resultDatabaseContext.Status;
 
-                status.LastQueryEnd = DateTime.Now;
+                status.LastQueryEnd = DateTime.UtcNow;
 
                 this.logger.LogInformation($"COMPLETED: Retrieving monitoring data as configured in HamnetDB at {status.LastQueryEnd}, duration {status.LastQueryEnd - status.LastQueryStart}");
 
@@ -494,11 +494,13 @@ namespace RestService.DataFetchingService
         {
             var failingSubnetString = pair.Key.Subnet.ToString();
             var failEntry = this.resultDatabaseContext.RssiFailingQueries.Find(failingSubnetString);
+            var hamnetSnmpEx = ex as HamnetSnmpException;
             if (failEntry == null)
             {
                 failEntry = new RssiFailingQuery
                 {
-                    Subnet = failingSubnetString
+                    Subnet = failingSubnetString,
+                    AffectedHosts = (hamnetSnmpEx != null) ? hamnetSnmpEx.AffectedHosts : pair.Value.Select(h => h.Address?.ToString()).ToArray()
                 };
 
                 this.resultDatabaseContext.RssiFailingQueries.Add(failEntry);

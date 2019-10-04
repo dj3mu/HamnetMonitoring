@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using SnmpSharpNet;
 
-namespace SnmpAbstraction.CachingLayer
+namespace SnmpAbstraction
 {
     /// <summary>
     /// Class performaning maitenance tasks on the cache data.
@@ -53,7 +53,10 @@ namespace SnmpAbstraction.CachingLayer
                         var itemIp = new IpAddress(item);
                         var entryToDelete = dbContext.CacheData.Where(d => d.Address == itemIp);
 
-                        log.Info($"{(this.dryRunMode ? "DRY RUN: Would now remove" : "Removing")} cache entry for address {item} as explicitly requested");
+                        if (entryToDelete.Any())
+                        {
+                            log.Info($"Listing cache entry for address '{item}' as explicitly requested REMOVAL");
+                        }
 
                         dataToDelete.AddRange(entryToDelete);
                     }
@@ -69,6 +72,22 @@ namespace SnmpAbstraction.CachingLayer
                     transaction.Commit();
                 }
             }
+        }
+
+        /// <summary>
+        /// Fetches and returns the full cache data.<br/>
+        /// EXPENSIVE. Use with care.
+        /// </summary>
+        /// <returns>The complete cache data list.</returns>
+        public IEnumerable<ICacheData> FetchEntryList()
+        {
+            List<ICacheData> returnList = null;
+            using (var dbContext = CacheDatabaseProvider.Instance.CacheDatabase)
+            {
+                returnList = dbContext.CacheData.Cast<ICacheData>().ToList();
+            }
+
+            return returnList;
         }
 
         /// <summary>

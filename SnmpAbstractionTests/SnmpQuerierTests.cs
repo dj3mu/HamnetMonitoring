@@ -30,6 +30,19 @@ namespace SnmpAbstractionTests
         }
 
         /// <summary>
+        /// Test for querying of system data of Ubiquiti devices.
+        /// </summary>
+        [Test]
+        public void AlixQuerySystemDataTest()
+        {
+            QueryAndPrintSystemData(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
+            QueryAndPrintSystemData(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
+            QueryAndPrintSystemData(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
+
+            QueryAndPrintSystemData(new IpAddress("44.224.90.30"), SnmpVersion.Ver2, true);
+        }
+
+        /// <summary>
         /// Test for querying of system data of MikroTik devices.
         /// </summary>
         [Test]
@@ -38,6 +51,17 @@ namespace SnmpAbstractionTests
             QueryAndPrintSystemData(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false);
             QueryAndPrintSystemData(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
             QueryAndPrintSystemData(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
+        }
+
+        /// <summary>
+        /// Test for querying of interface data of MikroTik devices.
+        /// </summary>
+        [Test]
+        public void AlixQueryInterfaceDataTest()
+        {
+            //QueryAndPrintInterfaces(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
+            QueryAndPrintInterfaces(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
+            //QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
@@ -83,6 +107,17 @@ namespace SnmpAbstractionTests
         /// Test for querying of wireless peers of MikroTik devices.
         /// </summary>
         [Test]
+        public void AlixQueryWirelessPeersTest()
+        {
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
+        }
+
+        /// <summary>
+        /// Test for querying of wireless peers of MikroTik devices.
+        /// </summary>
+        [Test]
         public void MtikQueryWirelessPeersTest()
         {
             QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, false);
@@ -92,6 +127,15 @@ namespace SnmpAbstractionTests
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
+        }
+
+        /// <summary>
+        /// Test for querying link details.
+        /// </summary>
+        [Test]
+        public void AlixFetchLinkDetailsTest()
+        {
+            QueryAndPrintLinkDetails(TestConstants.TestAddressAlix1, TestConstants.TestAddressAlix2, SnmpVersion.Ver2, true);
         }
 
         /// <summary>

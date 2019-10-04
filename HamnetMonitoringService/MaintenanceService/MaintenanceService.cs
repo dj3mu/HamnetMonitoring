@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -9,7 +10,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RestService.Database;
 using SnmpAbstraction;
-using SnmpAbstraction.CachingLayer;
 
 namespace RestService.DataFetchingService
 {
@@ -79,7 +79,7 @@ namespace RestService.DataFetchingService
 
             // by default waiting a couple of secs before first Hamnet scan
             var status = this.resultDatabaseContext.Status;
-            var nowItIs = DateTime.Now;
+            var nowItIs = DateTime.UtcNow;
             var timeSinceLastMaintenanceStart = (nowItIs - status.LastMaintenanceStart);
             if (status.LastMaintenanceStart > status.LastMaintenanceEnd)
             {
@@ -194,7 +194,7 @@ namespace RestService.DataFetchingService
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var status = resultDatabaseContext.Status;
-                var nowItIs = DateTime.Now;
+                var nowItIs = DateTime.UtcNow;
                 var sinceLastScan = nowItIs - status.LastMaintenanceStart;
                 if ((sinceLastScan < this.maintenanceInterval - Hysteresis) && (status.LastMaintenanceStart <= status.LastMaintenanceEnd))
                 {
@@ -204,7 +204,7 @@ namespace RestService.DataFetchingService
         
                 this.logger.LogInformation($"STARTING: Data maintenance - last run: Started {status.LastMaintenanceStart} ({sinceLastScan} ago)");
 
-                status.LastMaintenanceStart = DateTime.Now;
+                status.LastMaintenanceStart = DateTime.UtcNow;
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
@@ -215,11 +215,13 @@ namespace RestService.DataFetchingService
             var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
             cacheMaintenance.RemoveFromCacheIfModificationOlderThan(configurationSection.GetValue<TimeSpan>("CacheInvalidAfter"));
 
+            this.RemoveCacheEntriesForFailures(cacheMaintenance);
+
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var status = resultDatabaseContext.Status;
 
-                status.LastMaintenanceEnd = DateTime.Now;
+                status.LastMaintenanceEnd = DateTime.UtcNow;
 
                 this.logger.LogInformation($"COMPLETED: Database maintenance at {status.LastMaintenanceEnd}, duration {status.LastMaintenanceEnd - status.LastMaintenanceStart}");
 
@@ -228,6 +230,23 @@ namespace RestService.DataFetchingService
             }
 
             this.DisposeDatabaseContext();
+        }
+
+        /// <summary>
+        /// Removes the cache entries for failures recorded in the result database
+        /// </summary>
+        /// <param name="cacheMaintenance">The cache maintenance object that supports deletion of entries.</param>
+        private void RemoveCacheEntriesForFailures(CacheMaintenance cacheMaintenance)
+        {
+            var failures = this.resultDatabaseContext.RssiFailingQueries;
+            var affectedHosts = failures.Select(q => q.AffectedHosts);
+            List<IPAddress> toDelete = new List<IPAddress>();
+            foreach (IReadOnlyCollection<string> item in affectedHosts)
+            {
+                toDelete.AddRange(item.Select(ah => IPAddress.Parse(ah)));
+            }
+
+            cacheMaintenance.DeleteForAddress(toDelete.Distinct());
         }
 
         /// <summary>

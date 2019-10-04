@@ -12,6 +12,18 @@ namespace SnmpAbstractionTests
     public static class TestConstants
     {
         /// <summary>
+        /// The address of a ALIX device to use for the tests.
+        /// </summary>
+        /// <remarks>Obviously this might not forever remain an ALIX device. Feel free to adjust if needed.</remarks>
+        public static IpAddress TestAddressAlix1 { get; } = new IpAddress("44.224.90.86"); // HB9AM link DB0WBD, ALIX
+
+        /// <summary>
+        /// The address of an MTIK device to use for link-tests to Alix devices.
+        /// </summary>
+        /// <remarks>Obviously this might not forever remain a device linking to ALIX. Feel free to adjust if needed.</remarks>
+        public static IpAddress TestAddressAlix2 { get; } = new IpAddress("44.224.90.82"); // DB0WBD link HB9AM, MTik (but links to an Alix device)
+
+        /// <summary>
         /// The address of a MikroTik device to use for the tests.
         /// </summary>
         /// <remarks>Obviously this might not forever remain an MTik device. Feel free to adjust if needed.</remarks>

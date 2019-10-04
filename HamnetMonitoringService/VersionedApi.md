@@ -115,7 +115,7 @@ Tries to ping the given `<hostname or IP>` and returns the results. For example,
 }
 ```
 
-### Link Test
+#### Link Test
 URI path: `/api/v1/linktest/link/<host or IP #1>/<host or IP #2>?<options>`
 
 Tries to obtain the full link details of a radio link between the two given IP addresses or host names.
@@ -142,7 +142,7 @@ For example the request URI path `/api/v1/linktest/link/44.137.69.173/44.137.69.
 }
 ```
 
-### HamnetDB-based link test
+#### HamnetDB-based link test
 URI path: `/api/v1/linktest/network/<network>?<options>`
 
 Queries the HamnetDB for the radio nodes with active _monitoring_ flag inside the given `<network>`. The `<network>` can be CIDR notation or IP/netmask where forward slash must, obviously, be URL-escaped.
@@ -169,7 +169,7 @@ For example the request URI path `/api/v1/linktest/network/44.224.10.64%2F29` co
 }
 ```
 
-### Supported querier options
+#### Supported querier options
 For the `<options>` URL query string the following values are supported to configure the behaviour of the querier:
 
 | Option name | Default | Description                                                          |
@@ -183,3 +183,8 @@ For the `<options>` URL query string the following values are supported to confi
 | Ver2cMaximumRequests | 5 | The maximum number of SNMPv2c requests. Ignored in case of SNMPv1 |
 | EnableCaching | true | If **true**, the cache database will be used to reduce network traffic (if details of the device are already available in cache). If **false** all required data will be re-queried from the devices including identification of the device and SW version. |
 
+
+### Cache Info
+URI root path: `/api/v1/cacheInfo`.
+
+Returns the entire cache content in JSON format. Expensive call and not too much useful for regular use. Mainly intended for debugging caching issues.

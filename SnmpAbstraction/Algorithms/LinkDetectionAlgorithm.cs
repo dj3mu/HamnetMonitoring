@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 
 namespace SnmpAbstraction
 {
@@ -64,12 +65,12 @@ namespace SnmpAbstraction
 
             if (peeringWithSide1 == null)
             {
-                throw new HamnetSnmpException($"Side #2 ({this.querier2}) seems to have no peerings with side #1 ({this.querier1})");
+                throw new HamnetSnmpException($"Side #2 ({this.querier2.Address}) seems to have no peerings with side #1 ({this.querier1.Address})", this.querier2.Address?.ToString(), this.querier1.Address?.ToString());
             }
 
             if (peeringWithSide2 == null)
             {
-                throw new HamnetSnmpException($"Side #1 ({this.querier1}) seems to have no peerings with side #2 ({this.querier2})");
+                throw new HamnetSnmpException($"Side #1 ({this.querier1.Address}) seems to have no peerings with side #2 ({this.querier2.Address})", this.querier1.Address?.ToString(), this.querier2.Address?.ToString());
             }
 
             var returnDetails = new LinkDetails(

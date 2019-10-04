@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 using SemVersion;
 using SnmpSharpNet;
@@ -8,16 +9,16 @@ namespace SnmpAbstraction
     /// <summary>
     /// Detectable device implementation for MikroTik devices
     /// </summary>
-    internal class MikrotikDetectableDevice : DetectableDeviceBase
+    internal class AlixDetectableDevice : DetectableDeviceBase
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// String in system description to detect RouterOS
+        /// String in system description to detect Alix devices
         /// </summary>
-        private const string RouterOsDetectionString = "RouterOS";
+        private static readonly string[] AlixDetectionStrings = { "H4L HAMNET", "ALIX", "adult playground" };
 
-        private static readonly Regex OsVersionExtractionRegex = new Regex(RouterOsDetectionString + @"\s+([0-9.]+)\s+");
+        private static readonly Regex OsVersionExtractionRegex = new Regex(@"\s+([0-9.]+)\s+");
 
         /// <summary>
         /// The OID to obtain the string including the OS version.<br/>
@@ -41,13 +42,13 @@ namespace SnmpAbstraction
                 return false;
             }
 
-            if (!description.Contains(RouterOsDetectionString))
+            if (!AlixDetectionStrings.Any(ds => description.Contains(ds, StringComparison.InvariantCultureIgnoreCase)))
             {
-                log.Info($"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain string '{RouterOsDetectionString}': Assuming the device is not a MikroTik device");
+                log.Info($"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain any of the strings string '{string.Join(", ", AlixDetectionStrings)}': Assuming the device is not an ALIX device");
                 return false;
             }
 
-            log.Info($"Device '{snmpLowerLayer.Address}' seems to be a MikroTik device");
+            log.Info($"Device '{snmpLowerLayer.Address}' seems to be an ALIX device");
             
             return true;
         }
@@ -55,36 +56,36 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer)
         {
-            string osVersionString = null;
+            string osVersionString = "0.0.0";
 
-            // try #1: In IEEE SNMP tree
-            try
-            {
-                osVersionString = lowerLayer.QueryAsString(OsVersionOid, "MikroTik RouterOS Version String #1");
-            }
-            catch(SnmpException)
-            {
-                osVersionString = null;
-            }
-            catch(HamnetSnmpException)
-            {
-                osVersionString = null;
-            }
+            //// try #1: In IEEE SNMP tree
+            //try
+            //{
+            //    osVersionString = lowerLayer.QueryAsString(OsVersionOid, "ALIX Version String #1");
+            //}
+            //catch(SnmpException)
+            //{
+            //    osVersionString = null;
+            //}
+            //catch(HamnetSnmpException)
+            //{
+            //    osVersionString = null;
+            //}
 
             // try #2: Withing MikroTik enterprise tree
-            if (string.IsNullOrWhiteSpace(osVersionString))
-            {
-                osVersionString = lowerLayer.QueryAsString(OsVersionOid2, "MikroTik RouterOS Version String #2");
-            }
+            //if (string.IsNullOrWhiteSpace(osVersionString))
+            //{
+            //    osVersionString = lowerLayer.QueryAsString(OsVersionOid2, "ALIX Version String #2");
+            //}
 
-            // Example: "RouterOS 6.45.3 (stable) on RB711-5Hn-MMCX"
+            // Example: "..."
             Match match = OsVersionExtractionRegex.Match(osVersionString);
 
-            SemanticVersion osVersion = match.Success ? match.Groups[1].Value.ToSemanticVersion() : null;
+            SemanticVersion osVersion = osVersionString.ToSemanticVersion(); // match.Success ? match.Groups[1].Value.ToSemanticVersion() : null;
 
-            var model = lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Trim();
+            var model = lowerLayer.SystemData.Description; //lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Trim();
 
-            log.Info($"Detected device '{lowerLayer.Address}' as MikroTik '{model}' v '{osVersion}'");
+            log.Info($"Detected device '{lowerLayer.Address}' as ALIX '{model}' v '{osVersion}'");
 
             DeviceVersion deviceVersion;
             IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion, lowerLayer.Address);
@@ -92,13 +93,13 @@ namespace SnmpAbstraction
             {
                 try
                 {
-                    return new MikrotikDeviceHandler(lowerLayer, oidTable, osVersion, model);
+                    return new AlixDeviceHandler(lowerLayer, oidTable, osVersion, model);
                 }
                 catch(Exception ex)
                 {
                     // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                     // device (i.e. IP address) the exception is for
-                    throw new HamnetSnmpException($"Failed to create MikroTik handler for device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer.Address?.ToString());
+                    throw new HamnetSnmpException($"Failed to create ALIX handler for device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer?.Address?.ToString());
                 }
             }
             else

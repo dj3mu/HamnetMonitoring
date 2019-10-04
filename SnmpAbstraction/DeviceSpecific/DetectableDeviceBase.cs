@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SemVersion;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -31,7 +32,7 @@ namespace SnmpAbstraction
             var type = Type.GetType($"SnmpAbstraction.{handlerClassName}");
             if (type == null)
             {
-                throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Cannot find a DeviceHandler implementation of name '{handlerClassName}'");
+                throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Cannot find a DeviceHandler implementation of name '{handlerClassName}'", lowerLayer.Address?.ToString());
             }
 
             object myObject = null;
@@ -41,13 +42,13 @@ namespace SnmpAbstraction
             }
             catch(Exception ex)
             {
-                throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Exception while instantiating DeviceHandler of name '{handlerClassName}': {ex.Message}", ex);
+                throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Exception while instantiating DeviceHandler of name '{handlerClassName}': {ex.Message}", ex, lowerLayer.Address?.ToString());
             }
 
             IDeviceHandler castedHandler = myObject as IDeviceHandler;
             if (castedHandler == null)
             {
-                throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Instantiating DeviceHandler of name '{handlerClassName}' is NOT an IDeviceHandler");
+                throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Instantiating DeviceHandler of name '{handlerClassName}' is NOT an IDeviceHandler", lowerLayer.Address?.ToString());
             }
 
             return castedHandler;
@@ -59,15 +60,16 @@ namespace SnmpAbstraction
         /// <param name="deviceName">The device name to look up.</param>
         /// <param name="version">The current version of the device.</param>
         /// <param name="deviceVersion">Returns the device version container matching this device.</param>
+        /// <param name="deviceAddress">The IP address of the device (only used to include it with possible exceptions).</param>
         /// <returns>The OID lookup table for the specified device name and version.</returns>
-        protected IDeviceSpecificOidLookup ObtainOidTable(string deviceName, SemanticVersion version, out DeviceVersion deviceVersion)
+        protected IDeviceSpecificOidLookup ObtainOidTable(string deviceName, SemanticVersion version, out DeviceVersion deviceVersion, IpAddress deviceAddress)
         {
             using(var database = DeviceDatabaseProvider.Instance.DeviceDatabase)
             {
                 int foundDeviceId = -1;
                 if (!database.TryFindDeviceId(deviceName, out foundDeviceId))
                 {
-                    var exception = new HamnetSnmpException($"Device name '{deviceName}' cannot be found in device database");
+                    var exception = new HamnetSnmpException($"Device name '{deviceName}' cannot be found in device database", deviceAddress?.ToString());
                     log.Error(exception.Message);
                     throw exception;
                 }
@@ -75,7 +77,7 @@ namespace SnmpAbstraction
                 deviceVersion = null;
                 if (!database.TryFindDeviceVersionId(foundDeviceId, version, out deviceVersion))
                 {
-                    var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}) cannot be matched to any version range of device database");
+                    var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}) cannot be matched to any version range of device database", deviceAddress?.ToString());
                     log.Error(exception.Message);
                     throw exception;
                 }
@@ -83,7 +85,7 @@ namespace SnmpAbstraction
                 string foundOidMappingIds = string.Empty;
                 if (!database.TryFindOidLookupId(deviceVersion.Id, out foundOidMappingIds))
                 {
-                    var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}, version ID {deviceVersion.Id}) cannot be matched to any OID mapping ID of device database");
+                    var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}, version ID {deviceVersion.Id}) cannot be matched to any OID mapping ID of device database", deviceAddress?.ToString());
                     log.Error(exception.Message);
                     throw exception;
                 }
@@ -105,7 +107,7 @@ namespace SnmpAbstraction
                     IDeviceSpecificOidLookup foundLookup = null;
                     if (!database.TryFindDeviceSpecificOidLookup(intId, deviceVersion.MaximumSupportedSnmpVersion.ToSnmpVersion(), out foundLookup))
                     {
-                        var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}': Cannot find OID mapping ID table of ID {intId} in device database");
+                        var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}': Cannot find OID mapping ID table of ID {intId} in device database", deviceAddress?.ToString());
                         log.Error(exception.Message);
                         throw exception;
                     }

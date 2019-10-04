@@ -40,7 +40,7 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
+                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -68,7 +68,7 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
+                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -96,7 +96,7 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})");
+                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))

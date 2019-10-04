@@ -50,7 +50,7 @@ namespace SnmpAbstraction
             IPAddress address;
             if (!hostNameOrAddress.TryGetResolvedConnecionIPAddress(out address))
             {
-                throw new HamnetSnmpException($"Host name or address '{hostNameOrAddress}' cannot be resolved to a valid IP address");
+                throw new HamnetSnmpException($"Host name or address '{hostNameOrAddress}' cannot be resolved to a valid IP address", hostNameOrAddress);
             }
 
             return this.Create(address, options);
@@ -111,7 +111,7 @@ namespace SnmpAbstraction
                 {
                     var errorInfo = $"Cannot obtain a feasible device handler for device '{lowerLayer.Address}'";
                     log.Error(errorInfo);
-                    throw new HamnetSnmpException(errorInfo);
+                    throw new HamnetSnmpException(errorInfo, lowerLayer.Address?.ToString());
                 }
 
                 querier = new HamnetQuerier(handler, lowerLayer.Options);
