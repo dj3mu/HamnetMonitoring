@@ -68,6 +68,7 @@ namespace HamnetDbRest.Controllers
 
             this.AddConfiguration(reply, DataAquisitionService.AquisitionServiceSectionKey);
             this.AddConfiguration(reply, MaintenanceService.MaintenanceServiceSectionKey);
+            this.AddConfiguration(reply, DataAquisitionService.InfluxSectionKey);
             this.AddConfiguration(reply, "ConnectionStrings");
 
             var statusTableRow = this.dbContext.MonitoringStatus.First();
@@ -105,7 +106,7 @@ namespace HamnetDbRest.Controllers
             ConfigurationInfo configuration = new ConfigurationInfo();
             foreach (var item in this.configuration.GetSection(sectionKey).GetChildren())
             {
-                configuration.Add(item.Key, item.Value);
+                configuration.Add(item.Key, item.Key.Contains("password", StringComparison.InvariantCultureIgnoreCase) ? "***" : item.Value);
             }
 
             reply.Add(sectionKey, configuration);

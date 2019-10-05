@@ -1,6 +1,8 @@
 # `Hamnet` Monitoring command line tool
 A command line tool for manual execution of query operations.
 
+**NOTE: This tool has mostly been discontinued in favor of the REST service. 'Mostly' because the code will be kept and adjusted for interface changes. But no new functionality will be added any more.**
+
 ### Commands
 The tool supports the following sub-commands:
 
