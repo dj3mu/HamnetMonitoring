@@ -27,6 +27,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="IPNetwork2" Version="2.4.0.133" />
@@ -43,6 +44,8 @@
 
   <ItemGroup>
     <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
+    <_DeleteItems1 Include="$(PublishDir)/appsettings*" />
+    <_DeleteItems2 Include="$(PublishDir)/log4net*" />
   </ItemGroup>
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
@@ -56,6 +59,8 @@
     <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high" />
     <MakeDir Directories="$(PublishDir)$(ConfigDir)" />
     <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)" />
+    <Delete Files="@(_DeleteItems1)" />
+    <Delete Files="@(_DeleteItems2)" />
   </Target>
 
 </Project>
