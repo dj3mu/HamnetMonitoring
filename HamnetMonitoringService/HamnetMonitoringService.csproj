@@ -44,6 +44,8 @@
 
   <ItemGroup>
     <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
+    <_DeleteItems1 Include="$(PublishDir)/appsettings*" />
+    <_DeleteItems2 Include="$(PublishDir)/log4net*" />
   </ItemGroup>
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
@@ -57,6 +59,8 @@
     <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high" />
     <MakeDir Directories="$(PublishDir)$(ConfigDir)" />
     <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)" />
+    <Delete Files="@(_DeleteItems1)" />
+    <Delete Files="@(_DeleteItems2)" />
   </Target>
 
 </Project>
