@@ -415,7 +415,7 @@ namespace RestService.DataFetchingService
                     {
                         using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
                         {
-                            this.RecordDetailsInDatabase(linkDetails, DateTime.UtcNow);
+                            this.RecordDetailsInDatabase(pair.Key, linkDetails, DateTime.UtcNow);
 
                             this.DeleteFailingQuery(pair.Key);
                     
@@ -542,9 +542,10 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Records the link details in the database.
         /// </summary>
+        /// <param name="subnet">The subnet that is being recorded.</param>
         /// <param name="linkDetails">The link details to record.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
-        private void RecordDetailsInDatabase(ILinkDetails linkDetails, DateTime queryTime)
+        private void RecordDetailsInDatabase(IHamnetDbSubnet subnet, ILinkDetails linkDetails, DateTime queryTime)
         {
             LineProtocolPayload influxPayload = null;
             if (this.influxClient != null)
@@ -554,8 +555,8 @@ namespace RestService.DataFetchingService
 
             foreach (var item in linkDetails.Details)
             {
-                this.SetNewRssiForLink(queryTime, item, item.Address1.ToString(), item.RxLevel1at2, influxPayload);
-                this.SetNewRssiForLink(queryTime, item, item.Address2.ToString(), item.RxLevel2at1, influxPayload);
+                this.SetNewRssiForLink(subnet, queryTime, item, item.Address1.ToString(), item.RxLevel1at2, influxPayload);
+                this.SetNewRssiForLink(subnet, queryTime, item, item.Address2.ToString(), item.RxLevel2at1, influxPayload);
             }
 
             if ((this.influxClient != null) && (influxPayload != null))
@@ -571,12 +572,13 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Adds or modifies an RSSI entry for the given link detail.
         /// </summary>
+        /// <param name="subnet">The subnet that is being recorded.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
         /// <param name="linkDetail">The link details to record.</param>
         /// <param name="adressToSearch">The host address to search for (and modify if found).</param>
         /// <param name="rssiToSet">The RSSI value to record.</param>
         /// <param name="influxPayload">The Influx payload container or null if Influx is not in use.</param>
-        private void SetNewRssiForLink(DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet, LineProtocolPayload influxPayload)
+        private void SetNewRssiForLink(IHamnetDbSubnet subnet, DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet, LineProtocolPayload influxPayload)
         {
             var adressEntry = this.resultDatabaseContext.RssiValues.Find(adressToSearch);
             if (adressEntry == null)
@@ -606,7 +608,8 @@ namespace RestService.DataFetchingService
                         },
                         new Dictionary<string, string>
                         {
-                            { "host", adressToSearch }
+                            { "host", adressToSearch },
+                            { "subnet", subnet.Subnet.ToString() }
                         },
                         queryTime.ToUniversalTime()));
             }
