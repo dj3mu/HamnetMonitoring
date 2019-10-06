@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using SnmpSharpNet;
 
@@ -67,23 +68,47 @@ namespace SnmpAbstraction
         public DbSet<CacheData> CacheData { get; set; }
 
         /// <summary>
-        /// Construct for a specific database file location.
+        /// Construct for a specific configuration.
         /// </summary>
-        /// <param name="databasePathAndFile">The database file location.</param>
-        public CacheDatabaseContext(string databasePathAndFile)
+        /// <param name="configuration">The database configuration section.</param>
+        public CacheDatabaseContext(IConfigurationSection configuration)
         {
-            if (string.IsNullOrWhiteSpace(databasePathAndFile))
+            if (configuration == null)
             {
-                throw new ArgumentNullException(nameof(databasePathAndFile), "The specified database is null, empty or white-space-only");
+                SqliteConnectionStringBuilder connStringBuilder = new SqliteConnectionStringBuilder();
+
+                var databaseDefaultPath = Path.Combine(Environment.CurrentDirectory, "Config/CacheDatabase.sqlite");
+                connStringBuilder.DataSource = databaseDefaultPath;
+                
+                this.ConnectionString = connStringBuilder.ToString();
             }
-            
-            this.DatabasePathAndFile = databasePathAndFile;
-            if (!Path.IsPathRooted(this.DatabasePathAndFile))
+            else
             {
-                this.DatabasePathAndFile = Path.Combine(Environment.CurrentDirectory, this.DatabasePathAndFile);
+                if (configuration.GetValue<string>(CacheDatabaseProvider.DatabaseTypeKey).ToUpperInvariant() != "SQLITE")
+                {
+                    throw new InvalidOperationException("Only SQLite is currently supported for the cache database");
+                }
+
+                this.ConnectionString = configuration.GetValue<string>(CacheDatabaseProvider.ConnectionStringKey);
+            }
+        }
+
+        /// <summary>
+        /// Construct for a specific database file location. Only intended for unit testing.
+        /// </summary>
+        /// <param name="databaseFilePath">The database file path.</param>
+        internal CacheDatabaseContext(string databaseFilePath)
+        {
+            if (string.IsNullOrWhiteSpace(databaseFilePath))
+            {
+                throw new InvalidOperationException("Only SQLite is currently supported for the cache database");
             }
 
-            this.DatabasePathAndFile = databasePathAndFile;
+            SqliteConnectionStringBuilder connStringBuilder = new SqliteConnectionStringBuilder();
+
+            connStringBuilder.DataSource = databaseFilePath;
+            
+            this.ConnectionString = connStringBuilder.ToString();
         }
 
         /// <summary>
@@ -98,14 +123,12 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the path and/or file name of the file that contains the device database.
         /// </summary>
-        public string DatabasePathAndFile { get; }
+        public string ConnectionString { get; }
 
         /// <inheritdoc />
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connectionStringBuilder = new SqliteConnectionStringBuilder { DataSource = this.DatabasePathAndFile };
-            var connectionString = connectionStringBuilder.ToString();
-            var connection = new SqliteConnection(connectionString);
+            var connection = new SqliteConnection(this.ConnectionString);
 
             optionsBuilder.UseSqlite(connection);
         }

@@ -1,9 +1,9 @@
 using System;
-using System.IO;
 using System.Linq;
 using HamnetDbRest;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using RestService.Model;
 
 namespace RestService.Database
@@ -60,6 +60,12 @@ namespace RestService.Database
         }
 
         /// <summary>
+        /// Gets the connection string of this database context.
+        /// May contain sensitive data !
+        /// </summary>
+        public string ConnectionString { get; private set; }
+
+        /// <summary>
         /// Construct from DbContextOptions.
         /// </summary>
         /// <param name="options">The options to construct from.</param>
@@ -71,29 +77,18 @@ namespace RestService.Database
         /// <summary>
         /// Construct for a specific database file location.
         /// </summary>
-        /// <param name="databasePathAndFile">The database file location.</param>
-        public QueryResultDatabaseContext(string databasePathAndFile)
+        /// <param name="configuration">The configuration settings.</param>
+        public QueryResultDatabaseContext(IConfigurationSection configuration)
         {
-            if (string.IsNullOrWhiteSpace(databasePathAndFile))
+            if (configuration == null)
             {
-                throw new ArgumentNullException(nameof(databasePathAndFile), "The specified database is null, empty or white-space-only");
-            }
-            
-            this.DatabasePathAndFile = databasePathAndFile;
-            if (!Path.IsPathRooted(this.DatabasePathAndFile))
-            {
-                this.DatabasePathAndFile = Path.Combine(Environment.CurrentDirectory, this.DatabasePathAndFile);
+                throw new ArgumentNullException(nameof(configuration), "The specified database configuration data is null");
             }
 
-            this.DatabasePathAndFile = databasePathAndFile;
+            this.ConnectionString = configuration.GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey);
 
-            log.Info($"Initialized for Result Database '{this.DatabasePathAndFile}'");
+            log.Debug($"Connection string '{this.ConnectionString}'");
         }
-
-        /// <summary>
-        /// Gets the path and/or file name of the file that contains the device database.
-        /// </summary>
-        public string DatabasePathAndFile { get; }
 
         /// <inheritdoc />
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -103,13 +98,11 @@ namespace RestService.Database
                 return;
             }
             
-            var connectionStringBuilder = new SqliteConnectionStringBuilder { DataSource = this.DatabasePathAndFile };
-            var connectionString = connectionStringBuilder.ToString();
-            var connection = new SqliteConnection(connectionString);
+            var connection = new SqliteConnection(this.ConnectionString);
 
             optionsBuilder.UseSqlite(connection);
-        }
-
+        }  
+        
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -121,14 +114,6 @@ namespace RestService.Database
                 .HasConversion(
                     affectedHostsObject => string.Join(',', affectedHostsObject),
                     affectedHostsString => affectedHostsString.Split(',', StringSplitOptions.RemoveEmptyEntries));
-
-            //// Conversions of Minimum Device Version to SemanticVersion
-            //modelBuilder
-            //    .Entity<Rssi>()
-            //    .Property(e => e.ForeignId)
-            //    .HasConversion(
-            //        v => v.ToString(),
-            //        v => IPNetwork.Parse(v));
         }
     }
 }

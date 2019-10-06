@@ -1,0 +1,16 @@
+[Unit]
+Description=Hamnet Monitoring background service
+After=network.target
+Requires=mysqld.service
+
+[Service]
+EnvironmentFile=/etc/HamnetMonitoringService/environment
+Type=simple
+User=kurt
+WorkingDirectory=/usr/local/lib/HamnetMonitoringService
+ExecStart=/usr/local/lib/HamnetMonitoringService/HamnetMonitoringService $SettingsFile
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+

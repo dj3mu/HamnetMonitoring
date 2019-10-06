@@ -43,5 +43,11 @@ namespace RestService.Model
         /// </summary>
         [Required, JsonProperty(PropertyName = "value")]
         public string RssiValue { get; set; }
+
+        /// <summary>
+        /// Gets or sets the parent subnet (in CIDR notation x.x.x.x/y)
+        /// </summary>
+        [Required, JsonProperty(PropertyName = "parentSubnet")]
+        public string ParentSubnet { get; set; }
     }
 }

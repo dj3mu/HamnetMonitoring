@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 
 namespace SnmpAbstraction
 {
@@ -9,16 +10,24 @@ namespace SnmpAbstraction
     internal class CacheDatabaseProvider
     {
         /// <summary>
+        /// The configuration section name for the cache database configuration.
+        /// </summary>
+        public static readonly string CacheDatabaseSectionName = "CacheDatabase";
+
+        /// <summary>
+        /// The configuration key for getting the database type.
+        /// </summary>
+        public static readonly string DatabaseTypeKey = "DatabaseType";
+
+        /// <summary>
+        /// The configuration key for getting the database connection string.
+        /// </summary>
+        public static readonly string ConnectionStringKey = "ConnectionString";
+
+        /// <summary>
         /// Handle to the logger.
         /// </summary>
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        /// <summary>
-        /// The device database path and file name.
-        /// </summary>
-        private static readonly string DeviceDatabasePathAndFile = Path.Combine("Config", "CacheDatabase.sqlite");
-
-        private string dataBaseFile;
 
         private object lockObject = new object();
 
@@ -27,15 +36,17 @@ namespace SnmpAbstraction
         /// </summary>
         private CacheDatabaseProvider()
         {
-            this.dataBaseFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), DeviceDatabasePathAndFile);
-
-            log.Info($"Initialized for Device Database @ '{this.dataBaseFile}'");
         }
 
         /// <summary>
         /// Gets the singleton instance of the database provider class.
         /// </summary>
         public static CacheDatabaseProvider Instance { get; } = new CacheDatabaseProvider();
+
+        /// <summary>
+        /// Gets the database configuration to use.
+        /// </summary>
+        public IConfigurationSection Configuration { get; internal set; } = null;
 
         /// <summary>
         /// Gets the cache database handle.
@@ -46,7 +57,7 @@ namespace SnmpAbstraction
             {
                 lock(this.lockObject)
                 {
-                    var context = new CacheDatabaseContext(this.dataBaseFile);
+                    var context = new CacheDatabaseContext(this.Configuration);
                     
                     context.Database.EnsureCreated();
 
