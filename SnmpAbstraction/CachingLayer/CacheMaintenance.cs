@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.Configuration;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -24,6 +25,20 @@ namespace SnmpAbstraction
         public CacheMaintenance(bool dryRunMode)
         {
             this.dryRunMode = dryRunMode;
+        }
+
+        /// <summary>
+        /// Sets the database configuration from the given configuration.
+        /// </summary>
+        /// <param name="configuration">The configuration to use.</param>
+        public static void SetDatabaseConfiguration(IConfiguration configuration)
+        {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration), "the configuration to set is null");
+            }
+
+            CacheDatabaseProvider.Instance.Configuration = configuration.GetSection(CacheDatabaseProvider.CacheDatabaseSectionName);
         }
 
         /// <summary>

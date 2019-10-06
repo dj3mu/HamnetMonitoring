@@ -111,6 +111,12 @@ namespace RestService.DataFetchingService
 
             this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<bool>("UseQueryCaching"));
 
+            var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
+            if (hamnetDbConfig.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() != "MYSQL")
+            {
+                throw new InvalidOperationException("Only MySQL / MariaDB is currently supported for the Hament database");
+            }
+
             this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
 
             this.CreateInfluxClient(configuration);
@@ -369,7 +375,7 @@ namespace RestService.DataFetchingService
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
             var aquisitionConfig = this.configuration.GetSection(AquisitionServiceSectionKey);
 
-            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConnectionString(hamnetDbConfig.GetValue<string>(HamnetDbProvider.ConnectionStringKey)))
+            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
             {
                 var uniquePairs = accessor.UniqueMonitoredHostPairsInSameSubnet();
 

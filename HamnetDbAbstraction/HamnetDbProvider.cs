@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Microsoft.Extensions.Configuration;
 
 namespace HamnetDbAbstraction
 {
@@ -59,16 +60,21 @@ namespace HamnetDbAbstraction
         /// <summary>
         /// Gets an abstract functionality handle to the HamnetDB.
         /// </summary>
-        /// <param name="connectionString">The connection string. Can contain sensitive data !</param>
+        /// <param name="configurationSection">The configuration section.</param>
         /// <returns>A handle to an abstract database interface.</returns>
-        public IHamnetDbAccess GetHamnetDbFromConnectionString(string connectionString)
+        public IHamnetDbAccess GetHamnetDbFromConfiguration(IConfigurationSection configurationSection)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
+            if (configurationSection == null)
             {
-                throw new ArgumentNullException(nameof(connectionString), "The connections string is null, empty or white-space-only");
+                throw new ArgumentNullException(nameof(configurationSection), "The configuration section is null");
             }
 
-            return this.InstantiateAccessor(connectionString);
+            if (configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() != "MYSQL")
+            {
+                throw new InvalidOperationException("Only MySQL is currently supported for the HamentDB");
+            }
+
+            return this.InstantiateAccessor(configurationSection.GetValue<string>(HamnetDbProvider.ConnectionStringKey));
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 
 namespace SnmpAbstraction
 {
@@ -8,6 +9,21 @@ namespace SnmpAbstraction
     /// </summary>
     internal class DeviceDatabaseProvider
     {
+        /// <summary>
+        /// The configuration section name for the Hamnet database configuration.
+        /// </summary>
+        public static readonly string DeviceDatabaseSectionName = "DeviceDatabase";
+
+        /// <summary>
+        /// The configuration key for getting the database type.
+        /// </summary>
+        public static readonly string DatabaseTypeKey = "DatabaseType";
+
+        /// <summary>
+        /// The configuration key for getting the database connection string.
+        /// </summary>
+        public static readonly string ConnectionStringKey = "ConnectionString";
+
         /// <summary>
         /// Handle to the logger.
         /// </summary>
@@ -36,8 +52,13 @@ namespace SnmpAbstraction
         public static DeviceDatabaseProvider Instance { get; } = new DeviceDatabaseProvider();
 
         /// <summary>
+        /// Gets the configuration settings for the device database.
+        /// </summary>
+        public IConfigurationSection Configuration { get; internal set; } = null;
+
+        /// <summary>
         /// Gets the device database handle.
         /// </summary>
-        public DeviceDatabaseContext DeviceDatabase => new DeviceDatabaseContext(this.dataBaseFile);
+        internal DeviceDatabaseContext DeviceDatabase => new DeviceDatabaseContext(this.Configuration);
     }
 }

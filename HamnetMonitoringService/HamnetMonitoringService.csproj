@@ -51,7 +51,7 @@
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
     <Copy SourceFiles="$(ProjectDir)log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
-    <Copy SourceFiles="$(ProjectDir)/appsettings-$(Configuration).json" DestinationFiles="$(OutDir)$(ConfigDir)/appsettings.json" />
+    <Copy SourceFiles="$(ProjectDir)/appsettings-$(Configuration).json" DestinationFiles="$(OutDir)$(ConfigDir)/appsettings.json.template" />
     <Copy SourceFiles="$(ProjectDir)../SnmpAbstraction/DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
   </Target>
 

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using HamnetDbAbstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -18,6 +20,12 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class StatusController : ControllerBase
     {
+        private const string PasswordReplacementString = "***";
+
+        private static readonly Regex PasswordReplaceRegex = new Regex(@"((Pw|Pass|Secret|Ui|User|Server)\w*=).*?;", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
+        private static readonly Regex CompletlyHideKeyRegex = new Regex(@"Pass.*|DatabaseUri", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
         private readonly ILogger logger;
 
         private readonly IConfiguration configuration;
@@ -69,7 +77,10 @@ namespace HamnetDbRest.Controllers
             this.AddConfiguration(reply, DataAquisitionService.AquisitionServiceSectionKey);
             this.AddConfiguration(reply, MaintenanceService.MaintenanceServiceSectionKey);
             this.AddConfiguration(reply, DataAquisitionService.InfluxSectionKey);
-            this.AddConfiguration(reply, "ConnectionStrings");
+            this.AddConfiguration(reply, QueryResultDatabaseProvider.ResultDatabaseSectionName);
+            this.AddConfiguration(reply, HamnetDbProvider.HamnetDbSectionName);
+            this.AddConfiguration(reply, "CacheDatabase");
+            this.AddConfiguration(reply, "DeviceDatabase");
 
             var statusTableRow = this.dbContext.MonitoringStatus.First();
 
@@ -106,7 +117,17 @@ namespace HamnetDbRest.Controllers
             ConfigurationInfo configuration = new ConfigurationInfo();
             foreach (var item in this.configuration.GetSection(sectionKey).GetChildren())
             {
-                configuration.Add(item.Key, item.Key.Contains("password", StringComparison.InvariantCultureIgnoreCase) ? "***" : item.Value);
+                string valueToAdd = item.Value;
+                if (CompletlyHideKeyRegex.IsMatch(item.Key))
+                {
+                    valueToAdd = PasswordReplacementString;
+                }
+                else if (item.Key.Contains("connection", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    valueToAdd = PasswordReplaceRegex.Replace(valueToAdd, $"$1{PasswordReplacementString};");
+                }
+
+                configuration.Add(item.Key, valueToAdd);
             }
 
             reply.Add(sectionKey, configuration);
