@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SemVersion;
 using SnmpSharpNet;
 
@@ -70,39 +71,54 @@ namespace SnmpAbstraction
         /// <summary>
         /// Construct for a specific database file location.
         /// </summary>
+        /// <param name="configurationSection">The configuration section.</param>
+        public DeviceDatabaseContext(IConfigurationSection configurationSection)
+        {
+            if (configurationSection == null)
+            {
+                SqliteConnectionStringBuilder connStringBuilder = new SqliteConnectionStringBuilder();
+
+                var databaseDefaultPath = Path.Combine(Environment.CurrentDirectory, "Config/DeviceDatabase.sqlite");
+                connStringBuilder.DataSource = databaseDefaultPath;
+                
+                this.ConnectionString = connStringBuilder.ToString();
+            }
+            else
+            {
+                if (configurationSection.GetValue<string>(CacheDatabaseProvider.DatabaseTypeKey).ToUpperInvariant() != "SQLITE")
+                {
+                    throw new InvalidOperationException("Only SQLite is currently supported for the device database");
+                }
+
+                this.ConnectionString = configurationSection.GetValue<string>(CacheDatabaseProvider.ConnectionStringKey);
+            }
+        }
+
+       /// <summary>
+        /// Construct for a specific database file location. Only intended for Unit Tests !
+        /// </summary>
         /// <param name="databasePathAndFile">The database file location.</param>
-        public DeviceDatabaseContext(string databasePathAndFile)
+        internal DeviceDatabaseContext(string databasePathAndFile)
         {
             if (string.IsNullOrWhiteSpace(databasePathAndFile))
             {
                 throw new ArgumentNullException(nameof(databasePathAndFile), "The specified database is null, empty or white-space-only");
             }
             
-            this.DatabasePathAndFile = databasePathAndFile;
-            if (!Path.IsPathRooted(this.DatabasePathAndFile))
-            {
-                this.DatabasePathAndFile = Path.Combine(Environment.CurrentDirectory, this.DatabasePathAndFile);
-            }
+            SqliteConnectionStringBuilder connStringBuilder = new SqliteConnectionStringBuilder();
 
-            if (!File.Exists(this.DatabasePathAndFile))
-            {
-                throw new FileNotFoundException($"Cannot find OID database file '{this.DatabasePathAndFile}'", databasePathAndFile);
-            }
-
-            this.DatabasePathAndFile = databasePathAndFile;
+            var databaseDefaultPath = Path.Combine(Environment.CurrentDirectory, databasePathAndFile);
+            connStringBuilder.DataSource = databaseDefaultPath;
+            
+            this.ConnectionString = connStringBuilder.ToString();
         }
 
-        /// <summary>
-        /// Gets the path and/or file name of the file that contains the device database.
-        /// </summary>
-        public string DatabasePathAndFile { get; }
+        public string ConnectionString { get; }
 
         /// <inheritdoc />
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connectionStringBuilder = new SqliteConnectionStringBuilder { DataSource = this.DatabasePathAndFile };
-            var connectionString = connectionStringBuilder.ToString();
-            var connection = new SqliteConnection(connectionString);
+            var connection = new SqliteConnection(this.ConnectionString);
 
             optionsBuilder.UseSqlite(connection);
         }
