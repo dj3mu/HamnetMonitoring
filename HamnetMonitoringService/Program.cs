@@ -97,6 +97,12 @@ namespace HamnetDbRest
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
+            var configFile = (args != null) && (args.Length > 0) && !string.IsNullOrWhiteSpace(args[0])
+                ? args[0] // first command line options is the config file to use
+                : "/etc/HamnetMonitoringService/appsettings.json"; // this is the fallback config file - only good for Linux
+
+            configFile = configFile.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+
             CultureInfo culture = (CultureInfo)CultureInfo.CurrentCulture.Clone();
             culture.DateTimeFormat.ShortDatePattern = "yyyy-MM-dd";
             culture.DateTimeFormat.LongDatePattern = "yyyy-MM-dd";
@@ -109,7 +115,7 @@ namespace HamnetDbRest
             var configuration = new ConfigurationBuilder()
                 .AddCommandLine(args)
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("Config/appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile(configFile, optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
 

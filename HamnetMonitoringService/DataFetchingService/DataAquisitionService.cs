@@ -111,7 +111,7 @@ namespace RestService.DataFetchingService
 
             this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<bool>("UseQueryCaching"));
 
-            this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
+            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
 
             this.CreateInfluxClient(configuration);
 
@@ -252,7 +252,7 @@ namespace RestService.DataFetchingService
                 transaction.Commit();
             }
 
-            pairsSlicedAccordingToConfiguration = FetchSubnetsWithHostsFromHamnetDb(hamnetDbConfig);
+            pairsSlicedAccordingToConfiguration = FetchSubnetsWithHostsFromHamnetDb();
 
             this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
 
@@ -317,7 +317,7 @@ namespace RestService.DataFetchingService
         {
             this.DisposeDatabaseContext();
 
-            this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
+            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
         }
 
         /// <summary>
@@ -361,28 +361,28 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Retrieves the list of subnets with their hosts to monitor from HamnetDB.
         /// </summary>
-        /// <param name="hamnetDbConfig">The configuration section.</param>
         /// <returns>The list of subnets with their hosts to monitor from HamnetDB.</returns>
-        private Dictionary<IHamnetDbSubnet, IHamnetDbHosts> FetchSubnetsWithHostsFromHamnetDb(IConfigurationSection hamnetDbConfig)
+        private Dictionary<IHamnetDbSubnet, IHamnetDbHosts> FetchSubnetsWithHostsFromHamnetDb()
         {
-            string connectionStringFile = hamnetDbConfig.GetValue<string>("ConnectionStringFile");
-
             this.logger.LogDebug($"Getting unique host pairs to be monitored from HamnetDB. Please stand by ...");
 
-            using(var accessor = HamnetDbProvider.Instance.GetHamnetDb(connectionStringFile))
+            var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
+            var aquisitionConfig = this.configuration.GetSection(AquisitionServiceSectionKey);
+
+            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConnectionString(hamnetDbConfig.GetValue<string>(HamnetDbProvider.ConnectionStringKey)))
             {
                 var uniquePairs = accessor.UniqueMonitoredHostPairsInSameSubnet();
 
                 this.logger.LogDebug($"... found {uniquePairs.Count} unique pairs");
 
-                int maximumSubnetCount = hamnetDbConfig.GetValue<int>("MaximumSubnetCount");
+                int maximumSubnetCount = aquisitionConfig.GetValue<int>("MaximumSubnetCount");
                 if (maximumSubnetCount == 0)
                 {
                     // config returns 0 if not defined --> turn it to the reasonable "maximum" value
                     maximumSubnetCount = int.MaxValue;
                 }
 
-                int startOffset = hamnetDbConfig.GetValue<int>("SubnetStartOffset"); // will implicitly return 0 if not defined
+                int startOffset = aquisitionConfig.GetValue<int>("SubnetStartOffset"); // will implicitly return 0 if not defined
 
                 var pairsSlicedForOptions = uniquePairs.Skip(startOffset).Take(maximumSubnetCount).ToDictionary(k => k.Key, v => v.Value);
 
@@ -588,12 +588,14 @@ namespace RestService.DataFetchingService
                     ForeignId = adressToSearch,
                     Metric = RssiMetricName,
                     MetricId = RssiMetricId,
+                    ParentSubnet = subnet.Subnet?.ToString()
                 };
 
                 this.resultDatabaseContext.RssiValues.Add(adressEntry);
             }
 
             adressEntry.RssiValue = rssiToSet.ToString("0.0");
+            adressEntry.ParentSubnet = subnet.Subnet?.ToString(); // we're setting the value here, too so that migrated database will get the value added
             adressEntry.TimeStampString = queryTime.ToUniversalTime().ToString("yyyy-MM-ddTHH\\:mm\\:sszzz");
             adressEntry.UnixTimeStamp = (ulong)queryTime.ToUniversalTime().Subtract(Program.UnixTimeStampBase).TotalSeconds;
 

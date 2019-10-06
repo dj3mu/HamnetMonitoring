@@ -9,6 +9,21 @@ namespace HamnetDbAbstraction
     public class HamnetDbProvider
     {
         /// <summary>
+        /// The configuration section name for the Hamnet database configuration.
+        /// </summary>
+        public static readonly string HamnetDbSectionName = "HamnetDb";
+
+        /// <summary>
+        /// The configuration key for getting the database type.
+        /// </summary>
+        public static readonly string DatabaseTypeKey = "DatabaseType";
+
+        /// <summary>
+        /// The configuration key for getting the database connection string.
+        /// </summary>
+        public static readonly string ConnectionStringKey = "ConnectionString";
+
+        /// <summary>
         /// The connection string to use.
         /// </summary>
         private string connectionString = null;
@@ -42,6 +57,21 @@ namespace HamnetDbAbstraction
         }
 
         /// <summary>
+        /// Gets an abstract functionality handle to the HamnetDB.
+        /// </summary>
+        /// <param name="connectionString">The connection string. Can contain sensitive data !</param>
+        /// <returns>A handle to an abstract database interface.</returns>
+        public IHamnetDbAccess GetHamnetDbFromConnectionString(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new ArgumentNullException(nameof(connectionString), "The connections string is null, empty or white-space-only");
+            }
+
+            return this.InstantiateAccessor(connectionString);
+        }
+
+        /// <summary>
         /// Retrieves or creates a new <see cref="IHamnetDbAccess" /> object for the connection string given in the mentioned file.
         /// </summary>
         /// <param name="connectionStringFile">A path to and name of a file containing the database connection string.</param>
@@ -53,6 +83,16 @@ namespace HamnetDbAbstraction
                 this.connectionString = this.ReadAndValidateConnectionStringFromFile(connectionStringFile);
             }
 
+            return this.InstantiateAccessor(this.connectionString);
+        }
+
+        /// <summary>
+        /// Instantiates the DB accessor.
+        /// </summary>
+        /// <param name="connectionString">The connection string.</param>
+        /// <returns></returns>
+        private IHamnetDbAccess InstantiateAccessor(string connectionString)
+        {
             return new MySqlHamnetDbAccessor(connectionString, null);
         }
 

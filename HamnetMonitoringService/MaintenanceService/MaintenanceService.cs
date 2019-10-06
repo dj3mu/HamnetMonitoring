@@ -57,7 +57,7 @@ namespace RestService.DataFetchingService
             this.logger = logger;
             this.configuration = configuration;
 
-            this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
+            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -290,7 +290,7 @@ namespace RestService.DataFetchingService
         {
             this.DisposeDatabaseContext();
 
-            this.resultDatabaseContext = DatabaseProvider.Instance.CreateContext();
+            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
         }
 
         /// <summary>
