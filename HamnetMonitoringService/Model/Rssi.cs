@@ -49,5 +49,17 @@ namespace RestService.Model
         /// </summary>
         [Required, JsonProperty(PropertyName = "parentSubnet")]
         public string ParentSubnet { get; set; }
+
+        /// <summary>
+        /// Gets or sets the callsign of the station holding the <see cref="ForeignId" />.
+        /// </summary>
+        [Required, JsonProperty(PropertyName = "foreignCall")]
+        public string ForeignCall { get; set; }
+
+        /// <summary>
+        /// Gets or sets a descriptive text for the value, e.g. something like "DB0AAA at DB0BBB".
+        /// </summary>
+        [Required, JsonProperty(PropertyName = "description")]
+        public string Description { get; set; }
     }
 }

@@ -38,7 +38,7 @@ namespace HamnetDbRest
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            var querySection = this.Configuration.GetSection(DataAquisitionService.AquisitionServiceSectionKey);
+            var querySection = this.Configuration.GetSection(Program.AquisitionServiceSectionKey);
             if ((querySection == null) || querySection.GetValue<bool>("Enabled"))
             {
                 services.AddHostedService<DataAquisitionService>();
