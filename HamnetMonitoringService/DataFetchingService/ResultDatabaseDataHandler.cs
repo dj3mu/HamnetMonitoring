@@ -202,11 +202,10 @@ namespace RestService.DataFetchingService
         {
             if (this.resultDatabaseContext != null)
             {
-                //log.Warn("Creating new database context while old context was still existing. Existing one will be disposed off now. Did you forget to call AquisitionFinished()?");
-                return;
+                log.Warn("Creating new database context while old context was still existing. Existing one will be disposed off now. Did you forget to call AquisitionFinished()?");
             }
 
-            //this.DisposeDatabaseContext();
+            this.DisposeDatabaseContext();
 
             this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
         }
