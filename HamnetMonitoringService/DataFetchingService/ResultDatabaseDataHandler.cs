@@ -127,12 +127,6 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordFailingQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
         {
-            //if (this.resultDatabaseContext == null)
-            //{
-            //    log.Error("RecordFailingQuery: NOTHING WILL BE RECORDED: Call to ResultDatabaseDataHandler.RecordDetailsInDatabase while database context is null. Make sure to call PrepareForNewAquisition() before calling RecordFailingQuery(...)");
-            //    return;
-            //}
-
             lock(this.databaseLockingObject)
             {
                 this.NewDatabaseContext();
@@ -200,11 +194,6 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void NewDatabaseContext()
         {
-            if (this.resultDatabaseContext != null)
-            {
-                log.Warn("Creating new database context while old context was still existing. Existing one will be disposed off now. Did you forget to call AquisitionFinished()?");
-            }
-
             this.DisposeDatabaseContext();
 
             this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();

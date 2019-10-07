@@ -270,8 +270,6 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void PerformDataAquisition()
         {
-            //this.NewDatabaseContext();
-
             IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
 
             // detect if we're due to run and, if we are, record the start of the run
@@ -302,13 +300,14 @@ namespace RestService.DataFetchingService
             this.SendPrepareToDataHandlers();
 
             NetworkExcludeFile excludes = new NetworkExcludeFile(hamnetDbConfig);
+            var excludeNets = excludes?.ParsedNetworks?.ToList();
 
             this.logger.LogDebug($"Launching {this.maxParallelQueries} parallel aquisition threads");
 
             Parallel.ForEach(pairsSlicedAccordingToConfiguration, new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
             pair =>
             {
-                if ((excludes != null) && (excludes.ParsedNetworks.Any(exclude => exclude.Equals(pair.Key.Subnet) || exclude.Contains(pair.Key.Subnet))))
+                if ((excludeNets != null) && (excludeNets.Any(exclude => exclude.Equals(pair.Key.Subnet) || exclude.Contains(pair.Key.Subnet))))
                 {
                     this.logger.LogInformation($"Skipping subnet {pair.Key.Subnet} due to exclude list");
                     return;
