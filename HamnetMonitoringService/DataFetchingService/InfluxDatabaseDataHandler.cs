@@ -82,8 +82,8 @@ namespace RestService.DataFetchingService
             {
                 this.CreateNewPayload();
 
-                IHamnetDbHost host1 = inputData.Value.First();
-                IHamnetDbHost host2 = inputData.Value.Last();
+                string host1call = inputData.Value.First().Callsign?.ToUpperInvariant();
+                string host2call = inputData.Value.Last().Callsign?.ToUpperInvariant();
 
                 foreach (var item in linkDetails.Details)
                 {
@@ -98,8 +98,8 @@ namespace RestService.DataFetchingService
                             {
                                 { InfluxHostTagName, item.Address1.ToString() },
                                 { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
-                                { InfluxCallTagName, host1.Callsign?.ToUpperInvariant() },
-                                { InfluxDescriptionTagName, $"{host1.Callsign?.ToUpperInvariant()} at {host2.Callsign?.ToUpperInvariant()}" }
+                                { InfluxCallTagName, host1call },
+                                { InfluxDescriptionTagName, $"{host1call} at {host2call}" }
                             },
                             queryTime.ToUniversalTime()));
 
@@ -114,8 +114,8 @@ namespace RestService.DataFetchingService
                             {
                                 { InfluxHostTagName, item.Address2.ToString() },
                                 { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
-                                { InfluxCallTagName, host2.Callsign?.ToUpperInvariant() },
-                                { InfluxDescriptionTagName, $"{host2.Callsign?.ToUpperInvariant()} at {host1.Callsign?.ToUpperInvariant()}" }
+                                { InfluxCallTagName, host2call },
+                                { InfluxDescriptionTagName, $"{host2call} at {host1call}" }
                             },
                             queryTime.ToUniversalTime()));
                 }

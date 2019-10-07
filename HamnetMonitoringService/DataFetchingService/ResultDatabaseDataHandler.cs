@@ -33,10 +33,6 @@ namespace RestService.DataFetchingService
 
         private readonly IConfigurationSection hamnetDbConfig;
         
-        private QueryResultDatabaseContext resultDatabaseContext = null;
-
-        private object databaseLockingObject = new object();
-
         private bool disposedValue = false;
 
         /// <summary>
@@ -48,8 +44,6 @@ namespace RestService.DataFetchingService
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "configuration is null when creating a ResultDatabaseDataHandler");
 
             this.hamnetDbConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
-
-            this.NewDatabaseContext();
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -71,16 +65,14 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void PrepareForNewAquisition()
         {
-            lock(this.databaseLockingObject)
+            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
             {
-                this.NewDatabaseContext();
-
                 if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
                 {
-                    using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+                    using (var transaction = databaseContext.Database.BeginTransaction())
                     {
-                        this.resultDatabaseContext.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
-                        this.resultDatabaseContext.SaveChanges();
+                        databaseContext.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
+                        databaseContext.SaveChanges();
                         transaction.Commit();
                     }
                 }
@@ -90,17 +82,15 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordDetailsInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
-            lock(this.databaseLockingObject)
+            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
             {
-                this.NewDatabaseContext();
-
-                using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+                using (var transaction = databaseContext.Database.BeginTransaction())
                 {
-                    this.DoRecordDetailsInDatabase(inputData, linkDetails, DateTime.UtcNow);
+                    this.DoRecordDetailsInDatabase(databaseContext, inputData, linkDetails, DateTime.UtcNow);
 
-                    this.DoDeleteFailingQuery(inputData.Key);
+                    this.DoDeleteFailingQuery(databaseContext, inputData.Key);
             
-                    this.resultDatabaseContext.SaveChanges();
+                    databaseContext.SaveChanges();
 
                     transaction.Commit();
                 }
@@ -127,15 +117,13 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordFailingQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
         {
-            lock(this.databaseLockingObject)
+            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
             {
-                this.NewDatabaseContext();
-
-                using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+                using (var transaction = databaseContext.Database.BeginTransaction())
                 {
-                    this.DoRecordFailingQueryEntry(exception, inputData);
+                    this.DoRecordFailingQueryEntry(databaseContext, exception, inputData);
 
-                    this.resultDatabaseContext.SaveChanges();
+                    databaseContext.SaveChanges();
 
                     transaction.Commit();
                 }
@@ -179,7 +167,6 @@ namespace RestService.DataFetchingService
             {
                 if (disposing)
                 {
-                    this.DisposeDatabaseContext();
                 }
 
                 // TODO: nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer weiter unten überschreiben.
@@ -190,63 +177,44 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
-        /// Creates a new database context for the result database.
-        /// </summary>
-        private void NewDatabaseContext()
-        {
-            this.DisposeDatabaseContext();
-
-            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
-        }
-
-        /// <summary>
-        /// Disposes off the result database context.
-        /// </summary>
-        private void DisposeDatabaseContext()
-        {
-            if (this.resultDatabaseContext != null)
-            {
-                this.resultDatabaseContext.Dispose();
-                this.resultDatabaseContext = null;
-            }
-        }
-
-        /// <summary>
         /// Records the link details in the database.
         /// </summary>
+        /// <param name="databaseContext">The database context to work with.</param>
         /// <param name="inputData">The input data of the query.</param>
         /// <param name="linkDetails">The link details to record.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
-        private void DoRecordDetailsInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
+        private void DoRecordDetailsInDatabase(QueryResultDatabaseContext databaseContext, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
-            IHamnetDbHost host1 = inputData.Value.First();
-            IHamnetDbHost host2 = inputData.Value.Last();
+            string host1call = inputData.Value.First().Callsign?.ToUpperInvariant();
+            string host2call = inputData.Value.Last().Callsign?.ToUpperInvariant();
 
             foreach (var item in linkDetails.Details)
             {
-                this.SetNewRssiForLink(inputData.Key, queryTime, item, item.Address1.ToString(), item.RxLevel1at2, host1.Callsign?.ToUpperInvariant(), $"{host1.Callsign?.ToUpperInvariant()} at {host2.Callsign?.ToUpperInvariant()}");
-                this.SetNewRssiForLink(inputData.Key, queryTime, item, item.Address2.ToString(), item.RxLevel2at1 , host2.Callsign?.ToUpperInvariant(), $"{host2.Callsign?.ToUpperInvariant()} at {host1.Callsign?.ToUpperInvariant()}");
+                this.SetNewRssiForLink(databaseContext, inputData.Key, queryTime, item, item.Address1.ToString(), item.RxLevel1at2, host1call, $"{host1call} at {host2call}");
+                this.SetNewRssiForLink(databaseContext, inputData.Key, queryTime, item, item.Address2.ToString(), item.RxLevel2at1 , host2call, $"{host2call} at {host1call}");
             }
         }
  
          /// <summary>
         /// Deletes an entry in the failing query table.
         /// </summary>
+        /// <param name="databaseContext">The database context to work with.</param>
         /// <param name="subnet">The subnet which serves as key to the entry to delete.</param>
-        private void DoDeleteFailingQuery(IHamnetDbSubnet subnet)
+        private void DoDeleteFailingQuery(QueryResultDatabaseContext databaseContext, IHamnetDbSubnet subnet)
         {
             var failingSubnetString = subnet.Subnet.ToString();
-            var entryToRemove = this.resultDatabaseContext.RssiFailingQueries.SingleOrDefault(e => e.Subnet == failingSubnetString);
+            var entryToRemove = databaseContext.RssiFailingQueries.SingleOrDefault(e => e.Subnet == failingSubnetString);
             if (entryToRemove != null)
             {
                 log.Debug($"Removing fail entry for subnet '{failingSubnetString}'");
-                this.resultDatabaseContext.Remove(entryToRemove);
+                databaseContext.Remove(entryToRemove);
             }
         }
 
         /// <summary>
         /// Adds or modifies an RSSI entry for the given link detail.
         /// </summary>
+        /// <param name="databaseContext">The database context to work with.</param>
         /// <param name="subnet">The subnet that is being recorded.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
         /// <param name="linkDetail">The link details to record.</param>
@@ -254,9 +222,9 @@ namespace RestService.DataFetchingService
         /// <param name="rssiToSet">The RSSI value to record.</param>
         /// <param name="hostCall">The call of the foreign host.</param>
         /// <param name="description">The description for this value.</param>
-        private void SetNewRssiForLink(IHamnetDbSubnet subnet, DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet, string hostCall, string description)
+        private void SetNewRssiForLink(QueryResultDatabaseContext databaseContext, IHamnetDbSubnet subnet, DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet, string hostCall, string description)
         {
-            var adressEntry = this.resultDatabaseContext.RssiValues.Find(adressToSearch);
+            var adressEntry = databaseContext.RssiValues.Find(adressToSearch);
             if (adressEntry == null)
             {
                 adressEntry = new Rssi
@@ -269,7 +237,7 @@ namespace RestService.DataFetchingService
                     ForeignCall = hostCall
                 };
 
-                this.resultDatabaseContext.RssiValues.Add(adressEntry);
+                databaseContext.RssiValues.Add(adressEntry);
             }
 
             adressEntry.RssiValue = rssiToSet.ToString("0.0");
@@ -286,12 +254,13 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Records a failing query.
         /// </summary>
+        /// <param name="databaseContext">The database context to work with.</param>
         /// <param name="ex">The exception that caused the failure.</param>
         /// <param name="pair">The pair of hosts inside the subnet to query.</param>
-        private void DoRecordFailingQueryEntry(Exception ex, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
+        private void DoRecordFailingQueryEntry(QueryResultDatabaseContext databaseContext, Exception ex, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
         {
             var failingSubnetString = pair.Key.Subnet.ToString();
-            var failEntry = this.resultDatabaseContext.RssiFailingQueries.Find(failingSubnetString);
+            var failEntry = databaseContext.RssiFailingQueries.Find(failingSubnetString);
             var hamnetSnmpEx = ex as HamnetSnmpException;
             if (failEntry == null)
             {
@@ -301,7 +270,7 @@ namespace RestService.DataFetchingService
                     AffectedHosts = (hamnetSnmpEx != null) ? hamnetSnmpEx.AffectedHosts : pair.Value.Select(h => h.Address?.ToString()).ToArray()
                 };
 
-                this.resultDatabaseContext.RssiFailingQueries.Add(failEntry);
+                databaseContext.RssiFailingQueries.Add(failEntry);
             }
 
             failEntry.TimeStamp = DateTime.UtcNow;

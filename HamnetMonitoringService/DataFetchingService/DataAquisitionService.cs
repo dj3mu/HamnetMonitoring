@@ -43,8 +43,6 @@ namespace RestService.DataFetchingService
 
         private object databaseLockingObject = new object();
 
-        private object dataHandlerLockingObject = new object();
-
         private TimeSpan refreshInterval;
 
         private bool timerReAdjustmentNeeded = false;
@@ -200,18 +198,15 @@ namespace RestService.DataFetchingService
                 {
                     this.timer?.Dispose();
 
-                    lock(this.dataHandlerLockingObject)
+                    foreach (var item in this.dataHandlers)
                     {
-                        foreach (var item in this.dataHandlers)
+                        if (item != null)
                         {
-                            if (item != null)
-                            {
-                                item.Dispose();
-                            }
+                            item.Dispose();
                         }
-
-                        this.dataHandlers.Clear();
                     }
+
+                    this.dataHandlers.Clear();
 
                     this.DisposeDatabaseContext();
                 }
@@ -414,18 +409,15 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void SendPrepareToDataHandlers()
         {
-            lock(this.dataHandlerLockingObject)
+            foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
-                foreach (IAquiredDataHandler handler in this.dataHandlers)
+                try
                 {
-                    try
-                    {
-                        handler.PrepareForNewAquisition();
-                    }
-                    catch(Exception ex)
-                    {
-                        this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
-                    }
+                    handler.PrepareForNewAquisition();
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
                 }
             }
         }
@@ -435,18 +427,15 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void SendFinishedToDataHandlers()
         {
-            lock(this.dataHandlerLockingObject)
+            foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
-                foreach (IAquiredDataHandler handler in this.dataHandlers)
+                try
                 {
-                    try
-                    {
-                        handler.AquisitionFinished();
-                    }
-                    catch(Exception ex)
-                    {
-                        this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
-                    }
+                    handler.AquisitionFinished();
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
                 }
             }
         }
@@ -456,18 +445,15 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void SendFailToDataHandlers(Exception hitException, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
         {
-            lock(this.dataHandlerLockingObject)
+            foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
-                foreach (IAquiredDataHandler handler in this.dataHandlers)
+                try
                 {
-                    try
-                    {
-                        handler.RecordFailingQuery(hitException, pair);
-                    }
-                    catch(Exception ex)
-                    {
-                        this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
-                    }
+                    handler.RecordFailingQuery(hitException, pair);
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
                 }
             }
         }
@@ -477,18 +463,15 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void SendResultsToDataHandlers(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair, ILinkDetails linkDetails, DateTime queryTime)
         {
-            lock(this.dataHandlerLockingObject)
+            foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
-                foreach (IAquiredDataHandler handler in this.dataHandlers)
+                try
                 {
-                    try
-                    {
-                        handler.RecordDetailsInDatabaseAsync(pair, linkDetails, queryTime);
-                    }
-                    catch(Exception ex)
-                    {
-                        this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
-                    }
+                    handler.RecordDetailsInDatabaseAsync(pair, linkDetails, queryTime);
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
                 }
             }
         }
