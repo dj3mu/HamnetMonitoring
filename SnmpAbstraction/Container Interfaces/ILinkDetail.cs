@@ -6,7 +6,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Interface to the details of a single link.
     /// </summary>
-    public interface ILinkDetail : IHamnetSnmpQuerierResult
+    public interface ILinkDetail : IHamnetSnmpQuerierResult, ILazyEvaluated
     {
         /// <summary>
         /// Gets the MAC address of the local side (as Hex string like &quot;b8:27:eb:97:b6:39&quot;).

@@ -65,19 +65,27 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void AquisitionFinished()
         {
-            // NOP here
+            lock(this.databaseLockingObject)
+            {
+                this.DisposeDatabaseContext();
+            }
         }
 
         /// <inheritdoc />
         public void PrepareForNewAquisition()
         {
-            if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
+            lock(this.databaseLockingObject)
             {
-                using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+                this.NewDatabaseContext();
+
+                if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
                 {
-                    this.resultDatabaseContext.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
-                    this.resultDatabaseContext.SaveChanges();
-                    transaction.Commit();
+                    using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+                    {
+                        this.resultDatabaseContext.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
+                        this.resultDatabaseContext.SaveChanges();
+                        transaction.Commit();
+                    }
                 }
             }
         }

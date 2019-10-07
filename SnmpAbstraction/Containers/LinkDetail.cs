@@ -62,6 +62,14 @@ namespace SnmpAbstraction
 
         public string ModelAndVersion2 => this.linkRelatedResultCollection.InterfaceDetail2.DeviceModel;
 
+        public void ForceEvaluateAll()
+        {
+            this.linkRelatedResultCollection?.InterfaceDetail1?.ForceEvaluateAll();
+            this.linkRelatedResultCollection?.InterfaceDetail2?.ForceEvaluateAll();
+            this.linkRelatedResultCollection?.WirelessPeerInfo1?.ForceEvaluateAll();
+            this.linkRelatedResultCollection?.WirelessPeerInfo2?.ForceEvaluateAll();
+        }
+
         /// <inheritdoc />
         public override string ToString()
         {

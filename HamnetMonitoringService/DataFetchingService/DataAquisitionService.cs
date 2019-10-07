@@ -385,7 +385,9 @@ namespace RestService.DataFetchingService
 
                     var linkDetails = querier.FetchLinkDetails(address2.ToString());
 
-                    this.SendResultsToDataHandlers(pair, linkDetails, DateTime.UtcNow);
+                    var storeOnlyDetailsClone = new LinkDetailsStoreOnlyContainer(linkDetails);
+
+                    this.SendResultsToDataHandlers(pair, storeOnlyDetailsClone, DateTime.UtcNow);
                 }
             }
             catch (HamnetSnmpException ex)
