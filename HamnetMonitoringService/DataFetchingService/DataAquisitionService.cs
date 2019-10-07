@@ -105,12 +105,10 @@ namespace RestService.DataFetchingService
                 this.maxParallelQueries = Environment.ProcessorCount;
             }
 
-            ThreadPool.GetMinThreads(out int minWorkerThreads, out int eaThreads);
+            ThreadPool.GetMinThreads(out int minWorkerThreads, out int minEaThreads);
             ThreadPool.GetMaxThreads(out int maxworkerThreads, out int maxEaThreads);
 
-            maxworkerThreads = Math.Max(Math.Max(this.maxParallelQueries * 2, maxParallelQueries), minWorkerThreads);
-            maxEaThreads =  Math.Max(Math.Max(this.maxParallelQueries * 2, maxParallelQueries), minWorkerThreads);
-            ThreadPool.SetMaxThreads(maxworkerThreads, maxEaThreads);
+            this.logger.LogInformation($"Thread pool: Found: Min workers = {minWorkerThreads}, Max workers = {maxworkerThreads}, Min EA {minEaThreads}, Max EA {maxEaThreads}");
 
             this.refreshInterval = TimeSpan.Parse(aquisisionServiceSection.GetValue<string>("RefreshInterval"));
 
@@ -143,11 +141,11 @@ namespace RestService.DataFetchingService
                 throw new InvalidOperationException("Only MySQL / MariaDB is currently supported for the Hament database");
             }
 
-            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
-
+            // by default waiting a couple of secs before first Hamnet scan
             TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(11);
 
-            // by default waiting a couple of secs before first Hamnet scan
+            this.NewDatabaseContext();
+
             var status = this.resultDatabaseContext.Status;
             var nowItIs = DateTime.UtcNow;
             var timeSinceLastAquisitionStart = (nowItIs - status.LastQueryStart);
@@ -272,7 +270,7 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void PerformDataAquisition()
         {
-            this.NewDatabaseContext();
+            //this.NewDatabaseContext();
 
             IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
 
@@ -465,7 +463,7 @@ namespace RestService.DataFetchingService
                 {
                     try
                     {
-                        handler.RecordFailingQueryAsync(hitException, pair);
+                        handler.RecordFailingQuery(hitException, pair);
                     }
                     catch(Exception ex)
                     {

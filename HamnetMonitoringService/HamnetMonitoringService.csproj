@@ -44,8 +44,8 @@
 
   <ItemGroup>
     <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
-    <_DeleteItems1 Include="$(PublishDir)/appsettings*" />
-    <_DeleteItems2 Include="$(PublishDir)/log4net*" />
+    <_DeleteItems1 Include="$(PublishDir)/appsettings*.*" />
+    <_DeleteItems2 Include="$(PublishDir)/log4net*.*" />
   </ItemGroup>
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">

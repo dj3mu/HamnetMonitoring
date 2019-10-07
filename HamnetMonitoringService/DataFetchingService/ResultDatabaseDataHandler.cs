@@ -65,10 +65,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void AquisitionFinished()
         {
-            lock(this.databaseLockingObject)
-            {
-                this.DisposeDatabaseContext();
-            }
+            // NOP for now
         }
 
         /// <inheritdoc />
@@ -93,14 +90,10 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordDetailsInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
-            if (this.resultDatabaseContext == null)
-            {
-                log.Error("RecordDetailsInDatabase: NOTHING WILL BE RECORDED: Call to ResultDatabaseDataHandler.RecordDetailsInDatabase while database context is null. Make sure to call PrepareForNewAquisition() before calling RecordDetailsInDatabase(...)");
-                return;
-            }
-
             lock(this.databaseLockingObject)
             {
+                this.NewDatabaseContext();
+
                 using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
                 {
                     this.DoRecordDetailsInDatabase(inputData, linkDetails, DateTime.UtcNow);
@@ -134,14 +127,16 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordFailingQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
         {
-            if (this.resultDatabaseContext == null)
-            {
-                log.Error("RecordFailingQuery: NOTHING WILL BE RECORDED: Call to ResultDatabaseDataHandler.RecordDetailsInDatabase while database context is null. Make sure to call PrepareForNewAquisition() before calling RecordFailingQuery(...)");
-                return;
-            }
+            //if (this.resultDatabaseContext == null)
+            //{
+            //    log.Error("RecordFailingQuery: NOTHING WILL BE RECORDED: Call to ResultDatabaseDataHandler.RecordDetailsInDatabase while database context is null. Make sure to call PrepareForNewAquisition() before calling RecordFailingQuery(...)");
+            //    return;
+            //}
 
             lock(this.databaseLockingObject)
             {
+                this.NewDatabaseContext();
+
                 using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
                 {
                     this.DoRecordFailingQueryEntry(exception, inputData);
@@ -207,10 +202,11 @@ namespace RestService.DataFetchingService
         {
             if (this.resultDatabaseContext != null)
             {
-                log.Warn("Creating new database context while old context was still existing. Existing one will be disposed off now. Did you forget to call AquisitionFinished()?");
+                //log.Warn("Creating new database context while old context was still existing. Existing one will be disposed off now. Did you forget to call AquisitionFinished()?");
+                return;
             }
 
-            this.DisposeDatabaseContext();
+            //this.DisposeDatabaseContext();
 
             this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
         }
