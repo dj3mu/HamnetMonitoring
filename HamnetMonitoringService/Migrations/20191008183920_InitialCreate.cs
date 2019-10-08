@@ -1,11 +1,12 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable 1591
 
 namespace HamnetDbRest.Migrations
 {
-    public partial class CreateDatabase : Migration
+    public partial class InitialCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -14,7 +15,7 @@ namespace HamnetDbRest.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     LastQueryStart = table.Column<DateTime>(nullable: false),
                     LastQueryEnd = table.Column<DateTime>(nullable: false),
                     LastMaintenanceStart = table.Column<DateTime>(nullable: false),
@@ -31,7 +32,8 @@ namespace HamnetDbRest.Migrations
                 {
                     Subnet = table.Column<string>(nullable: false),
                     TimeStamp = table.Column<DateTime>(nullable: false),
-                    ErrorInfo = table.Column<string>(nullable: false)
+                    ErrorInfo = table.Column<string>(nullable: false),
+                    AffectedHosts = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -47,7 +49,10 @@ namespace HamnetDbRest.Migrations
                     Metric = table.Column<string>(nullable: false),
                     UnixTimeStamp = table.Column<ulong>(nullable: false),
                     TimeStampString = table.Column<string>(nullable: false),
-                    RssiValue = table.Column<string>(nullable: false)
+                    RssiValue = table.Column<string>(nullable: false),
+                    ParentSubnet = table.Column<string>(nullable: false),
+                    ForeignCall = table.Column<string>(nullable: false),
+                    Description = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {

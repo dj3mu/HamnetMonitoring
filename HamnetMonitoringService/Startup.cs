@@ -1,4 +1,5 @@
-﻿using HamnetDbRest.Controllers;
+﻿using System;
+using HamnetDbRest.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +60,21 @@ namespace HamnetDbRest
             QueryResultDatabaseProvider.Instance.SetConfiguration(this.Configuration);
             CacheMaintenance.SetDatabaseConfiguration(this.Configuration);
 
-            services.AddDbContext<QueryResultDatabaseContext>(opt => opt.UseSqlite(this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName).GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey)));
+            var databaseType = this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName).GetValue<string>(QueryResultDatabaseProvider.DatabaseTypeKey)?.ToUpperInvariant();
+
+            switch(databaseType)
+            {
+                case "SQLITE":
+                    services.AddDbContext<QueryResultDatabaseContext>(opt => opt.UseSqlite(this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName).GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey)));
+                    break;
+
+                case "MYSQL":
+                    services.AddDbContext<QueryResultDatabaseContext>(opt => opt.UseMySql(this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName).GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey)));
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException($"The configured database type '{databaseType}' is not supported for the query result database");
+            }
         }
 
         /// <summary>
