@@ -2,15 +2,19 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RestService.Database;
+
+#pragma warning disable 1591
 
 namespace HamnetDbRest.Migrations
 {
     [DbContext(typeof(QueryResultDatabaseContext))]
-    partial class QueryResultDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20191007113550_AddForeignCallAndDescription")]
+    partial class AddForeignCallAndDescription
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

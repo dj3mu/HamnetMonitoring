@@ -74,9 +74,9 @@ namespace HamnetDbRest.Controllers
                 ProcessStartTime = myProcess.StartTime,
             };
 
-            this.AddConfiguration(reply, DataAquisitionService.AquisitionServiceSectionKey);
+            this.AddConfiguration(reply, Program.AquisitionServiceSectionKey);
             this.AddConfiguration(reply, MaintenanceService.MaintenanceServiceSectionKey);
-            this.AddConfiguration(reply, DataAquisitionService.InfluxSectionKey);
+            this.AddConfiguration(reply, Program.InfluxSectionKey);
             this.AddConfiguration(reply, QueryResultDatabaseProvider.ResultDatabaseSectionName);
             this.AddConfiguration(reply, HamnetDbProvider.HamnetDbSectionName);
             this.AddConfiguration(reply, "CacheDatabase");

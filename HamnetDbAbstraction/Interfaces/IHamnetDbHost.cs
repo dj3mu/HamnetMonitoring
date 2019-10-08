@@ -11,5 +11,10 @@ namespace HamnetDbAbstraction
         /// Gets the address of this host.
         /// </summary>
         IPAddress Address { get; }
+    
+        /// <summary>
+        /// Gets the callsign of the host.
+        /// </summary>
+        string Callsign { get; }
     }
 }

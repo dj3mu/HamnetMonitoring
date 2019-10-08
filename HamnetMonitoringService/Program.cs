@@ -18,6 +18,16 @@ namespace HamnetDbRest
     public class Program
     {
         /// <summary>
+        /// The section key for the Data Aquisition service configuration.
+        /// </summary>
+        public static readonly string AquisitionServiceSectionKey = "DataAquisitionService";
+
+        /// <summary>
+        /// The section key for the Influx database configuration.
+        /// </summary>
+        public static readonly string InfluxSectionKey = "Influx";
+    
+        /// <summary>
         /// The base time for calculation of Unix Time Stamp (by subtracting this time stamp).
         /// </summary>
         public static readonly DateTime UnixTimeStampBase = new DateTime(1970, 1, 1);

@@ -64,7 +64,7 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                var matchingHosts = this.FetchSubnetsWithHostsFromHamnetDb(this.configuration.GetSection(DataAquisitionService.AquisitionServiceSectionKey));
+                var matchingHosts = this.FetchSubnetsWithHostsFromHamnetDb(this.configuration.GetSection(Program.AquisitionServiceSectionKey));
 
                 if ((matchingHosts == null) || (matchingHosts.Count == 0))
                 {

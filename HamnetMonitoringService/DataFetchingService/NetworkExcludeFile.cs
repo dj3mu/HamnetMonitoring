@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using HamnetDbRest;
+using Microsoft.Extensions.Configuration;
 
 namespace RestService.DataFetchingService
 {
@@ -33,9 +34,34 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
+        /// Construct from a configuration secttion.
+        /// </summary>
+        /// <param name="configurationSection">The configuration section.</param>
+        public NetworkExcludeFile(IConfigurationSection configurationSection)
+        {
+            string excludeFileName = configurationSection.GetValue<string>("ExcludeFile")?.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+            if (!string.IsNullOrWhiteSpace(excludeFileName))
+            {
+                if (File.Exists(excludeFileName))
+                {
+                    log.Debug($"Reading Exclude file {excludeFileName} parallel aquisition threads");
+                    this.FileToParse = excludeFileName;
+                }
+                else
+                {
+                    log.Warn($"Exclude file '{excludeFileName}' does not exist. Not using any excludes.");
+                }
+            }
+                else
+                {
+                    log.Info($"No exclude file configuration found. Not using any excludes.");
+                }
+        }
+
+        /// <summary>
         /// Gets the file to parse.
         /// </summary>
-        public string FileToParse { get; }
+        public string FileToParse { get; } = null;
 
         /// <summary>
         /// Gets the list of networks as parsed from the file.
@@ -70,6 +96,12 @@ namespace RestService.DataFetchingService
         private void ParseFile()
         {
             this.parsedNetworksBacking = new List<IPNetwork>();
+
+            if (string.IsNullOrWhiteSpace(this.FileToParse))            
+            {
+                // if the file is null or empty the parsed list is also empty.
+                return;
+            }
 
             if (!File.Exists(this.FileToParse))
             {
