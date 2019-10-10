@@ -4,6 +4,7 @@ using HamnetDbRest;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
 using RestService.Model;
 
 namespace RestService.Database
@@ -60,12 +61,6 @@ namespace RestService.Database
         }
 
         /// <summary>
-        /// Gets the connection string of this database context.
-        /// May contain sensitive data !
-        /// </summary>
-        public string ConnectionString { get; private set; }
-
-        /// <summary>
         /// Construct from DbContextOptions.
         /// </summary>
         /// <param name="options">The options to construct from.</param>
@@ -85,10 +80,20 @@ namespace RestService.Database
                 throw new ArgumentNullException(nameof(configuration), "The specified database configuration data is null");
             }
 
+            this.Configuration = configuration;
             this.ConnectionString = configuration.GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey);
-
-            log.Debug($"Connection string '{this.ConnectionString}'");
         }
+
+        /// <summary>
+        /// Gets the configuration section for the database.
+        /// </summary>
+        public IConfigurationSection Configuration { get; }
+
+        /// <summary>
+        /// Gets the connection string of this database context.
+        /// May contain sensitive data !
+        /// </summary>
+        protected string ConnectionString { get; private set; }
 
         /// <inheritdoc />
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -98,9 +103,30 @@ namespace RestService.Database
                 return;
             }
             
-            var connection = new SqliteConnection(this.ConnectionString);
+            var databaseType = this.Configuration.GetValue<string>(QueryResultDatabaseProvider.DatabaseTypeKey)?.ToUpperInvariant();
 
-            optionsBuilder.UseSqlite(connection);
+            switch(databaseType)
+            {
+                case "SQLITE":
+                    {
+                        var connection = new SqliteConnection(this.ConnectionString);
+                        optionsBuilder.UseSqlite(connection);
+                    }
+
+                    break;
+
+                case "MYSQL":
+                    {
+                        var connection = new MySqlConnection(this.ConnectionString);
+                        optionsBuilder.UseMySql(connection);
+                    }
+                    
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException($"The configured database type '{databaseType}' is not supported for the query result database");
+            }
+
         }  
         
         /// <inheritdoc />
@@ -114,6 +140,10 @@ namespace RestService.Database
                 .HasConversion(
                     affectedHostsObject => string.Join(',', affectedHostsObject),
                     affectedHostsString => affectedHostsString.Split(',', StringSplitOptions.RemoveEmptyEntries));
+
+            modelBuilder.Entity<MonitoringPerstistence>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd();
         }
     }
 }

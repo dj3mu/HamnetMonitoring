@@ -11,14 +11,15 @@ using RestService.Database;
 namespace HamnetDbRest.Migrations
 {
     [DbContext(typeof(QueryResultDatabaseContext))]
-    [Migration("20191007113550_AddForeignCallAndDescription")]
-    partial class AddForeignCallAndDescription
+    [Migration("20191008183920_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079");
+                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("RestService.Database.MonitoringPerstistence", b =>
                 {
