@@ -14,7 +14,8 @@ namespace HamnetDbRest.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079");
+                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("RestService.Database.MonitoringPerstistence", b =>
                 {
@@ -38,6 +39,12 @@ namespace HamnetDbRest.Migrations
                 {
                     b.Property<string>("ForeignId")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Description")
+                        .IsRequired();
+
+                    b.Property<string>("ForeignCall")
+                        .IsRequired();
 
                     b.Property<string>("Metric")
                         .IsRequired();

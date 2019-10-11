@@ -58,26 +58,6 @@ namespace SnmpAbstraction
         {
             string osVersionString = "0.0.0";
 
-            //// try #1: In IEEE SNMP tree
-            //try
-            //{
-            //    osVersionString = lowerLayer.QueryAsString(OsVersionOid, "ALIX Version String #1");
-            //}
-            //catch(SnmpException)
-            //{
-            //    osVersionString = null;
-            //}
-            //catch(HamnetSnmpException)
-            //{
-            //    osVersionString = null;
-            //}
-
-            // try #2: Withing MikroTik enterprise tree
-            //if (string.IsNullOrWhiteSpace(osVersionString))
-            //{
-            //    osVersionString = lowerLayer.QueryAsString(OsVersionOid2, "ALIX Version String #2");
-            //}
-
             // Example: "..."
             Match match = OsVersionExtractionRegex.Match(osVersionString);
 

@@ -26,6 +26,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public IReadOnlyList<ILinkDetail> Details { get; }
 
+        /// <inheritdoc />
         public override TimeSpan QueryDuration
         {
             get
@@ -36,6 +37,15 @@ namespace SnmpAbstraction
                 }
 
                 return this.Details.Aggregate(TimeSpan.Zero, (a, c) => a += c.QueryDuration);
+            }
+        }
+
+        /// <inheritdoc />
+        public void ForceEvaluateAll()
+        {
+            foreach (var item in this.Details)
+            {
+                item.ForceEvaluateAll();
             }
         }
 

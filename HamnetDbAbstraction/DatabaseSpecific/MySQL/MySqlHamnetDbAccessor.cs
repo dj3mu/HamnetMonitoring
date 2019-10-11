@@ -78,20 +78,21 @@ namespace HamnetDbAbstraction
         {
             var connection = this.GetConnection();
             List<IHamnetDbHost> hosts = new List<IHamnetDbHost>();
-            using(MySqlCommand cmd = new MySqlCommand("SELECT ip FROM hamnet_host where monitor=1", this.connection))
+            using(MySqlCommand cmd = new MySqlCommand("SELECT ip,site FROM hamnet_host where monitor=1", this.connection))
             {
                 using (MySqlDataReader reader = cmd.ExecuteReader())  
                 {  
                     while (reader.Read())  
                     {  
-                        var addressString = reader["ip"].ToString();
+                        var addressString = reader.GetString("ip");
                         IPAddress address;
-                        if (!IPAddress.TryParse(reader["ip"].ToString(), out address))
+                        if (!IPAddress.TryParse(addressString, out address))
                         {
-                            log.Warn($"Cannot convert retrieved string '{addressString}' to a valid IP address");
+                            log.Error($"Cannot convert retrieved string '{addressString}' to a valid IP address. This entry will be skipped.");
+                            continue;
                         }
 
-                        hosts.Add(new HamnetDbHost(address));
+                        hosts.Add(new HamnetDbHost(address, reader.GetString("site")));
                     }  
                 }
             }
@@ -110,11 +111,12 @@ namespace HamnetDbAbstraction
                 {  
                     while (reader.Read())  
                     {  
-                        var networkCidr = reader["ip"].ToString();
+                        var networkCidr = reader.GetString("ip");
                         IPNetwork ipNet;
-                        if (!IPNetwork.TryParse(reader["ip"].ToString(), out ipNet))
+                        if (!IPNetwork.TryParse(networkCidr, out ipNet))
                         {
-                            log.Warn($"Cannot convert retrieved string '{networkCidr}' to a valid IP network");
+                            log.Error($"Cannot convert retrieved string '{networkCidr}' to a valid IP network. This entry will be skipped.");
+                            continue;
                         }
 
                         subnets.Add(new HamnetDbSubnet(ipNet));

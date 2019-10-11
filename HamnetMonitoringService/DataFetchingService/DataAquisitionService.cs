@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
 using HamnetDbRest;
-using InfluxDB.LineProtocol.Client;
-using InfluxDB.LineProtocol.Payload;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RestService.Database;
-using RestService.Model;
 using SnmpAbstraction;
 using SnmpSharpNet;
 
@@ -25,22 +20,13 @@ namespace RestService.DataFetchingService
     /// </summary>
     public class DataAquisitionService : IHostedService, IDisposable
     {
-        private const string RssiMetricName = "RSSI";
-
-        private const int RssiMetricId = 1;
-
-        /// <summary>
-        /// The section key for the Data Aquisition service configuration.
-        /// </summary>
-        public static readonly string AquisitionServiceSectionKey = "DataAquisitionService";
-
-        /// <summary>
-        /// The section key for the Influx database configuration.
-        /// </summary>
-        public static readonly string InfluxSectionKey = "Influx";
-    
         private static readonly TimeSpan Hysteresis = TimeSpan.FromSeconds(10);
         
+        /// <summary>
+        /// The list of receivers for the data that we aquired.
+        /// </summary>
+        private readonly List<IAquiredDataHandler> dataHandlers = new List<IAquiredDataHandler>();
+
         private readonly ILogger<DataAquisitionService> logger;
 
         private readonly IConfiguration configuration;
@@ -63,7 +49,7 @@ namespace RestService.DataFetchingService
 
         private QueryResultDatabaseContext resultDatabaseContext;
 
-        private LineProtocolClient influxClient = null;
+        private int maxParallelQueries;
 
         /// <summary>
         /// Constructs taking the logger.
@@ -72,8 +58,30 @@ namespace RestService.DataFetchingService
         /// <param name="configuration">The service configuration.</param>
         public DataAquisitionService(ILogger<DataAquisitionService> logger, IConfiguration configuration)
         {
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger), "The logger is null when creating a DataAquisitionService");
+            }
+
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration), "The configuration is null when creating a DataAquisitionService");
+            }
+
             this.logger = logger;
             this.configuration = configuration;
+
+            this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
+
+            IConfigurationSection influxSection = configuration.GetSection(Program.InfluxSectionKey);
+            if ((influxSection != null) && influxSection.GetChildren().Any())
+            {
+                this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration));
+            }
+            else
+            {
+                this.logger.LogInformation($"Influx database disabled: No or empty '{Program.InfluxSectionKey}' section in configuration");
+            }
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -86,30 +94,44 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            this.refreshInterval = TimeSpan.Parse(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<string>("RefreshInterval"));
+            IConfigurationSection aquisisionServiceSection = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
 
-            var snmpVersion = this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<int>("SnmpVersion");
+            // configure thread pool for number of parallel queries
+            this.maxParallelQueries = aquisisionServiceSection.GetValue<int>("MaximumParallelQueries");
+            if (this.maxParallelQueries == 0)
+            {
+                this.maxParallelQueries = Environment.ProcessorCount;
+            }
+
+            ThreadPool.GetMinThreads(out int minWorkerThreads, out int minEaThreads);
+            ThreadPool.GetMaxThreads(out int maxworkerThreads, out int maxEaThreads);
+
+            this.logger.LogInformation($"Thread pool: Found: Min workers = {minWorkerThreads}, Max workers = {maxworkerThreads}, Min EA {minEaThreads}, Max EA {maxEaThreads}");
+
+            this.refreshInterval = TimeSpan.Parse(aquisisionServiceSection.GetValue<string>("RefreshInterval"));
+
+            var snmpVersion = aquisisionServiceSection.GetValue<int>("SnmpVersion");
             if (snmpVersion != 0)
             {
                 // 0 is the default value set by config framework and doesn't make any sense here - so we can use it to identify a missing config
                 this.snmpQuerierOptions = this.snmpQuerierOptions.WithProtocolVersion(snmpVersion.ToSnmpVersion());
             }
 
-            var snmpTimeoutConfig = this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<int>("SnmpTimeoutSeconds");
+            var snmpTimeoutConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey).GetValue<int>("SnmpTimeoutSeconds");
             if (snmpTimeoutConfig != 0)
             {
                 // 0 is the default value set by config framework and doesn't make any sense here - so we can use it to identify a missing config
                 this.snmpQuerierOptions = this.snmpQuerierOptions.WithTimeout(TimeSpan.FromSeconds(snmpTimeoutConfig));
             }
 
-            var snmpRetriesConfig = this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<int>("SnmpRetries");
+            var snmpRetriesConfig = aquisisionServiceSection.GetValue<int>("SnmpRetries");
             if (snmpRetriesConfig != 0)
             {
                 // 0 is the default value set by config framework and doesn't make any sense here - so we can use it to identify a missing config
                 this.snmpQuerierOptions = this.snmpQuerierOptions.WithRetries(snmpRetriesConfig);
             }
 
-            this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(this.configuration.GetSection(AquisitionServiceSectionKey).GetValue<bool>("UseQueryCaching"));
+            this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(aquisisionServiceSection.GetValue<bool>("UseQueryCaching"));
 
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
             if (hamnetDbConfig.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() != "MYSQL")
@@ -117,13 +139,11 @@ namespace RestService.DataFetchingService
                 throw new InvalidOperationException("Only MySQL / MariaDB is currently supported for the Hament database");
             }
 
-            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
-
-            this.CreateInfluxClient(configuration);
-
+            // by default waiting a couple of secs before first Hamnet scan
             TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(11);
 
-            // by default waiting a couple of secs before first Hamnet scan
+            this.NewDatabaseContext();
+
             var status = this.resultDatabaseContext.Status;
             var nowItIs = DateTime.UtcNow;
             var timeSinceLastAquisitionStart = (nowItIs - status.LastQueryStart);
@@ -177,6 +197,18 @@ namespace RestService.DataFetchingService
                 if (disposing)
                 {
                     this.timer?.Dispose();
+
+                    foreach (var item in this.dataHandlers)
+                    {
+                        if (item != null)
+                        {
+                            item.Dispose();
+                        }
+                    }
+
+                    this.dataHandlers.Clear();
+
+                    this.DisposeDatabaseContext();
                 }
 
                 // TODO: nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer weiter unten überschreiben.
@@ -233,12 +265,9 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void PerformDataAquisition()
         {
-            this.NewDatabaseContext();
+            IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
 
-            IConfigurationSection hamnetDbConfig = this.configuration.GetSection(AquisitionServiceSectionKey);
-
-            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration;
-
+            // detect if we're due to run and, if we are, record the start of the run
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var status = resultDatabaseContext.Status;
@@ -258,34 +287,22 @@ namespace RestService.DataFetchingService
                 transaction.Commit();
             }
 
-            pairsSlicedAccordingToConfiguration = FetchSubnetsWithHostsFromHamnetDb();
+            HamnetDbPoller hamnetDbPoller = new HamnetDbPoller(this.configuration);
+            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration = hamnetDbPoller.FetchSubnetsWithHostsFromHamnetDb();
 
             this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
 
-            if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
-            {
-                using (var transaction = resultDatabaseContext.Database.BeginTransaction())
-                {
-                    resultDatabaseContext.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
-                    resultDatabaseContext.SaveChanges();
-                    transaction.Commit();
-                }
-            }
+            this.SendPrepareToDataHandlers();
 
-            int maxParallelQueries = hamnetDbConfig.GetValue<int>("MaximumParallelQueries");
-            if (maxParallelQueries == 0)
-            {
-                maxParallelQueries = 4;
-            }
+            NetworkExcludeFile excludes = new NetworkExcludeFile(hamnetDbConfig);
+            var excludeNets = excludes?.ParsedNetworks?.ToList();
 
-            NetworkExcludeFile excludes = this.GetExcludes(hamnetDbConfig);
+            this.logger.LogDebug($"Launching {this.maxParallelQueries} parallel aquisition threads");
 
-            this.logger.LogDebug($"Launching {maxParallelQueries} parallel aquisition threads");
-
-            Parallel.ForEach(pairsSlicedAccordingToConfiguration, new ParallelOptions { MaxDegreeOfParallelism = maxParallelQueries },
+            Parallel.ForEach(pairsSlicedAccordingToConfiguration, new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
             pair =>
             {
-                if ((excludes != null) && (excludes.ParsedNetworks.Any(exclude => exclude.Equals(pair.Key.Subnet) || exclude.Contains(pair.Key.Subnet))))
+                if ((excludeNets != null) && (excludeNets.Any(exclude => exclude.Equals(pair.Key.Subnet) || exclude.Contains(pair.Key.Subnet))))
                 {
                     this.logger.LogInformation($"Skipping subnet {pair.Key.Subnet} due to exclude list");
                     return;
@@ -301,6 +318,9 @@ namespace RestService.DataFetchingService
                 }
             });
 
+            this.SendFinishedToDataHandlers();
+
+            // record the regular end of the run
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var status = resultDatabaseContext.Status;
@@ -312,8 +332,6 @@ namespace RestService.DataFetchingService
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
             }
-
-            this.DisposeDatabaseContext();
         }
 
         /// <summary>
@@ -339,64 +357,6 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
-        /// Gets the excludes if the exclude file exists.
-        /// </summary>
-        /// <param name="hamnetDbConfig">The configuration to take the exclude file name from.</param>
-        /// <returns>The exclude file handler class.</returns>
-        private NetworkExcludeFile GetExcludes(IConfigurationSection hamnetDbConfig)
-        {
-            NetworkExcludeFile excludes = null;
-            string excludeFileName = hamnetDbConfig.GetValue<string>("ExcludeFile")?.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-            if (!string.IsNullOrWhiteSpace(excludeFileName))
-            {
-                if (File.Exists(excludeFileName))
-                {
-                    this.logger.LogDebug($"Reading Exclude file {excludeFileName} parallel aquisition threads");
-                    excludes = new NetworkExcludeFile(excludeFileName);
-                    excludes.Parse();
-                }
-                else
-                {
-                    this.logger.LogDebug($"Exclude file '{excludeFileName}' does not exist. Not using any excludes.");
-                }
-            }
-
-            return excludes;
-        }
-
-        /// <summary>
-        /// Retrieves the list of subnets with their hosts to monitor from HamnetDB.
-        /// </summary>
-        /// <returns>The list of subnets with their hosts to monitor from HamnetDB.</returns>
-        private Dictionary<IHamnetDbSubnet, IHamnetDbHosts> FetchSubnetsWithHostsFromHamnetDb()
-        {
-            this.logger.LogDebug($"Getting unique host pairs to be monitored from HamnetDB. Please stand by ...");
-
-            var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-            var aquisitionConfig = this.configuration.GetSection(AquisitionServiceSectionKey);
-
-            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
-            {
-                var uniquePairs = accessor.UniqueMonitoredHostPairsInSameSubnet();
-
-                this.logger.LogDebug($"... found {uniquePairs.Count} unique pairs");
-
-                int maximumSubnetCount = aquisitionConfig.GetValue<int>("MaximumSubnetCount");
-                if (maximumSubnetCount == 0)
-                {
-                    // config returns 0 if not defined --> turn it to the reasonable "maximum" value
-                    maximumSubnetCount = int.MaxValue;
-                }
-
-                int startOffset = aquisitionConfig.GetValue<int>("SubnetStartOffset"); // will implicitly return 0 if not defined
-
-                var pairsSlicedForOptions = uniquePairs.Skip(startOffset).Take(maximumSubnetCount).ToDictionary(k => k.Key, v => v.Value);
-
-                return pairsSlicedForOptions;
-            }
-        }
-
-        /// <summary>
         /// Queries the link for a single subnet.
         /// </summary>
         /// <param name="pair">The pair of hosts inside the subnet to query.</param>
@@ -413,23 +373,13 @@ namespace RestService.DataFetchingService
                 using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.snmpQuerierOptions))
                 {
                     // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
-                    //       Else the lazy-loading containers will fail to lazy-query the required values.
+                    //       Else the lazy-loading containers might fail to lazy-query the required values.
 
                     var linkDetails = querier.FetchLinkDetails(address2.ToString());
 
-                    lock(this.databaseLockingObject)
-                    {
-                        using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
-                        {
-                            this.RecordDetailsInDatabase(pair.Key, linkDetails, DateTime.UtcNow);
+                    var storeOnlyDetailsClone = new LinkDetailsStoreOnlyContainer(linkDetails);
 
-                            this.DeleteFailingQuery(pair.Key);
-                    
-                            this.resultDatabaseContext.SaveChanges();
-
-                            transaction.Commit();
-                        }
-                    }
+                    this.SendResultsToDataHandlers(pair, storeOnlyDetailsClone, DateTime.UtcNow);
                 }
             }
             catch (HamnetSnmpException ex)
@@ -450,235 +400,80 @@ namespace RestService.DataFetchingService
 
             if (hitException != null)
             {
-                this.RecordFailingQuery(hitException, pair);
+                this.SendFailToDataHandlers(hitException, pair);
             }
         }
 
         /// <summary>
-        /// Deletes an entry in the failing query table.
+        /// Calls the <see cref="IAquiredDataHandler.PrepareForNewAquisition" /> for all configured handlers.
         /// </summary>
-        /// <param name="subnet">The subnet which serves as key to the entry to delete.</param>
-        private void DeleteFailingQuery(IHamnetDbSubnet subnet)
+        private void SendPrepareToDataHandlers()
         {
-            var failingSubnetString = subnet.Subnet.ToString();
-            var entryToRemove = this.resultDatabaseContext.RssiFailingQueries.SingleOrDefault(e => e.Subnet == failingSubnetString);
-            if (entryToRemove != null)
+            foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
-                this.logger.LogDebug($"Removing fail entry for subnet '{failingSubnetString}'");
-                this.resultDatabaseContext.Remove(entryToRemove);
-            }
-        }
-
-        /// <summary>
-        /// Records a failing query.
-        /// </summary>
-        /// <param name="exception">The exception that caused the failure.</param>
-        /// <param name="pair">The pair of hosts inside the subnet to query.</param>
-        private void RecordFailingQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
-        {
-            lock(this.databaseLockingObject)
-            {
-                using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+                try
                 {
-                    this.RecordFailingQueryEntry(exception, pair);
-
-                    this.resultDatabaseContext.SaveChanges();
-
-                    transaction.Commit();
+                    handler.PrepareForNewAquisition();
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
                 }
             }
         }
 
         /// <summary>
-        /// Removes the RSSI table entry for the given address.
+        /// Calls the <see cref="IAquiredDataHandler.AquisitionFinished" /> for all configured handlers.
         /// </summary>
-        /// <param name="address">The address for which to remove the entry.</param>
-        private void RemoveRssiTableEntryForHost(string address)
+        private void SendFinishedToDataHandlers()
         {
-            var entryToRemove = this.resultDatabaseContext.RssiValues.Find(address);
-            if (entryToRemove != null)
+            foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
-                this.resultDatabaseContext.Remove(entryToRemove);
-            }
-        }
-
-        /// <summary>
-        /// Records a failing query.
-        /// </summary>
-        /// <param name="ex">The exception that caused the failure.</param>
-        /// <param name="pair">The pair of hosts inside the subnet to query.</param>
-        private void RecordFailingQueryEntry(Exception ex, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
-        {
-            var failingSubnetString = pair.Key.Subnet.ToString();
-            var failEntry = this.resultDatabaseContext.RssiFailingQueries.Find(failingSubnetString);
-            var hamnetSnmpEx = ex as HamnetSnmpException;
-            if (failEntry == null)
-            {
-                failEntry = new RssiFailingQuery
+                try
                 {
-                    Subnet = failingSubnetString,
-                    AffectedHosts = (hamnetSnmpEx != null) ? hamnetSnmpEx.AffectedHosts : pair.Value.Select(h => h.Address?.ToString()).ToArray()
-                };
-
-                this.resultDatabaseContext.RssiFailingQueries.Add(failEntry);
-            }
-
-            failEntry.TimeStamp = DateTime.UtcNow;
-
-//#if DEBUG
-            failEntry.ErrorInfo = ex.ToString();
-//#else
-//                Exception currentExcpetion = ex;
-//                string errorInfo = string.Empty;
-//                while(currentExcpetion != null)
-//                {
-//                    if (errorInfo.Length > 0)
-//                    {
-//                        errorInfo += Environment.NewLine;
-//                    }
-//
-//                    errorInfo += currentExcpetion.Message;
-//                    currentExcpetion = currentExcpetion.InnerException;
-//                }
-//
-//                failEntry.ErrorInfo = errorInfo;
-//#endif
-        }
-
-        /// <summary>
-        /// Records the link details in the database.
-        /// </summary>
-        /// <param name="subnet">The subnet that is being recorded.</param>
-        /// <param name="linkDetails">The link details to record.</param>
-        /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
-        private void RecordDetailsInDatabase(IHamnetDbSubnet subnet, ILinkDetails linkDetails, DateTime queryTime)
-        {
-            LineProtocolPayload influxPayload = null;
-            if (this.influxClient != null)
-            {
-                influxPayload = new LineProtocolPayload();
-            }
-
-            foreach (var item in linkDetails.Details)
-            {
-                this.SetNewRssiForLink(subnet, queryTime, item, item.Address1.ToString(), item.RxLevel1at2, influxPayload);
-                this.SetNewRssiForLink(subnet, queryTime, item, item.Address2.ToString(), item.RxLevel2at1, influxPayload);
-            }
-
-            if ((this.influxClient != null) && (influxPayload != null))
-            {
-                var result = this.influxClient.WriteAsync(influxPayload).Result;
-                if (!result.Success)
+                    handler.AquisitionFinished();
+                }
+                catch(Exception ex)
                 {
-                    this.logger.LogError($"Error writing Influx data: {result.ErrorMessage}");
+                    this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
                 }
             }
         }
 
         /// <summary>
-        /// Adds or modifies an RSSI entry for the given link detail.
+        /// Calls the <see cref="IAquiredDataHandler.RecordFailingQueryAsync" /> for all configured handlers.
         /// </summary>
-        /// <param name="subnet">The subnet that is being recorded.</param>
-        /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
-        /// <param name="linkDetail">The link details to record.</param>
-        /// <param name="adressToSearch">The host address to search for (and modify if found).</param>
-        /// <param name="rssiToSet">The RSSI value to record.</param>
-        /// <param name="influxPayload">The Influx payload container or null if Influx is not in use.</param>
-        private void SetNewRssiForLink(IHamnetDbSubnet subnet, DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet, LineProtocolPayload influxPayload)
+        private void SendFailToDataHandlers(Exception hitException, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
         {
-            var adressEntry = this.resultDatabaseContext.RssiValues.Find(adressToSearch);
-            if (adressEntry == null)
+            foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
-                adressEntry = new Rssi
+                try
                 {
-                    ForeignId = adressToSearch,
-                    Metric = RssiMetricName,
-                    MetricId = RssiMetricId,
-                    ParentSubnet = subnet.Subnet?.ToString()
-                };
-
-                this.resultDatabaseContext.RssiValues.Add(adressEntry);
-            }
-
-            adressEntry.RssiValue = rssiToSet.ToString("0.0");
-            adressEntry.ParentSubnet = subnet.Subnet?.ToString(); // we're setting the value here, too so that migrated database will get the value added
-            adressEntry.TimeStampString = queryTime.ToUniversalTime().ToString("yyyy-MM-ddTHH\\:mm\\:sszzz");
-            adressEntry.UnixTimeStamp = (ulong)queryTime.ToUniversalTime().Subtract(Program.UnixTimeStampBase).TotalSeconds;
-
-            if (influxPayload != null)
-            {
-                influxPayload.Add(
-                    new LineProtocolPoint(
-                        "RSSI",
-                        new Dictionary<string, object>
-                        {
-                            { "value", rssiToSet }
-                        },
-                        new Dictionary<string, string>
-                        {
-                            { "host", adressToSearch },
-                            { "subnet", subnet.Subnet.ToString() }
-                        },
-                        queryTime.ToUniversalTime()));
+                    handler.RecordFailingQuery(hitException, pair);
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
+                }
             }
         }
 
         /// <summary>
-        /// Creates the Influx client or sets the field to null if Influx is not configured.
+        /// Calls the <see cref="IAquiredDataHandler.RecordDetailsInDatabaseAsync" /> for all configured handlers.
         /// </summary>
-        /// <param name="configuration">The configuration object to get the Influx settings from.</param>
-        private void CreateInfluxClient(IConfiguration configuration)
+        private void SendResultsToDataHandlers(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair, ILinkDetails linkDetails, DateTime queryTime)
         {
-            IConfigurationSection influxSection = configuration.GetSection(InfluxSectionKey);
-            if ((influxSection == null) || (!influxSection.GetChildren().Any()))
+            foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
-                this.logger.LogInformation($"Influx database disabled: No or empty '{InfluxSectionKey}' section in configration");
-
-                this.influxClient = null;
-                return;
+                try
+                {
+                    handler.RecordDetailsInDatabaseAsync(pair, linkDetails, queryTime);
+                }
+                catch(Exception ex)
+                {
+                    this.logger.LogError($"Excpetion recording failed query at handler {handler.Name}: {ex.Message}");
+                }
             }
-
-            string currentKey = "DatabaseUri";
-            string databaseUri = influxSection.GetValue<string>(currentKey);
-            if (string.IsNullOrWhiteSpace(databaseUri))
-            {
-                this.logger.LogInformation($"Influx database disabled: No key '{currentKey}' in '{InfluxSectionKey}' configration section");
-
-                this.influxClient = null;
-                return;
-            }
-
-            currentKey = "DatabaseName";
-            string databaseName = influxSection.GetValue<string>(currentKey);
-            if (string.IsNullOrWhiteSpace(databaseName))
-            {
-                this.logger.LogInformation($"Influx database disabled: No key '{currentKey}' in '{InfluxSectionKey}' configration section");
-
-                this.influxClient = null;
-                return;
-            }
-
-            string databaseUser = influxSection.GetValue<string>("DatabaseUser");
-            if (string.IsNullOrWhiteSpace(databaseUser))
-            {
-                databaseUser = null;
-            }
-
-            string databasePassword = influxSection.GetValue<string>("DatabasePassword");
-            if (string.IsNullOrWhiteSpace(databasePassword))
-            {
-                databasePassword = null;
-            }
-
-            if ((databaseUser == null) && (databasePassword != null))
-            {
-                this.logger.LogError($"Influx database disabled: Inconsistent Influx database configuration: Found password but no user name in '{InfluxSectionKey}' configration section");
-                return;
-            }
-
-            this.logger.LogInformation($"Initialized Influx reporting to URI '{databaseUri}', database '{databaseName}'");
-
-            this.influxClient = new LineProtocolClient(new Uri(databaseUri), databaseName, databaseUser, databasePassword);
         }
     }
 }

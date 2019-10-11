@@ -11,14 +11,15 @@ using RestService.Database;
 namespace HamnetDbRest.Migrations
 {
     [DbContext(typeof(QueryResultDatabaseContext))]
-    [Migration("20190920063629_CreateDatabase")]
-    partial class CreateDatabase
+    [Migration("20191008183920_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079");
+                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("RestService.Database.MonitoringPerstistence", b =>
                 {
@@ -43,10 +44,19 @@ namespace HamnetDbRest.Migrations
                     b.Property<string>("ForeignId")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("Description")
+                        .IsRequired();
+
+                    b.Property<string>("ForeignCall")
+                        .IsRequired();
+
                     b.Property<string>("Metric")
                         .IsRequired();
 
                     b.Property<int>("MetricId");
+
+                    b.Property<string>("ParentSubnet")
+                        .IsRequired();
 
                     b.Property<string>("RssiValue")
                         .IsRequired();
@@ -68,6 +78,8 @@ namespace HamnetDbRest.Migrations
                 {
                     b.Property<string>("Subnet")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("AffectedHosts");
 
                     b.Property<string>("ErrorInfo")
                         .IsRequired();

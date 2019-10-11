@@ -35,6 +35,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="2.2.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,8 +45,8 @@
 
   <ItemGroup>
     <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
-    <_DeleteItems1 Include="$(PublishDir)/appsettings*" />
-    <_DeleteItems2 Include="$(PublishDir)/log4net*" />
+    <_DeleteItems1 Include="$(PublishDir)/appsettings*.*" />
+    <_DeleteItems2 Include="$(PublishDir)/log4net*.*" />
   </ItemGroup>
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">

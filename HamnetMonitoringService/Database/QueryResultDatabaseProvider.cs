@@ -31,6 +31,11 @@ namespace RestService.Database
         /// The configuration key for getting the database connection string.
         /// </summary>
         public static readonly string ConnectionStringKey = "ConnectionString";
+        
+        /// <summary>
+        /// Remember whether we've already called Migrate on the DB.
+        /// </summary>
+        private bool migrateCalled = false;
 
         /// <summary>
         /// Prevent construction from outside the singleton getter.
@@ -50,24 +55,18 @@ namespace RestService.Database
         public IConfiguration Configuration { get; private set; } = null;
 
         /// <summary>
-        /// Gets the type of the database context to create.
-        /// </summary>
-        public Type ContextType { get; private set; } = null;
-
-        /// <summary>
         /// Gets a device database context.
         /// </summary>
         /// <remarks>The context must be disposed off by the caller.</remarks>
         public QueryResultDatabaseContext CreateContext()
         {
-            if (this.ContextType == null)
-            {
-                throw new InvalidOperationException("Cannot create a result database context: The type of the database has not (yet) been set");
-            }
-
-            QueryResultDatabaseContext context = (QueryResultDatabaseContext)Activator.CreateInstance(this.ContextType, this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName));
+            QueryResultDatabaseContext context = new QueryResultDatabaseContext(this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName));
             
-            context.Database.Migrate();
+            if (!this.migrateCalled)
+            {
+                context.Database.Migrate();
+                this.migrateCalled = true;
+            }
 
             return context;
         }
@@ -84,18 +83,6 @@ namespace RestService.Database
             }
             
             this.Configuration = configuration;
-
-            var databaseType = this.Configuration.GetSection(ResultDatabaseSectionName).GetValue<string>(DatabaseTypeKey)?.ToUpperInvariant();
-
-            switch(databaseType)
-            {
-                case "SQLITE":
-                    this.ContextType = typeof(QueryResultDatabaseContext);
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException($"The configured database type '{databaseType}' is not supported for the query result database");
-            }
         }
     }
 
