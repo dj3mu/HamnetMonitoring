@@ -4,6 +4,7 @@ using System.Net;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using SnmpSharpNet;
 
@@ -80,15 +81,12 @@ namespace SnmpAbstraction
                 var databaseDefaultPath = Path.Combine(Environment.CurrentDirectory, "Config/CacheDatabase.sqlite");
                 connStringBuilder.DataSource = databaseDefaultPath;
                 
+                this.DatabaseType = "SQLITE";
                 this.ConnectionString = connStringBuilder.ToString();
             }
             else
             {
-                if (configuration.GetValue<string>(CacheDatabaseProvider.DatabaseTypeKey).ToUpperInvariant() != "SQLITE")
-                {
-                    throw new InvalidOperationException("Only SQLite is currently supported for the cache database");
-                }
-
+                this.DatabaseType = configuration.GetValue<string>(CacheDatabaseProvider.DatabaseTypeKey).ToUpperInvariant();
                 this.ConnectionString = configuration.GetValue<string>(CacheDatabaseProvider.ConnectionStringKey);
             }
         }
@@ -121,6 +119,11 @@ namespace SnmpAbstraction
         }
 
         /// <summary>
+        /// Gets a string reflecting the type of the database (from configuration).
+        /// </summary>
+        public string DatabaseType { get; }
+
+        /// <summary>
         /// Gets the path and/or file name of the file that contains the device database.
         /// </summary>
         public string ConnectionString { get; }
@@ -128,9 +131,25 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connection = new SqliteConnection(this.ConnectionString);
+            switch(this.DatabaseType)
+            {
+                case "SQLITE":
+                    {
+                        var connection = new SqliteConnection(this.ConnectionString);
+                        optionsBuilder.UseSqlite(connection);
+                    }
+                    break;
 
-            optionsBuilder.UseSqlite(connection);
+                case "MYSQL":
+                    {
+                        var connection = new MySqlConnection(this.ConnectionString);
+                        optionsBuilder.UseMySql(connection);
+                    }
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"A database of type '{this.DatabaseType}' is currently not supported for the cache database");
+            }
         }
 
         /// <inheritdoc />
