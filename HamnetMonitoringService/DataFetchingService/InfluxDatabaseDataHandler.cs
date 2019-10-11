@@ -237,7 +237,7 @@ namespace RestService.DataFetchingService
 
         private void SendCurrentPayload()
         {
-            if (this.currentPayload != null)
+            if ((this.influxClient != null) && (this.currentPayload != null))
             {
                 var result = this.influxClient.WriteAsync(this.currentPayload).Result;
                 if (!result.Success)
