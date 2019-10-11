@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Reflection;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace SnmpAbstraction
 {
@@ -31,6 +29,8 @@ namespace SnmpAbstraction
 
         private object lockObject = new object();
 
+        private bool ensureCreatedCalled = false;
+
         /// <summary>
         /// Prevent construction from outside the singleton getter.
         /// </summary>
@@ -59,7 +59,11 @@ namespace SnmpAbstraction
                 {
                     var context = new CacheDatabaseContext(this.Configuration);
                     
-                    context.Database.EnsureCreated();
+                    if (!this.ensureCreatedCalled)
+                    {
+                        context.Database.EnsureCreated();
+                        this.ensureCreatedCalled = true;
+                    }
 
                     return context;
                 }
