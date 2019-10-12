@@ -27,6 +27,7 @@
     <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
     <PackageReference Include="SnmpSharpNetStandard" Version="0.10.0" />
+    <PackageReference Include="tik4net" Version="3.4.0" />
   </ItemGroup>
 
   <ItemGroup>

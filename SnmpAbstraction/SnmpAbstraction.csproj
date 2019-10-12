@@ -33,6 +33,7 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0" />
     <PackageReference Include="SemanticVersion" Version="2.0.0" />
     <PackageReference Include="SnmpSharpNetStandard" Version="0.10.0" />
+    <PackageReference Include="tik4net" Version="3.4.0" />
   </ItemGroup>
 
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
