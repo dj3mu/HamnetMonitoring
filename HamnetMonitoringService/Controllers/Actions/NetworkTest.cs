@@ -7,7 +7,6 @@ using HamnetDbAbstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using RestService.DataFetchingService;
 using SnmpAbstraction;
 
 namespace HamnetDbRest.Controllers

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -12,21 +13,40 @@ namespace SnmpAbstraction
     internal static class SnmpLowerLayerExtensions
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-    
+
         /// <summary>
         /// Queries the given OIDs and returns the value as string or null if the OID is not available.
         /// </summary>
         /// <param name="lowerLayer">The lower layer engine to extend.</param>
         /// <param name="oid">The OID to query.</param>
         /// <param name="what">Descriptive text what is being queried. Used for debug/error output</param>
+        /// <param name="encoding">If not null, will try to detect whether the string is a hex string and then use the given encoding to decode it.</param>
         /// <returns>The OID's value as string or null if the OID is not available.</returns>
-        public static string QueryAsString(this ISnmpLowerLayer lowerLayer, Oid oid, string what)
+        public static string QueryAsString(this ISnmpLowerLayer lowerLayer, Oid oid, string what, Encoding encoding = null)
         {
             VbCollection result = lowerLayer.Query(oid);
             var retVal = result[oid]?.Value?.ToString();
             if (retVal == null)
             {
                 log.Warn($"Querying '{what}' from '{lowerLayer.Address}' as string returned null");
+            }
+
+            if (encoding != null)
+            {
+                bool couldBeHexString = true;
+                for (int i = 2; i < retVal.Length; i+=3)
+                {
+                    if (retVal[i] != ' ')
+                    {
+                        couldBeHexString = false;
+                        break;
+                    }
+                }
+
+                if (couldBeHexString)
+                {
+                    retVal = encoding.GetString(retVal.HexStringToByteArray(' '));
+                }
             }
 
             return retVal;

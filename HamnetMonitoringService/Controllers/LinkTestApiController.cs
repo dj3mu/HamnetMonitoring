@@ -42,6 +42,16 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET request.
         /// </summary>
         /// <returns>The results of the get request.</returns>
+        [HttpGet("info/{host}")]
+        public async Task<ActionResult<IStatusReply>> HostInfo(string host, [FromQuery]FromUrlQueryQuerierOptions options)
+        {
+            return await new HostInfo(WebUtility.UrlDecode(host), this.logger, this.configuration, options).Execute();
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
         [HttpGet("link/{host1}/{host2}")]
         public async Task<ActionResult<IStatusReply>> LinkTest(string host1, string host2, [FromQuery]FromUrlQueryQuerierOptions options)
         {

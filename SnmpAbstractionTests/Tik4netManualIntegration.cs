@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Text;
 using NUnit.Framework;
+using SnmpAbstraction;
 using tik4net;
 using tik4net.Objects;
 using tik4net.Objects.Ip;
@@ -20,6 +22,27 @@ namespace SnmpAbstractionTests
         {
         }
 
+        [Test]
+        public void HexStringTest()
+        {
+            var input = "4D F6 6E 63 68 65 6E 67 6C 61 64 62 61 63 68";
+
+            bool couldBeHexString = true;
+            for (int i = 2; i < input.Length; i+=3)
+            {
+                if (input[i] != ' ')
+                {
+                    couldBeHexString = false;
+                    break;
+                }
+            }
+
+            if (couldBeHexString)
+            {
+                input = Encoding.UTF8.GetString(input.HexStringToByteArray(' '));
+            }
+        }
+
         /// <summary>
         /// Test for using ITikConnection
         /// </summary>
@@ -28,7 +51,7 @@ namespace SnmpAbstractionTests
         {
             using (ITikConnection connection = ConnectionFactory.CreateConnection(TikConnectionType.Api))
             {
-                connection.Open("HOST", "USER", "PASS");
+                connection.Open("44.224.10.78", "monitoring", "");
                 ITikCommand cmd = connection.CreateCommand("/system/identity/print");
                 Console.WriteLine(cmd.ExecuteScalar());
 

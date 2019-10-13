@@ -258,7 +258,7 @@ namespace SnmpAbstraction
             this.BackupSnmpVersionAndSetV1();
 
             this.AddQueryDuration( () => {
-                this.systemDescrition = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.1.0"), "system description");
+                this.systemDescrition = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.1.0"), "system description", Encoding.UTF8);
             });
 
             this.RestoreSnmpVersion();
@@ -300,7 +300,7 @@ namespace SnmpAbstraction
             this.BackupSnmpVersionAndSetV1();
 
             this.AddQueryDuration( () => {
-                this.systemAdminContact = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.4.0"), "system adminstrative contact");
+                this.systemAdminContact = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.4.0"), "system adminstrative contact", Encoding.UTF8);
             });
 
             this.RestoreSnmpVersion();
@@ -321,7 +321,7 @@ namespace SnmpAbstraction
             this.BackupSnmpVersionAndSetV1();
 
             this.AddQueryDuration( () => {
-                this.systemLocation = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.6.0"), "system location");
+                this.systemLocation = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.6.0"), "system location", Encoding.UTF8)?.Trim();
             });
 
             this.RestoreSnmpVersion();
@@ -342,7 +342,7 @@ namespace SnmpAbstraction
             this.BackupSnmpVersionAndSetV1();
 
             this.AddQueryDuration( () => {
-                this.systemName = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.5.0"), "system name");
+                this.systemName = this.LowerSnmpLayer.QueryAsString(new Oid(".1.3.6.1.2.1.1.5.0"), "system name", Encoding.UTF8);
             });
 
             this.RestoreSnmpVersion();
