@@ -120,6 +120,11 @@ namespace SnmpAbstraction
                 throw new ArgumentNullException(nameof(hexString), "The hex string to convert is null");
             }
 
+            if (string.IsNullOrWhiteSpace(hexString))
+            {
+                return new byte[0];
+            }
+
             return hexString.Split(separator).Select(x => Convert.ToByte(x.Trim(), 16)).ToArray();
         }
  
