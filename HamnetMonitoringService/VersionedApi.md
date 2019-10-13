@@ -115,6 +115,28 @@ Tries to ping the given `<hostname or IP>` and returns the results. For example,
 }
 ```
 
+#### Ping
+URI path: `/api/v1/linktest/info/<hostname or IP>`.
+
+Gets the basic system information for the given `<hostname or IP>` and returns the results. For example, the request URI path `/api/v1/linktest/info/44.224.10.78?EnableCaching=false` could return:
+```json
+{
+    "description": "RouterOS RB750Pr2",
+    "contact": "DG1MHM, DJ3MU",
+    "location": "Aussichtsturm Ebersberg",
+    "name": "router.db0ebe",
+    "uptime": "295.19:38:15",
+    "model": "RB750Pr2",
+    "version": "6.43.8",
+    "maximumSnmpVersion": "Ver2",
+    "address": "44.224.10.78",
+    "errorDetails": []
+}
+```
+
+**Note:** If you want to make sure that the device is actually responding to SNMP requests, make sure to append the `?EnableCaching=false` or else you might get data from cache only without triggering any real SNMP request. You can detect a cache-only result when field `uptime` gets reported as `null` (JSON _null_, not zero !).
+
+
 #### Link Test
 URI path: `/api/v1/linktest/link/<host or IP #1>/<host or IP #2>?<options>`
 

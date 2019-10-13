@@ -16,9 +16,9 @@ using SnmpSharpNet;
 namespace RestService.DataFetchingService
 {
     /// <summary>
-    /// Hosted service to regularly retrieve the data to be reported via REST api.
+    /// Hosted service to regularly retrieve the RSSI data to be reported via REST api.
     /// </summary>
-    public class DataAquisitionService : IHostedService, IDisposable
+    public class RssiAquisitionService : IHostedService, IDisposable
     {
         private static readonly TimeSpan Hysteresis = TimeSpan.FromSeconds(10);
         
@@ -27,7 +27,7 @@ namespace RestService.DataFetchingService
         /// </summary>
         private readonly List<IAquiredDataHandler> dataHandlers = new List<IAquiredDataHandler>();
 
-        private readonly ILogger<DataAquisitionService> logger;
+        private readonly ILogger<RssiAquisitionService> logger;
 
         private readonly IConfiguration configuration;
         
@@ -56,7 +56,7 @@ namespace RestService.DataFetchingService
         /// </summary>
         /// <param name="logger">The logger to use.</param>
         /// <param name="configuration">The service configuration.</param>
-        public DataAquisitionService(ILogger<DataAquisitionService> logger, IConfiguration configuration)
+        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration)
         {
             if (logger == null)
             {

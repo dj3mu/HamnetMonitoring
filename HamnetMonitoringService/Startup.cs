@@ -42,7 +42,7 @@ namespace HamnetDbRest
             var querySection = this.Configuration.GetSection(Program.AquisitionServiceSectionKey);
             if ((querySection == null) || querySection.GetValue<bool>("Enabled"))
             {
-                services.AddHostedService<DataAquisitionService>();
+                services.AddHostedService<RssiAquisitionService>();
             }
 
             var maintenanceSection = this.Configuration.GetSection(MaintenanceService.MaintenanceServiceSectionKey);

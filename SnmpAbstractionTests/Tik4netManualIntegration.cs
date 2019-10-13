@@ -6,6 +6,7 @@ using tik4net;
 using tik4net.Objects;
 using tik4net.Objects.Ip;
 using tik4net.Objects.Routing.Bgp;
+using tik4net.Objects.Tool;
 
 namespace SnmpAbstractionTests
 {
@@ -22,6 +23,9 @@ namespace SnmpAbstractionTests
         {
         }
 
+        /// <summary>
+        /// A test for hex-string to string conversion (the hex bytes are actually ASCII/UTF-8 codes)
+        /// </summary>
         [Test]
         public void HexStringTest()
         {
@@ -52,14 +56,12 @@ namespace SnmpAbstractionTests
             using (ITikConnection connection = ConnectionFactory.CreateConnection(TikConnectionType.Api))
             {
                 connection.Open("44.224.10.78", "monitoring", "");
-                ITikCommand cmd = connection.CreateCommand("/system/identity/print");
-                Console.WriteLine(cmd.ExecuteScalar());
-
-                var advertisements = connection.LoadAll<BgpAdvertisement>();
-                var instances = connection.LoadAll<BgpInstance>();
-                var peers = connection.LoadAll<BgpPeer>();
-                var networks = connection.LoadAll<BgpNetwork>();
-                var routes = connection.LoadAll<IpRoute>();
+                var traceroute = connection.Traceroute("44.137.62.114");
+                //var advertisements = connection.LoadAll<BgpAdvertisement>();
+                //var instances = connection.LoadAll<BgpInstance>();
+                //var peers = connection.LoadAll<BgpPeer>();
+                //var networks = connection.LoadAll<BgpNetwork>();
+                //var routes = connection.LoadAll<IpRoute>();
             }
         }
     }
