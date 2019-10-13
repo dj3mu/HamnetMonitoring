@@ -16,9 +16,9 @@ using SnmpSharpNet;
 namespace RestService.DataFetchingService
 {
     /// <summary>
-    /// Hosted service to regularly retrieve the RSSI data to be reported via REST api.
+    /// Hosted service to regularly retrieve the BGP-related data to be reported via REST api.
     /// </summary>
-    public class RssiAquisitionService : IHostedService, IDisposable
+    public class BgpAquisitionService : IHostedService, IDisposable
     {
         private static readonly TimeSpan Hysteresis = TimeSpan.FromSeconds(10);
         
@@ -27,7 +27,7 @@ namespace RestService.DataFetchingService
         /// </summary>
         private readonly List<IAquiredDataHandler> dataHandlers = new List<IAquiredDataHandler>();
 
-        private readonly ILogger<RssiAquisitionService> logger;
+        private readonly ILogger<BgpAquisitionService> logger;
 
         private readonly IConfiguration configuration;
         
@@ -56,32 +56,22 @@ namespace RestService.DataFetchingService
         /// </summary>
         /// <param name="logger">The logger to use.</param>
         /// <param name="configuration">The service configuration.</param>
-        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration)
+        public BgpAquisitionService(ILogger<BgpAquisitionService> logger, IConfiguration configuration)
         {
             if (logger == null)
             {
-                throw new ArgumentNullException(nameof(logger), "The logger is null when creating a RssiAquisitionService");
+                throw new ArgumentNullException(nameof(logger), "The logger is null when creating a BgpAquisitionService");
             }
 
             if (configuration == null)
             {
-                throw new ArgumentNullException(nameof(configuration), "The configuration is null when creating a RssiAquisitionService");
+                throw new ArgumentNullException(nameof(configuration), "The configuration is null when creating a BgpAquisitionService");
             }
 
             this.logger = logger;
             this.configuration = configuration;
 
             this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
-
-            IConfigurationSection influxSection = configuration.GetSection(Program.InfluxSectionKey);
-            if ((influxSection != null) && influxSection.GetChildren().Any())
-            {
-                this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration));
-            }
-            else
-            {
-                this.logger.LogInformation($"Influx database disabled: No or empty '{Program.InfluxSectionKey}' section in configuration");
-            }
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.

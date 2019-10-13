@@ -43,7 +43,7 @@ namespace RestService.DataFetchingService
         {
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "configuration is null when creating a ResultDatabaseDataHandler");
 
-            this.hamnetDbConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
+            this.hamnetDbConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.

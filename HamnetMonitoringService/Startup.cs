@@ -39,10 +39,16 @@ namespace HamnetDbRest
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            var querySection = this.Configuration.GetSection(Program.AquisitionServiceSectionKey);
-            if ((querySection == null) || querySection.GetValue<bool>("Enabled"))
+            var rssiSection = this.Configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+            if ((rssiSection == null) || rssiSection.GetValue<bool>("Enabled"))
             {
                 services.AddHostedService<RssiAquisitionService>();
+            }
+
+            var bpgSection = this.Configuration.GetSection(Program.BgpAquisitionServiceSectionKey);
+            if ((bpgSection == null) || bpgSection.GetValue<bool>("Enabled"))
+            {
+                services.AddHostedService<BgpAquisitionService>();
             }
 
             var maintenanceSection = this.Configuration.GetSection(MaintenanceService.MaintenanceServiceSectionKey);
@@ -91,7 +97,7 @@ namespace HamnetDbRest
             else
             {
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+                //app.UseHsts();
             }
 
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())

@@ -18,9 +18,14 @@ namespace HamnetDbRest
     public class Program
     {
         /// <summary>
-        /// The section key for the Data Aquisition service configuration.
+        /// The section key for the RSSI Aquisition service configuration.
         /// </summary>
-        public static readonly string AquisitionServiceSectionKey = "DataAquisitionService";
+        public static readonly string RssiAquisitionServiceSectionKey = "RssiAquisitionService";
+
+        /// <summary>
+        /// The section key for the RSSI Aquisition service configuration.
+        /// </summary>
+        public static readonly string BgpAquisitionServiceSectionKey = "BgpAquisitionService";
 
         /// <summary>
         /// The section key for the Influx database configuration.

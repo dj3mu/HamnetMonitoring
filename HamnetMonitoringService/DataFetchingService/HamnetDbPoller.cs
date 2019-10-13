@@ -34,7 +34,7 @@ namespace RestService.DataFetchingService
             log.Debug($"Getting unique host pairs to be monitored from HamnetDB. Please stand by ...");
 
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-            var aquisitionConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
+            var aquisitionConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
 
             using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
             {
