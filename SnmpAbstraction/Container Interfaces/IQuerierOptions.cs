@@ -52,5 +52,20 @@ namespace SnmpAbstraction
         /// Volatile data (e.g. RSSI) will not be cached at all.
         /// </summary>
         bool EnableCaching { get; }
+
+        /// <summary>
+        /// Gets the user name to use when a login is required to use a specific API.
+        /// </summary>
+        string LoginUser { get; }
+
+        /// <summary>
+        /// Gets the password to use when a login is required to use a specific API.
+        /// Can be null or empty of not required.
+        /// </summary>
+        /// <remarks>We're not taking any measures to protect this password.<br/>
+        /// In Hamnet we will anyway have to transfer it in plain text due to regulatory rules (Amateur Radio has to be public).<br/>
+        /// So let's save the additonal effort of fiddling around with SecretString etc.
+        /// </remarks>
+        string LoginPassword { get; }
     }
 }

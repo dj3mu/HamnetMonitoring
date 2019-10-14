@@ -37,7 +37,7 @@ namespace SnmpAbstraction
         /// Idea is, that this might already be sufficient to finally decide about a specific device and thus decision can be done without doing any network communiation.
         /// </summary>
         /// <returns>A <see cref="IDetectableDevice" /> representing the detected device or null if the device is unknown and cannot be detected.</returns>
-        public IDeviceHandler Detect()
+        public IDeviceHandler Detect(IQuerierOptions options)
         {
             Stopwatch detectionDuration = Stopwatch.StartNew();
             
@@ -113,7 +113,7 @@ namespace SnmpAbstraction
 
                 try
                 {
-                    var handler = currentDevice.CreateHandler(this.lowerLayer);
+                    var handler = currentDevice.CreateHandler(this.lowerLayer, options);
                     var handlerBase = handler as DeviceHandlerBase;
 
                     var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;

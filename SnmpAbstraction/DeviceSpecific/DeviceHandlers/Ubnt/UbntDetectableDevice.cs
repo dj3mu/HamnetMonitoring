@@ -112,7 +112,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer)
+        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
         {
             if (!this.detectionId.HasValue)
             {
@@ -168,12 +168,12 @@ namespace SnmpAbstraction
                 if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
                 {
                     return (model == AirFiberFakeModelString)
-                        ? new UbiquitiAirFiberDeviceHandler(lowerLayer, oidTable, osVersion, model) as IDeviceHandler
-                        : new UbiquitiAirOsAbove56DeviceHandler(lowerLayer, oidTable, osVersion, model) as IDeviceHandler;
+                        ? new UbiquitiAirFiberDeviceHandler(lowerLayer, oidTable, osVersion, model, options) as IDeviceHandler
+                        : new UbiquitiAirOsAbove56DeviceHandler(lowerLayer, oidTable, osVersion, model, options) as IDeviceHandler;
                 }
                 else
                 {
-                    return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model);
+                    return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model, options);
                 }
 
             }

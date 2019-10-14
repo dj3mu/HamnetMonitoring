@@ -62,6 +62,7 @@ namespace HamnetDbRest
             services.AddTransient<LinkTestController>();
             services.AddTransient<StatusController>();
             services.AddTransient<CacheInfoApiController>();
+            services.AddTransient<BgpController>();
             
             QueryResultDatabaseProvider.Instance.SetConfiguration(this.Configuration);
             CacheMaintenance.SetDatabaseConfiguration(this.Configuration);

@@ -31,7 +31,7 @@ namespace SnmpAbstraction
                 log.Warn($"Querying '{what}' from '{lowerLayer.Address}' as string returned null");
             }
 
-            if (encoding != null)
+            if ((encoding != null) && (retVal.Length > 0))
             {
                 bool couldBeHexString = true;
                 for (int i = 2; i < retVal.Length; i+=3)

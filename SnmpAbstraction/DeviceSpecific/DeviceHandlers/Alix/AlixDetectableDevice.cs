@@ -54,7 +54,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer)
+        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
         {
             string osVersionString = "0.0.0";
 
@@ -73,7 +73,7 @@ namespace SnmpAbstraction
             {
                 try
                 {
-                    return new AlixDeviceHandler(lowerLayer, oidTable, osVersion, model);
+                    return new AlixDeviceHandler(lowerLayer, oidTable, osVersion, model, options);
                 }
                 catch(Exception ex)
                 {
@@ -84,7 +84,7 @@ namespace SnmpAbstraction
             }
             else
             {
-                return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model);
+                return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model, options);
             }
         }
     }

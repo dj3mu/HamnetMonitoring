@@ -39,5 +39,11 @@ namespace HamnetDbRest.Controllers
 
         /// <inheritdoc />
         public bool EnableCaching { get; set; } = true;
+
+        /// <inheritdoc />
+        public string LoginUser { get; set; } = string.Empty;
+
+        /// <inheritdoc />
+        public string LoginPassword { get; set; } = string.Empty;
     }
 }

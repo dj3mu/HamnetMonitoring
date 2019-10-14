@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using SnmpSharpNet;
 
@@ -16,6 +14,8 @@ namespace SnmpAbstraction
         /// Lookup for cachable OIDs.
         /// </summary>
         private readonly Dictionary<CachableValueMeanings, ICachableOid> cachableOidLookup = new Dictionary<CachableValueMeanings, ICachableOid>();
+
+        private static readonly BlockTextFormatter formatter = new BlockTextFormatter();
 
         /// <summary>
         /// Construct for the given device address and query duration.
@@ -66,7 +66,7 @@ namespace SnmpAbstraction
         {
             StringBuilder returnBuilder = new StringBuilder(128);
             returnBuilder.Append("Device ").Append(this.DeviceAddress).Append(" (").Append(this.DeviceModel).AppendLine("):");
-            returnBuilder.AppendLine(SnmpAbstraction.IndentLines(this.ToString()));
+            returnBuilder.AppendLine(SnmpAbstraction.IndentLines(formatter.Format(this)));
             returnBuilder.Append(SnmpAbstraction.IndentLines("--> Query took ")).Append(this.QueryDuration.TotalMilliseconds).Append(" ms");
 
             return returnBuilder.ToString();

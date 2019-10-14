@@ -191,7 +191,70 @@ For example the request URI path `/api/v1/linktest/network/44.224.10.64%2F29` co
 }
 ```
 
-#### Supported querier options
+### BGP information
+URI root path: `/api/v1/bgp`.
+
+All replies of this API will at least return a JSON structure with the element `errorDetails` which is an array of strings containing error information. Usually this contains text of exceptions encountered when performing the operation. Example:
+```json
+{
+    "errorDetails": [
+        "TikCommandException: invalid user name or password (6)"
+    ]
+}
+```
+
+#### Get BGP peers
+There are two ways to request details of a BGP peering. Either all peer's details of the queried host can be retrieved using the
+
+URI path: `/api/v1/bgp/peers/<host or IP>?<options>`
+
+Alternatively a single peer's details can be obtained causing a little less traffic by using
+
+URI path: `/api/v1/bgp/peers/<host or IP>/<peer IP>?<options>`
+
+**Please note:** While the first parameter can be a host name or an IP address, the second parameter _must_ be an IP address (no name resolution is supported).
+
+A response could look like:
+```json
+{
+    "bgpPeers": [
+        {
+            "localAddress": "44.224.10.78",
+            "peeringName": "DB0ZM",
+            "remoteAddress": "44.224.10.73",
+            "uptime": "62.13:54:46",
+            "prefixCount": 2138,
+            "peeringState": "established"
+        },
+        {
+            "localAddress": "44.224.10.70",
+            "peeringName": "DB0AAT",
+            "remoteAddress": "44.224.10.65",
+            "uptime": "13:28:49",
+            "prefixCount": 1590,
+            "peeringState": "established"
+        },
+        {
+            "localAddress": "44.224.10.217",
+            "peeringName": "DB0ON",
+            "remoteAddress": "44.224.10.222",
+            "uptime": "54.19:49:33",
+            "prefixCount": 164,
+            "peeringState": "established"
+        }
+    ],
+    "errorDetails": []
+}
+```
+
+
+### Cache Info
+URI root path: `/api/v1/cacheInfo`.
+
+Returns the entire cache content in JSON format. Expensive call and not too much useful for regular use. Mainly intended for debugging caching issues.
+
+
+## Supported querier options
 For the `<options>` URL query string the following values are supported to configure the behaviour of the querier:
 
 | Option name | Default | Description                                                          |
@@ -204,9 +267,5 @@ For the `<options>` URL query string the following values are supported to confi
 | Ver2cMaximumValuesPerRequest | 0 | The maximum number of values per SNMPv2c request. Ignored in case of SNMPv1 |
 | Ver2cMaximumRequests | 5 | The maximum number of SNMPv2c requests. Ignored in case of SNMPv1 |
 | EnableCaching | true | If **true**, the cache database will be used to reduce network traffic (if details of the device are already available in cache). If **false** all required data will be re-queried from the devices including identification of the device and SW version. |
-
-
-### Cache Info
-URI root path: `/api/v1/cacheInfo`.
-
-Returns the entire cache content in JSON format. Expensive call and not too much useful for regular use. Mainly intended for debugging caching issues.
+| LoginUser | "" | A user name to use when login / authentication is required to access a specific set of data. |
+| LoginPassword | "" | A password to use when login / authentication is required to access a specific set of data. |

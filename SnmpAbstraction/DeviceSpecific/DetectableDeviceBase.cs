@@ -13,7 +13,7 @@ namespace SnmpAbstraction
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <inheritdoc />
-        public abstract IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer);
+        public abstract IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options);
 
         /// <inheritdoc />
         public abstract bool IsApplicable(ISnmpLowerLayer snmpLowerLayer);
@@ -26,8 +26,9 @@ namespace SnmpAbstraction
         /// <param name="oidTable">The OID lookup table for the device.</param>
         /// <param name="osVersion">The SW version of the device.</param>
         /// <param name="model">The device's model name. Shall be the same name as used for the device name during OID database lookups.</param>
+        /// <param name="options">The options to use.</param>
         /// <returns>The generated device handler.</returns>
-        protected IDeviceHandler GetHandlerViaReflection(string handlerClassName, ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidTable, SemanticVersion osVersion, string model)
+        protected IDeviceHandler GetHandlerViaReflection(string handlerClassName, ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidTable, SemanticVersion osVersion, string model, IQuerierOptions options)
         {
             var type = Type.GetType($"SnmpAbstraction.{handlerClassName}");
             if (type == null)
@@ -38,7 +39,7 @@ namespace SnmpAbstraction
             object myObject = null;
             try
             {
-                myObject = Activator.CreateInstance(type, lowerLayer, oidTable, osVersion, model);
+                myObject = Activator.CreateInstance(type, lowerLayer, oidTable, osVersion, model, options);
             }
             catch(Exception ex)
             {

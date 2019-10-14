@@ -57,7 +57,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The volatile data fetching interface details object.
         /// </summary>
-        private VolatileFetchingInterfaceDetails volatileFetchingInterfaceDetails;
+        private VolatileFetchingInterfaceDetails volatileFetchingInterfaceDetails = null;
 
         /// <summary>
         /// Initializes using the given lower layer.
@@ -160,6 +160,16 @@ namespace SnmpAbstraction
             }
 
             return new LinkDetails(fetchedDetails, this.Address, this.SystemData.DeviceModel);
+        }
+
+        /// <inheritdoc />
+        public IBgpPeers FetchBgpPeers(string remotePeerIp)
+        {
+            this.InitializeLowerQuerier();
+
+            // currently not caching BGP info at all -- it's pretty volatile
+            // not sure whether we'll implement caching at all one day.
+            return this.lowerQuerier.FetchBgpPeers(remotePeerIp);
         }
 
         /// <inheritdoc />
@@ -301,7 +311,9 @@ namespace SnmpAbstraction
                     this.options.Retries,
                     this.options.Ver2cMaximumValuesPerRequest,
                     this.options.Ver2cMaximumRequests,
-                    false));
+                    false,
+                    this.options.LoginUser,
+                    this.options.LoginPassword));
         }
 
         /// <summary>

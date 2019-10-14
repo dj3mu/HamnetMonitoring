@@ -24,6 +24,12 @@ namespace SnmpAbstractionTests
         public static IpAddress TestAddressAlix2 { get; } = new IpAddress("44.224.90.82"); // DB0WBD link HB9AM, MTik (but links to an Alix device)
 
         /// <summary>
+        /// The address of a MikroTik BGP routing device to use for the tests.
+        /// </summary>
+        /// <remarks>Obviously this might not forever remain an MTik device. Feel free to adjust if needed.</remarks>
+        public static IpAddress TestAddressMikrotikRouter1 { get; } = new IpAddress("44.224.10.78"); // DB0EBE power box, MTik
+
+        /// <summary>
         /// The address of a MikroTik device to use for the tests.
         /// </summary>
         /// <remarks>Obviously this might not forever remain an MTik device. Feel free to adjust if needed.</remarks>

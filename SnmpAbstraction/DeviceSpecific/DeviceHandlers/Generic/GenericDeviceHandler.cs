@@ -24,8 +24,9 @@ namespace SnmpAbstraction
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="osVersion">The SW version of the device.</param>
         /// <param name="model">The device's model name. Shall be the same name as used for the device name during OID database lookups.</param>
-        public GenericDeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion, string model)
-            : base(lowerLayer, oidLookup, osVersion, model)
+        /// <param name="options">The options to use.</param>
+        public GenericDeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion, string model, IQuerierOptions options)
+            : base(lowerLayer, oidLookup, osVersion, model, options)
         {
         }
 

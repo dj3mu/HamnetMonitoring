@@ -169,6 +169,37 @@ namespace SnmpAbstractionTests
         }
 
         /// <summary>
+        /// Test for querying of BGP peers of Mikrotik devices.
+        /// </summary>
+        [Test]
+        public void MtikQueryBgpPeersTest()
+        {
+            QueryAndPrintBgpPeers(TestConstants.TestAddressMikrotikRouter1, SnmpVersion.Ver2, false);
+        }
+
+        /// <summary>
+        /// Performs procedure for *QuerySystemData tests.
+        /// </summary>
+        /// <param name="address">The address to test with.</param>
+        /// <param name="snmpVersion">The SNMP protocol version to use.</param>
+        /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
+        private static void QueryAndPrintBgpPeers(IpAddress address, SnmpVersion snmpVersion, bool useCache = false)
+        {
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache));
+
+            Assert.NotNull(querier, "Create(...) returned null");
+
+            var bgpPeers = querier.FetchBgpPeers(null);
+
+            Assert.NotNull(bgpPeers, "querier.BgpPeers returned null");
+
+            bgpPeers.ForceEvaluateAll();
+
+            Console.WriteLine("Obtained BGP peers:");
+            Console.WriteLine(new BlockTextFormatter().Format(bgpPeers));
+        }
+
+        /// <summary>
         /// Performs procedure for *QuerySystemData tests.
         /// </summary>
         /// <param name="address1">The address of side #1 to test with.</param>
