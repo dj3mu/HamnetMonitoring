@@ -34,6 +34,22 @@ namespace HamnetDbAbstractionTests
         }
 
         /// <summary>
+        /// Test for querying of router hosts (implicitly testing the provider).
+        /// </summary>
+        [Test]
+        public void QueryRouterHostsTest()
+        {
+            var accessor = HamnetDbProvider.Instance.GetHamnetDb(TestConstants.ConnectionStringFilePath);
+            
+            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            var routerHosts = accessor.QueryBgpRouters();
+
+            Assert.NotNull(routerHosts, "The router hosts return data is null");
+            Assert.Greater(routerHosts.Count, 0, "No hosts returned at all");
+        }
+
+        /// <summary>
         /// Test for querying of monitored hosts (implicitly testing the provider).
         /// </summary>
         [Test]
@@ -41,7 +57,7 @@ namespace HamnetDbAbstractionTests
         {
             var accessor = HamnetDbProvider.Instance.GetHamnetDb(TestConstants.ConnectionStringFilePath);
             
-            Assert.NotNull(accessor, "The accessir returned by provider is null");
+            Assert.NotNull(accessor, "The accessor returned by provider is null");
 
             var monitoredHosts = accessor.QueryMonitoredHosts();
 
@@ -57,7 +73,7 @@ namespace HamnetDbAbstractionTests
         {
             var accessor = HamnetDbProvider.Instance.GetHamnetDb(TestConstants.ConnectionStringFilePath);
             
-            Assert.NotNull(accessor, "The accessir returned by provider is null");
+            Assert.NotNull(accessor, "The accessor returned by provider is null");
 
             var subnets = accessor.QuerySubnets();
 

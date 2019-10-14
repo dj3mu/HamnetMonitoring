@@ -81,6 +81,7 @@ namespace HamnetDbRest.Controllers
             this.AddConfiguration(reply, HamnetDbProvider.HamnetDbSectionName);
             this.AddConfiguration(reply, "CacheDatabase");
             this.AddConfiguration(reply, "DeviceDatabase");
+            this.AddConfiguration(reply, Program.MonitoringAccountsSectionKey, Program.BgpAccountSectionKey);
 
             var statusTableRow = this.dbContext.MonitoringStatus.First();
 
@@ -90,8 +91,10 @@ namespace HamnetDbRest.Controllers
                 { "TotalFailures", this.dbContext.RssiFailingQueries.Count().ToString() },
                 { "TimeoutFailures", this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
                 { "NonTimeoutFailures", this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
-                { "LastAquisitionStart", statusTableRow.LastQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
-                { "LastAquisitionEnd", statusTableRow.LastQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastRssiAquisitionStart", statusTableRow.LastRssiQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastRssiAquisitionEnd", statusTableRow.LastRssiQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastBgpAquisitionStart", statusTableRow.LastBgpQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastBgpAquisitionEnd", statusTableRow.LastBgpQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
                 { "LastMaintenanceStart", statusTableRow.LastMaintenanceStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
                 { "LastMaintenanceEnd", statusTableRow.LastMaintenanceEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
             };
@@ -105,6 +108,33 @@ namespace HamnetDbRest.Controllers
             reply.Add("DeviceDatabase", new DatabaseStatistic(devDbMaintenance.CacheStatistics()));
 
             return reply;
+        }
+
+        /// <summary>
+        /// Adds the given configuration section using given section key.
+        /// </summary>
+        /// <param name="reply">The reply to receive the section settings.</param>
+        /// <param name="sectionKey">The status output key to use for the section values.</param>
+        /// <param name="subSectionKey">The status output sub-section key to use for the sub-section values.</param>
+        private void AddConfiguration(ServerStatusReply reply, string sectionKey, string subSectionKey)
+        {
+            ConfigurationInfo configuration = new ConfigurationInfo();
+            foreach (var item in this.configuration.GetSection(sectionKey).GetSection(subSectionKey).GetChildren())
+            {
+                string valueToAdd = item.Value;
+                if (CompletlyHideKeyRegex.IsMatch(item.Key))
+                {
+                    valueToAdd = PasswordReplacementString;
+                }
+                else if (item.Key.Contains("connection", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    valueToAdd = PasswordReplaceRegex.Replace(valueToAdd, $"$1{PasswordReplacementString};");
+                }
+
+                configuration.Add(item.Key, valueToAdd);
+            }
+
+            reply.Add($"{sectionKey}.{subSectionKey}", configuration);
         }
 
         /// <summary>

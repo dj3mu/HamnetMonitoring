@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 namespace RestService.DataFetchingService
 {
     /// <summary>
-    /// Class for polling the data from HamnetDB.
+    /// Helper class for polling the data from HamnetDB.
     /// </summary>
     internal class HamnetDbPoller
     {
@@ -23,6 +23,38 @@ namespace RestService.DataFetchingService
         public HamnetDbPoller(IConfiguration configuration)
         {
             this.configuration = configuration;
+        }
+
+        /// <summary>
+        /// Retrieves the list of hosts/IPs which are considered to be BGP routers from HamnetDB.
+        /// </summary>
+        /// <returns>The list of hosts/IPs which are considered to be BGP routers from HamnetDB.</returns>
+        public List<IHamnetDbHost> FetchBgpRoutersFromHamnetDb()
+        {
+            log.Debug($"Getting BGP routers from HamnetDB. Please stand by ...");
+
+            var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
+            var aquisitionConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+
+            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
+            {
+                var routers = accessor.QueryBgpRouters();
+
+                log.Debug($"... found {routers.Count} routers");
+
+                int maximumHostCount = aquisitionConfig.GetValue<int>("MaximumHostCount");
+                if (maximumHostCount == 0)
+                {
+                    // config returns 0 if not defined --> turn it to the reasonable "maximum" value
+                    maximumHostCount = int.MaxValue;
+                }
+
+                int startOffset = aquisitionConfig.GetValue<int>("HostStartOffset"); // will implicitly return 0 if not defined
+
+                var hostsSlicedForOptions = routers.Skip(startOffset).Take(maximumHostCount).ToList();
+
+                return hostsSlicedForOptions;
+            }
         }
 
         /// <summary>

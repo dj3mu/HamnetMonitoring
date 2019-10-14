@@ -92,7 +92,7 @@ namespace RestService.DataFetchingService
                 this.timerReAdjustmentNeeded = true;
             }
 
-            this.logger.LogInformation($"STARTING: Next maintenance run after restart in {timeToFirstMaintenance}: Last maintenance started {status.LastQueryStart}, configured interval {this.maintenanceInterval}");
+            this.logger.LogInformation($"STARTING: Next maintenance run after restart in {timeToFirstMaintenance}: Last maintenance started {status.LastRssiQueryStart}, configured interval {this.maintenanceInterval}");
 
             this.timer = new Timer(DoMaintenance, null, timeToFirstMaintenance, this.maintenanceInterval);
 
@@ -210,7 +210,7 @@ namespace RestService.DataFetchingService
                 transaction.Commit();
             }
 
-            this.RemovedOutdatedResults(configurationSection);
+            this.RemoveOutdatedResults(configurationSection);
 
             var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
             cacheMaintenance.RemoveFromCacheIfModificationOlderThan(configurationSection.GetValue<TimeSpan>("CacheInvalidAfter"));
@@ -252,7 +252,7 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Removes results (in result database) for which we didn't see an update for a configured amount of time.
         /// </summary>
-        private void RemovedOutdatedResults(IConfigurationSection configuration)
+        private void RemoveOutdatedResults(IConfigurationSection configuration)
         {
             TimeSpan resultsOutdatedAfter = configuration.GetValue<TimeSpan>("ResultsOutdatedAfter");
 
@@ -260,7 +260,6 @@ namespace RestService.DataFetchingService
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var outdatedRssis = this.resultDatabaseContext.RssiValues.Where(r => (currentUnixTimeStamp - r.UnixTimeStamp) > resultsOutdatedAfter.TotalSeconds);
-
                 foreach (var item in outdatedRssis)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI entry for host {item.ForeignId} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
@@ -269,9 +268,16 @@ namespace RestService.DataFetchingService
                 var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
                 cacheMaintenance.DeleteForAddress(outdatedRssis.Select(e => IPAddress.Parse(e.ForeignId)));
 
+                var outdatedBgpPeers = this.resultDatabaseContext.BgpPeers.Where(r => (currentUnixTimeStamp - r.UnixTimeStamp) > resultsOutdatedAfter.TotalSeconds);
+                foreach (var item in outdatedBgpPeers)
+                {
+                    this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP peer entry from host {item.LocalAddress} to {item.RemoteAddress} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
+                }
+
                 if (!this.dryRunMode)
                 {
                     this.resultDatabaseContext.RemoveRange(outdatedRssis);
+                    this.resultDatabaseContext.RemoveRange(outdatedBgpPeers);
 
                     this.resultDatabaseContext.SaveChanges();
                     transaction.Commit();

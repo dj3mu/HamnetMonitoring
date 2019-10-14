@@ -84,7 +84,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            IConfigurationSection aquisisionServiceSection = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+            IConfigurationSection aquisisionServiceSection = this.configuration.GetSection(Program.BgpAquisitionServiceSectionKey);
 
             // configure thread pool for number of parallel queries
             this.maxParallelQueries = aquisisionServiceSection.GetValue<int>("MaximumParallelQueries");
@@ -100,25 +100,18 @@ namespace RestService.DataFetchingService
 
             this.refreshInterval = TimeSpan.Parse(aquisisionServiceSection.GetValue<string>("RefreshInterval"));
 
-            var snmpVersion = aquisisionServiceSection.GetValue<int>("SnmpVersion");
-            if (snmpVersion != 0)
+            var monitoringAccountsSection = this.configuration.GetSection(Program.MonitoringAccountsSectionKey).GetSection(Program.BgpAccountSectionKey);
+
+            var loginUserName = monitoringAccountsSection.GetValue<string>("User");
+            if (!string.IsNullOrWhiteSpace(loginUserName))
             {
-                // 0 is the default value set by config framework and doesn't make any sense here - so we can use it to identify a missing config
-                this.snmpQuerierOptions = this.snmpQuerierOptions.WithProtocolVersion(snmpVersion.ToSnmpVersion());
+                this.snmpQuerierOptions = this.snmpQuerierOptions.WithUser(loginUserName);
             }
 
-            var snmpTimeoutConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey).GetValue<int>("SnmpTimeoutSeconds");
-            if (snmpTimeoutConfig != 0)
+            var loginPassword = monitoringAccountsSection.GetValue<string>("Password");
+            if (!string.IsNullOrWhiteSpace(loginPassword))
             {
-                // 0 is the default value set by config framework and doesn't make any sense here - so we can use it to identify a missing config
-                this.snmpQuerierOptions = this.snmpQuerierOptions.WithTimeout(TimeSpan.FromSeconds(snmpTimeoutConfig));
-            }
-
-            var snmpRetriesConfig = aquisisionServiceSection.GetValue<int>("SnmpRetries");
-            if (snmpRetriesConfig != 0)
-            {
-                // 0 is the default value set by config framework and doesn't make any sense here - so we can use it to identify a missing config
-                this.snmpQuerierOptions = this.snmpQuerierOptions.WithRetries(snmpRetriesConfig);
+                this.snmpQuerierOptions = this.snmpQuerierOptions.WithPassword(loginPassword);
             }
 
             this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(aquisisionServiceSection.GetValue<bool>("UseQueryCaching"));
@@ -130,16 +123,16 @@ namespace RestService.DataFetchingService
             }
 
             // by default waiting a couple of secs before first Hamnet scan
-            TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(11);
+            TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(17);
 
             this.NewDatabaseContext();
 
             var status = this.resultDatabaseContext.Status;
             var nowItIs = DateTime.UtcNow;
-            var timeSinceLastAquisitionStart = (nowItIs - status.LastQueryStart);
-            if (status.LastQueryStart > status.LastQueryEnd)
+            var timeSinceLastAquisitionStart = (nowItIs - status.LastBgpQueryStart);
+            if (status.LastRssiQueryStart > status.LastBgpQueryEnd)
             {
-                this.logger.LogInformation($"STARTING first aquisition immediately: Last aquisition started {status.LastQueryStart} seems not to have ended successfully (last end time {status.LastQueryEnd})");
+                this.logger.LogInformation($"STARTING first BGP aquisition immediately: Last aquisition started {status.LastBgpQueryStart} seems not to have ended successfully (last end time {status.LastBgpQueryEnd})");
             }
             else if (timeSinceLastAquisitionStart < this.refreshInterval)
             {
@@ -148,7 +141,7 @@ namespace RestService.DataFetchingService
                 this.timerReAdjustmentNeeded = true;
             }
 
-            this.logger.LogInformation($"STARTING first aquisition after restart in {timeToFirstAquisition}: Last aquisition started {status.LastQueryStart}, configured interval {this.refreshInterval}");
+            this.logger.LogInformation($"STARTING first BGP aquisition after restart in {timeToFirstAquisition}: Last aquisition started {status.LastBgpQueryStart}, configured interval {this.refreshInterval}");
 
             this.timer = new Timer(DoFetchData, null, timeToFirstAquisition, this.refreshInterval);
 
@@ -158,7 +151,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("Timed data fetching service is stopping.");
+            this.logger.LogInformation("Timed BGP data fetching service is stopping.");
 
             this.timer?.Change(Timeout.Infinite, 0);
 
@@ -246,7 +239,7 @@ namespace RestService.DataFetchingService
             }
             else
             {
-                this.logger.LogError("SKIPPING data aquisition: Previous aquisition still ongoing. Please adjust interval.");
+                this.logger.LogError("SKIPPING BGP data aquisition: Previous aquisition still ongoing. Please adjust interval.");
             }
         }
 
@@ -262,49 +255,56 @@ namespace RestService.DataFetchingService
             {
                 var status = resultDatabaseContext.Status;
                 var nowItIs = DateTime.UtcNow;
-                var sinceLastScan = nowItIs - status.LastQueryStart;
-                if ((sinceLastScan < this.refreshInterval - Hysteresis) && (status.LastQueryStart <= status.LastQueryEnd))
+                var sinceLastScan = nowItIs - status.LastBgpQueryStart;
+                if ((sinceLastScan < this.refreshInterval - Hysteresis) && (status.LastBgpQueryStart <= status.LastBgpQueryEnd))
                 {
-                    this.logger.LogInformation($"SKIPPING: Aquisition not yet due: Last aquisition started {status.LastQueryStart} ({sinceLastScan} ago, hysteresis {Hysteresis}), configured interval {this.refreshInterval}");
+                    this.logger.LogInformation($"SKIPPING: BGP aquisition not yet due: Last aquisition started {status.LastBgpQueryStart} ({sinceLastScan} ago, hysteresis {Hysteresis}), configured interval {this.refreshInterval}");
                     return;
                 }
         
-                this.logger.LogInformation($"STARTING: Retrieving monitoring data as configured in HamnetDB - last run: Started {status.LastQueryStart} ({sinceLastScan} ago)");
+                this.logger.LogInformation($"STARTING: Retrieving BGP monitoring data as configured in HamnetDB - last run: Started {status.LastBgpQueryStart} ({sinceLastScan} ago)");
 
-                status.LastQueryStart = DateTime.UtcNow;
+                status.LastRssiQueryStart = DateTime.UtcNow;
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
             }
 
             HamnetDbPoller hamnetDbPoller = new HamnetDbPoller(this.configuration);
-            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration = hamnetDbPoller.FetchSubnetsWithHostsFromHamnetDb();
+            List<IHamnetDbHost> hostsSlicedAccordingToConfiguration = hamnetDbPoller.FetchBgpRoutersFromHamnetDb();
 
-            this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
+            this.logger.LogDebug($"SNMP querying {hostsSlicedAccordingToConfiguration.Count} entries");
 
             this.SendPrepareToDataHandlers();
 
             NetworkExcludeFile excludes = new NetworkExcludeFile(hamnetDbConfig);
             var excludeNets = excludes?.ParsedNetworks?.ToList();
 
-            this.logger.LogDebug($"Launching {this.maxParallelQueries} parallel aquisition threads");
+            this.logger.LogDebug($"Launching {this.maxParallelQueries} parallel BGP aquisition threads");
 
-            Parallel.ForEach(pairsSlicedAccordingToConfiguration, new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
-            pair =>
+            Parallel.ForEach(hostsSlicedAccordingToConfiguration
+                // the following where is just a hack until HamnetDB has a flag clearly identifying routers that shall be queried for BGP
+                // and have opened their API port to "monitoring" user.
+                .Where(hsatc => hsatc.Callsign.ToUpperInvariant().Equals("DB0EBE")
+                    || hsatc.Callsign.ToUpperInvariant().Equals("DB0ZM")
+                    || hsatc.Callsign.ToUpperInvariant().Equals("DB0AAT")
+                    || hsatc.Callsign.ToUpperInvariant().Equals("DB0ON"))
+                , new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
+            host =>
             {
-                if ((excludeNets != null) && (excludeNets.Any(exclude => exclude.Equals(pair.Key.Subnet) || exclude.Contains(pair.Key.Subnet))))
+                if ((excludeNets != null) && (excludeNets.Any(exclude => exclude.Contains(host.Address))))
                 {
-                    this.logger.LogInformation($"Skipping subnet {pair.Key.Subnet} due to exclude list");
+                    this.logger.LogInformation($"Skipping subnet {host.Address} due to exclude list");
                     return;
                 }
 
                 try
                 {
-                    this.QueryLinkOfSingleSubnet(pair);
+                    this.QueryPeersForSingleHost(host);
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError($"Exception caught and ignored in parallel data aquisition thread: {ex.ToString()}");
+                    this.logger.LogError($"Exception caught and ignored in BGP parallel data aquisition thread: {ex.ToString()}");
                 }
             });
 
@@ -315,9 +315,9 @@ namespace RestService.DataFetchingService
             {
                 var status = resultDatabaseContext.Status;
 
-                status.LastQueryEnd = DateTime.UtcNow;
+                status.LastBgpQueryEnd = DateTime.UtcNow;
 
-                this.logger.LogInformation($"COMPLETED: Retrieving monitoring data as configured in HamnetDB at {status.LastQueryEnd}, duration {status.LastQueryEnd - status.LastQueryStart}");
+                this.logger.LogInformation($"COMPLETED: Retrieving BGP monitoring data as configured in HamnetDB at {status.LastBgpQueryEnd}, duration {status.LastBgpQueryEnd - status.LastBgpQueryStart}");
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
@@ -347,50 +347,47 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
-        /// Queries the link for a single subnet.
+        /// Queries the BGP peers of a single host.
         /// </summary>
-        /// <param name="pair">The pair of hosts inside the subnet to query.</param>
-        private void QueryLinkOfSingleSubnet(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
+        /// <param name="host">The host to query BGP peers from.</param>
+        private void QueryPeersForSingleHost(IHamnetDbHost host)
         {
-            IPAddress address1 = pair.Value.First().Address;
-            IPAddress address2 = pair.Value.Last().Address;
-
-            this.logger.LogInformation($"Querying link details for pair {address1} <-> {address2} of subnet {pair.Key.Subnet}");
+            this.logger.LogInformation($"Querying BGP peers for host {host.Address} ({host.Name})");
 
             Exception hitException = null;
             try
             {
-                using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.snmpQuerierOptions))
+                using(var querier = SnmpQuerierFactory.Instance.Create(host.Address, this.snmpQuerierOptions))
                 {
                     // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
                     //       Else the lazy-loading containers might fail to lazy-query the required values.
 
-                    var linkDetails = querier.FetchLinkDetails(address2.ToString());
+                    var bgpPeers = querier.FetchBgpPeers(null);
 
-                    var storeOnlyDetailsClone = new LinkDetailsStoreOnlyContainer(linkDetails);
+                    var storeOnlyDetailsClone = new BgpPeersStoreOnlyContainer(bgpPeers);
 
-                    this.SendResultsToDataHandlers(pair, storeOnlyDetailsClone, DateTime.UtcNow);
+                    this.SendResultsToDataHandlers(host, storeOnlyDetailsClone, DateTime.UtcNow);
                 }
             }
             catch (HamnetSnmpException ex)
             {
-                this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): Error: {ex.Message}");
+                this.logger.LogWarning($"Cannot get BGP peers for host {host.Address} ({host.Name}): Error: {ex.Message}");
                 hitException = ex;
             }
             catch (SnmpException ex)
             {
-                this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): SNMP Error: {ex.Message}");
+                this.logger.LogWarning($"Cannot get BGP peers for host {host.Address} ({host.Name}): SNMP Error: {ex.Message}");
                 hitException = ex;
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning($"Cannot get link details for pair {address1} <-> {address2} (subnet {pair.Key.Subnet}): General exception: {ex.Message}");
+                this.logger.LogWarning($"Cannot get BGP peers for host {host.Address} ({host.Name}): General exception: {ex.Message}");
                 hitException = ex;
             }
 
             if (hitException != null)
             {
-                this.SendFailToDataHandlers(hitException, pair);
+                this.SendFailToDataHandlers(hitException, host);
             }
         }
 
@@ -431,15 +428,15 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
-        /// Calls the <see cref="IAquiredDataHandler.RecordFailingQueryAsync" /> for all configured handlers.
+        /// Calls the <see cref="IAquiredDataHandler.RecordFailingRssiQueryAsync" /> for all configured handlers.
         /// </summary>
-        private void SendFailToDataHandlers(Exception hitException, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
+        private void SendFailToDataHandlers(Exception hitException, IHamnetDbHost host)
         {
             foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
                 try
                 {
-                    handler.RecordFailingQuery(hitException, pair);
+                    handler.RecordFailingBgpQuery(hitException, host);
                 }
                 catch(Exception ex)
                 {
@@ -449,15 +446,15 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
-        /// Calls the <see cref="IAquiredDataHandler.RecordDetailsInDatabaseAsync" /> for all configured handlers.
+        /// Calls the IAquiredDataHandler.RecordDetailsInDatabaseAsync for all configured handlers.
         /// </summary>
-        private void SendResultsToDataHandlers(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair, ILinkDetails linkDetails, DateTime queryTime)
+        private void SendResultsToDataHandlers(IHamnetDbHost host, IBgpPeers peers, DateTime queryTime)
         {
             foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
                 try
                 {
-                    handler.RecordDetailsInDatabaseAsync(pair, linkDetails, queryTime);
+                    handler.RecordDetailsInDatabaseAsync(host, peers, queryTime);
                 }
                 catch(Exception ex)
                 {

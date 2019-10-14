@@ -19,9 +19,9 @@ namespace HamnetDbRest.Controllers
     internal interface IBgpPeerResult
     {
         /// <summary>
-        /// Gets the IP address of the local (i.e. the queried side) of the BGP peering.
+        /// Gets the IP address of the remote (i.e. the other side) of the BGP peering.
         /// </summary>
-        string LocalAddress { get; }
+        string RemoteAddress { get; }
 
         /// <summary>
         /// Gets the name of the peering as assigned by Sysop.
@@ -29,9 +29,9 @@ namespace HamnetDbRest.Controllers
         string PeeringName { get; }
 
         /// <summary>
-        /// Gets the IP address of the remote (i.e. the other side) of the BGP peering.
+        /// Gets the IP address of the local (i.e. the queried side) of the BGP peering.
         /// </summary>
-        string RemoteAddress { get; }
+        string LocalAddress { get; }
 
         /// <summary>
         /// Gets the uptime of the BGP peering.

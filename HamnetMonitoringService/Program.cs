@@ -28,6 +28,16 @@ namespace HamnetDbRest
         public static readonly string BgpAquisitionServiceSectionKey = "BgpAquisitionService";
 
         /// <summary>
+        /// The key for the monitoring accounts section.
+        /// </summary>
+        public static readonly string MonitoringAccountsSectionKey = "MonitoringAccounts";
+
+        /// <summary>
+        /// Key for the BGP-related query account data.
+        /// </summary>
+        public static readonly string BgpAccountSectionKey = "Bgp";
+
+        /// <summary>
         /// The section key for the Influx database configuration.
         /// </summary>
         public static readonly string InfluxSectionKey = "Influx";

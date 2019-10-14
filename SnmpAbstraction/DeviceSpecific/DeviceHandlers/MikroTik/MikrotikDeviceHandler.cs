@@ -47,7 +47,7 @@ namespace SnmpAbstraction
 
                 if (!this.tikConnectionBacking.IsOpened)
                 {
-                    this.tikConnectionBacking.Open(this.Address.ToString(), this.Options.LoginUser, this.Options.LoginPassword);
+                    this.tikConnectionBacking.Open(this.Address.ToString(), this.Options.LoginUser ?? string.Empty, this.Options.LoginPassword ?? string.Empty);
                 }
 
                 return this.tikConnectionBacking;

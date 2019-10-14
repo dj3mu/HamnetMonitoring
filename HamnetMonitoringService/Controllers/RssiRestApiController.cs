@@ -35,7 +35,7 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET request.
         /// </summary>
         /// <returns>The results of the get request.</returns>
-        [HttpGet("{host?}")]
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<Rssi>>> GetRssi(string host)
         {
             return await this.dbContext.RssiValues.ToListAsync();

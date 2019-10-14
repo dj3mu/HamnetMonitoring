@@ -76,7 +76,7 @@ namespace RestService.DataFetchingService
         }
 
         /// <inheritdoc />
-        public void RecordDetailsInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
+        public void RecordRssiDetailsInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
             lock(this.recordingLock)
             {
@@ -125,13 +125,13 @@ namespace RestService.DataFetchingService
         }
 
         /// <inheritdoc />
-        public Task RecordDetailsInDatabaseAsync(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
+        public Task RecordRssiDetailsInDatabaseAsync(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
             return Task.Run(() =>
             {
                 try
                 {
-                    this.RecordDetailsInDatabase(inputData, linkDetails, queryTime);
+                    this.RecordRssiDetailsInDatabase(inputData, linkDetails, queryTime);
                 }
                 catch(Exception ex)
                 {
@@ -142,12 +142,39 @@ namespace RestService.DataFetchingService
         }
 
         /// <inheritdoc />
-        public void RecordFailingQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
+        public void RecordFailingRssiQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
         {
             // NOP here - as of now, no failing queries recorded in InfluxDB
         }
 
-        public Task RecordFailingQueryAsync(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
+        /// <inheritdoc />
+        public Task RecordFailingRssiQueryAsync(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
+        {
+            // NOP here - as of now, no failing queries recorded in InfluxDB
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc />
+        public void RecordFailingBgpQuery(Exception exception, IHamnetDbHost host)
+        {
+            // NOP here - as of now, no failing queries recorded in InfluxDB
+        }
+
+        /// <inheritdoc />
+        public Task RecordFailingBgpQueryAsync(Exception exception, IHamnetDbHost host)
+        {
+            // NOP here - as of now, no failing queries recorded in InfluxDB
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc />
+        public void RecordDetailsInDatabase(IHamnetDbHost host, IBgpPeers peers, DateTime queryTime)
+        {
+            // NOP here - as of now, no failing queries recorded in InfluxDB
+        }
+
+        /// <inheritdoc />
+        public Task RecordDetailsInDatabaseAsync(IHamnetDbHost host, IBgpPeers peers, DateTime queryTime)
         {
             // NOP here - as of now, no failing queries recorded in InfluxDB
             return Task.CompletedTask;

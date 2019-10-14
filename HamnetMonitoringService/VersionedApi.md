@@ -61,7 +61,7 @@ Please note that for point-to-multipoint links the same host is supposed to hold
  ]
 ```
 
-#### List of value query failurs
+#### List of RSSI query failures
 URI path: `/api/v1/rssi/failing[/timeout|nontimeout]`
 
 The last fragment `timeout` or `nontimeout` performs filtering for only such errors appearing due or not due to commuication timeouts. If omitted, all errors will be reported without filtering.
@@ -246,6 +246,42 @@ A response could look like:
     "errorDetails": []
 }
 ```
+
+### BGP all monitored (according to HamnetDB) query
+URI path: `/api/v1/bgp/monitoredRouters`.
+
+Returns the BGP peers for all monitored routers. That is routers which have the "monitor BGP peers" flag set.  
+
+```json
+{
+    "bgpPeers": [
+        {
+            "remoteAddress": "44.224.10.73",
+            "peeringName": "DB0ZM",
+            "localAddress": "44.224.10.78",
+            "uptime": "62.19:30:34",
+            "prefixCount": 2139,
+            "peeringState": "established"
+        },
+        {
+            "remoteAddress": "44.224.10.222",
+            "peeringName": "DB0ON",
+            "localAddress": "44.224.10.217",
+            "uptime": "55.01:25:21",
+            "prefixCount": 162,
+            "peeringState": "established"
+        }
+    ],
+    "errorDetails": []
+}
+```
+
+#### List of BGP query failures
+URI path: `/api/v1/bgp/monitoredRouters/failing[/timeout|nontimeout]`
+
+The last fragment `timeout` or `nontimeout` performs filtering for only such errors appearing due or not due to commuication timeouts. If omitted, all errors will be reported without filtering.
+
+**Note:** With the current implementation, the error list will be completely deleted when a new query process starts. So when querying the failurs the list might be empty even though failurs will soon come up again. Actually this call is not meant for machine processing but mainly for human debugging.
 
 
 ### Cache Info

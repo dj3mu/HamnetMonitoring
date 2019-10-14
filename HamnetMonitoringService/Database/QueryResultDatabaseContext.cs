@@ -25,9 +25,19 @@ namespace RestService.Database
         public DbSet<Rssi> RssiValues { get; set; }
 
         /// <summary>
+        /// Gets access to the RSSI values table.
+        /// </summary>
+        public DbSet<BgpPeerData> BgpPeers { get; set; }
+
+        /// <summary>
         /// Gets access to the RSSI failing queries table.
         /// </summary>
         public DbSet<RssiFailingQuery> RssiFailingQueries { get; set; }
+
+        /// <summary>
+        /// Gets access to the BGP failing queries table.
+        /// </summary>
+        public DbSet<BgpFailingQuery> BgpFailingQueries { get; set; }
 
         /// <summary>
         /// Gets access to the monitoring service persistence data.
@@ -48,8 +58,8 @@ namespace RestService.Database
                     {
                         LastMaintenanceEnd = DateTime.MinValue,
                         LastMaintenanceStart = DateTime.MinValue,
-                        LastQueryEnd = DateTime.MinValue,
-                        LastQueryStart = DateTime.MinValue
+                        LastRssiQueryEnd = DateTime.MinValue,
+                        LastRssiQueryStart = DateTime.MinValue
                     };
                     
                     this.MonitoringStatus.Add(status);
@@ -144,6 +154,9 @@ namespace RestService.Database
             modelBuilder.Entity<MonitoringPerstistence>()
                 .Property(p => p.Id)
                 .ValueGeneratedOnAdd();
+
+            modelBuilder.Entity<BgpPeerData>()
+                .HasIndex(p => new { p.RemoteAddress, p.LocalAddress }).IsUnique();
         }
     }
 }

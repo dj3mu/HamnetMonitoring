@@ -74,28 +74,19 @@ namespace HamnetDbAbstraction
         }
 
         /// <inheritdoc />
+        public IHamnetDbHosts QueryBgpRouters()
+        {
+            var connection = this.GetConnection();
+            List<IHamnetDbHost> hosts = this.ReadHostsForSqlCommand("SELECT ip,site,name,typ FROM hamnet_host WHERE name LIKE '%router%'");
+
+            return new HamnetDbHosts(hosts);
+        }
+
+        /// <inheritdoc />
         public IHamnetDbHosts QueryMonitoredHosts()
         {
             var connection = this.GetConnection();
-            List<IHamnetDbHost> hosts = new List<IHamnetDbHost>();
-            using(MySqlCommand cmd = new MySqlCommand("SELECT ip,site FROM hamnet_host where monitor=1", this.connection))
-            {
-                using (MySqlDataReader reader = cmd.ExecuteReader())  
-                {  
-                    while (reader.Read())  
-                    {  
-                        var addressString = reader.GetString("ip");
-                        IPAddress address;
-                        if (!IPAddress.TryParse(addressString, out address))
-                        {
-                            log.Error($"Cannot convert retrieved string '{addressString}' to a valid IP address. This entry will be skipped.");
-                            continue;
-                        }
-
-                        hosts.Add(new HamnetDbHost(address, reader.GetString("site")));
-                    }  
-                }
-            }
+            List<IHamnetDbHost> hosts = this.ReadHostsForSqlCommand("SELECT ip,site,name,typ FROM hamnet_host WHERE monitor=1");
 
             return new HamnetDbHosts(hosts);
         }
@@ -169,5 +160,31 @@ namespace HamnetDbAbstraction
                 this.disposedValue = true;
             }
         }
-    }
+ 
+        private List<IHamnetDbHost> ReadHostsForSqlCommand(string hostSelectCommand)
+        {
+            List<IHamnetDbHost> hosts = new List<IHamnetDbHost>();
+
+            using (MySqlCommand cmd = new MySqlCommand(hostSelectCommand, this.connection))
+            {
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var addressString = reader.GetString("ip");
+                        IPAddress address;
+                        if (!IPAddress.TryParse(addressString, out address))
+                        {
+                            log.Error($"Cannot convert retrieved string '{addressString}' to a valid IP address. This entry will be skipped.");
+                            continue;
+                        }
+
+                        hosts.Add(new HamnetDbHost(address, reader.GetString("site"), reader.GetString("name"), reader.GetString("typ")));
+                    }
+                }
+            }
+
+            return hosts;
+        }
+   }
 }

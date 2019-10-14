@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
 
-namespace RestService.Database
+namespace RestService.Model
 {
     /// <summary>
     /// Database table to preserve persistency data.
@@ -17,16 +17,28 @@ namespace RestService.Database
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets the start time of the last monitoring query.
+        /// Gets the start time of the last RSSI monitoring query.
         /// </summary>
         [JsonProperty(PropertyName = "LastQueryStart")]
-        public DateTime LastQueryStart { get; set; }
+        public DateTime LastRssiQueryStart { get; set; }
 
         /// <summary>
-        /// Gets the end time of the last monitoring query.
+        /// Gets the end time of the last RSSI monitoring query.
         /// </summary>   
         [JsonProperty(PropertyName = "LastQueryEnd")]
-        public DateTime LastQueryEnd { get; set; }
+        public DateTime LastRssiQueryEnd { get; set; }
+
+        /// <summary>
+        /// Gets the start time of the last BGP monitoring query.
+        /// </summary>
+        [JsonProperty(PropertyName = "LastBgpQueryStart")]
+        public DateTime LastBgpQueryStart { get; set; }
+
+        /// <summary>
+        /// Gets the end time of the last BGP monitoring query.
+        /// </summary>   
+        [JsonProperty(PropertyName = "LastBgpQueryEnd")]
+        public DateTime LastBgpQueryEnd { get; set; }
 
         /// <summary>
         /// Gets the start time of the last database maintenance run.

@@ -105,13 +105,13 @@ namespace HamnetDbRest.Controllers
             }
 
             /// <inheritdoc />
-            public string LocalAddress { get; }
+            public string RemoteAddress { get; }
 
             /// <inheritdoc />
             public string PeeringName { get; }
 
             /// <inheritdoc />
-            public string RemoteAddress { get; }
+            public string LocalAddress { get; }
 
             /// <inheritdoc />
             public string Uptime { get; }
