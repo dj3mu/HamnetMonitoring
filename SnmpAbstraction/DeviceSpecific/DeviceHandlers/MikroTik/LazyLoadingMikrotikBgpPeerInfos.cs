@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SnmpSharpNet;
 using tik4net;
 using tik4net.Objects;
 using tik4net.Objects.Routing.Bgp;
@@ -12,10 +13,8 @@ namespace SnmpAbstraction
     /// <summary>
     /// Container for a lazy-loading (on first request) list of BGP peer infos.
     /// </summary>
-    internal class LazyLoadingMikrotikBgpPeerInfos : LazyHamnetSnmpQuerierResultBase, IBgpPeers
+    internal class LazyLoadingMikrotikBgpPeerInfos : LazyMtikApiQuerierResultBase, IBgpPeers
     {
-        private IDeviceSpecificOidLookup oidLookup;
-
         private IReadOnlyList<IBgpPeer> detailsBacking = null;
 
         private TimeSpan queryDurationBacking = TimeSpan.Zero;
@@ -23,15 +22,12 @@ namespace SnmpAbstraction
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
         /// </summary>
-        /// <param name="lowerLayer">The communication layer to use for talking to the device.</param>
-        /// <param name="oidLookup">The OID lookup table for the device.</param>
+        /// <param name="address">The address of the device that we're querying.</param>
         /// <param name="tikConnection">The tik4Net connection to use for talking to the device.</param>
         /// <param name="remotePeerIp">The remote peer to get details for. If null or empty, fetching all peer's info.</param>
-        public LazyLoadingMikrotikBgpPeerInfos(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, ITikConnection tikConnection, string remotePeerIp)
-            : base(lowerLayer)
+        public LazyLoadingMikrotikBgpPeerInfos(IpAddress address, ITikConnection tikConnection, string remotePeerIp)
+            : base(address, tikConnection)
         {
-            this.oidLookup = oidLookup ?? throw new ArgumentNullException(nameof(oidLookup), "The OID lookup structure is null when constructing LazyLoadingMikrotikBgpPeerInfos");
-            this.TikConnection = tikConnection ?? throw new ArgumentNullException(nameof(tikConnection), "This tik4Net connection is null when constructing LazyLoadingMikrotikBgpPeerInfos");
             this.RemotePeerIp = remotePeerIp;
         }
 
@@ -46,13 +42,8 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        /// public override TimeSpan QueryDuration => this.queryDurationBacking;
+        public override TimeSpan QueryDuration => this.queryDurationBacking;
 
-        /// <summary>
-        /// Gets the connection to the MikroTik API
-        /// </summary>
-        protected ITikConnection TikConnection { get; }
-        
         /// <summary>
         /// Gets the remote peer IP to get the BGP info for.
         /// </summary>
@@ -108,7 +99,7 @@ namespace SnmpAbstraction
 
             this.queryDurationBacking = stopper.Elapsed;
 
-            this.detailsBacking = peers.Select(p => new LazyLoadingMikrotikBgpPeerInfo(this.LowerSnmpLayer, this.TikConnection, p)).ToList();
+            this.detailsBacking = peers.Select(p => new LazyLoadingMikrotikBgpPeerInfo(this.DeviceAddress, this.TikConnection, p)).ToList();
         }
     }
 }

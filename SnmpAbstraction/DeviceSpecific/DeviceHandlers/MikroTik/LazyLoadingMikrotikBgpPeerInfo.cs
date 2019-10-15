@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using SnmpSharpNet;
 using tik4net;
 using tik4net.Objects.Routing.Bgp;
 
@@ -12,7 +13,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Lazy-loading Container for the data of a single BGP peer.
     /// </summary>
-    internal class LazyLoadingMikrotikBgpPeerInfo : LazyHamnetSnmpQuerierResultBase, IBgpPeer
+    internal class LazyLoadingMikrotikBgpPeerInfo : LazyMtikApiQuerierResultBase, IBgpPeer
     {
         /// <summary>
         /// Regex to parse a Mikrotik timespan string (e.g. &quot;8w6d8h51m16s&quot;).
@@ -28,17 +29,12 @@ namespace SnmpAbstraction
         /// Construct for a given peer. We can right-away extract the values. What is lazy here is that for some properties (e.g. Uptime)
         /// we trigger a re-query.
         /// </summary>
-        /// <param name="lowerLayer">The communication layer to use for talking to the device.</param>
+        /// <param name="address">The address of the device that we're querying.</param>
         /// <param name="tikConnection">The tik4Net connection to use for talking to the device.</param>
         /// <param name="bgpPeer">The BGP peer to construct for.</param>
-        public LazyLoadingMikrotikBgpPeerInfo(ISnmpLowerLayer lowerLayer, ITikConnection tikConnection, BgpPeer bgpPeer)
-            : base(lowerLayer)
+        public LazyLoadingMikrotikBgpPeerInfo(IpAddress address, ITikConnection tikConnection, BgpPeer bgpPeer)
+            : base(address, tikConnection)
         {
-            if (tikConnection is null)
-            {
-                throw new ArgumentNullException(nameof(tikConnection), "tikConnection is null when constructing a LazyLoadingMikrotikBgpPeerInfo");
-            }
-
             if (bgpPeer is null)
             {
                 throw new ArgumentNullException(nameof(bgpPeer), "bgpPeer is null when constructing a LazyLoadingMikrotikBgpPeerInfo");

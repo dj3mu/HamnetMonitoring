@@ -45,5 +45,8 @@ namespace HamnetDbRest.Controllers
 
         /// <inheritdoc />
         public string LoginPassword { get; set; } = null;
+
+        /// <inheritdoc />
+        public QueryApis AllowedApis { get; set; } = QueryApis.Snmp;
     }
 }

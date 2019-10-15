@@ -13,10 +13,16 @@ namespace SnmpAbstraction
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <inheritdoc />
+        public abstract QueryApis SupportedApi { get; }
+
+        /// <inheritdoc />
         public abstract IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options);
 
         /// <inheritdoc />
-        public abstract bool IsApplicable(ISnmpLowerLayer snmpLowerLayer);
+        public abstract bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer);
+
+        /// <inheritdoc />
+        public abstract bool IsApplicableVendorSpecific(IpAddress address);
 
         /// <summary>
         /// Gets the device handler of the given handler class name via reflection.

@@ -10,6 +10,11 @@ namespace SnmpAbstraction
     public interface IDeviceHandler : IDisposable
     {
         /// <summary>
+        /// Gets the API that is supported by this handler.
+        /// </summary>
+        QueryApis SupportedApi { get; }
+        
+        /// <summary>
         /// Gets the IP address that this device handler handles.
         /// </summary>
         IpAddress Address { get; }

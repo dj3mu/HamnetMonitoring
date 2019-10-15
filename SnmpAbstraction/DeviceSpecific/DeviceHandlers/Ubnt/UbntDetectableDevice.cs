@@ -75,7 +75,17 @@ namespace SnmpAbstraction
         private string detectedModel = null;
 
         /// <inheritdoc />
-        public override bool IsApplicable(ISnmpLowerLayer snmpLowerLayer)
+        public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
+
+        /// <inheritdoc />
+        public override bool IsApplicableVendorSpecific(IpAddress address)
+        {
+            // we only support SNMP
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer)
         {
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))

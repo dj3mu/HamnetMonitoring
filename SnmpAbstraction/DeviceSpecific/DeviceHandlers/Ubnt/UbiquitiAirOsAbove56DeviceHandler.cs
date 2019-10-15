@@ -1,4 +1,5 @@
-﻿using SemVersion;
+﻿using System;
+using SemVersion;
 
 namespace SnmpAbstraction
 {
@@ -18,7 +19,14 @@ namespace SnmpAbstraction
         public UbiquitiAirOsAbove56DeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion, string model, IQuerierOptions options)
             : base(lowerLayer, oidLookup, osVersion, model, options)
         {
+            if ((options.AllowedApis & this.SupportedApi) == 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(options), $"This device handler doesn't support any of the APIs allowed by the IQuerierOptions (allowed: {options.AllowedApis}, supported {this.SupportedApi}).");
+            }
         }
+
+        /// <inheritdoc />
+        public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
 
         /// <inheritdoc />
         public override IBgpPeers FetchBgpPeers(string remotePeerIp)

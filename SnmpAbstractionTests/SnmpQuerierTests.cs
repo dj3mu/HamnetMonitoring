@@ -135,7 +135,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AlixFetchLinkDetailsTest()
         {
-            QueryAndPrintLinkDetails(TestConstants.TestAddressAlix1, TestConstants.TestAddressAlix2, SnmpVersion.Ver2, true);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressAlix1, TestConstants.TestAddressAlix2, SnmpVersion.Ver2, false);
         }
 
         /// <summary>

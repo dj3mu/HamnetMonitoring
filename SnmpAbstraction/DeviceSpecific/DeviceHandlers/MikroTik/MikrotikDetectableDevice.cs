@@ -8,7 +8,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Detectable device implementation for MikroTik devices
     /// </summary>
-    internal class MikrotikDetectableDevice : DetectableDeviceBase
+    internal class MikrotikSnmpDetectableDevice : DetectableDeviceBase
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -32,7 +32,17 @@ namespace SnmpAbstraction
         private readonly Oid OsVersionOid2 = new Oid(".1.3.6.1.4.1.14988.1.1.17.1.1.4.1");
 
         /// <inheritdoc />
-        public override bool IsApplicable(ISnmpLowerLayer snmpLowerLayer)
+        public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
+
+        /// <inheritdoc />
+        public override bool IsApplicableVendorSpecific(IpAddress address)
+        {
+            // at them moment vendor-specific is not yet implemented
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer)
         {
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
@@ -92,7 +102,7 @@ namespace SnmpAbstraction
             {
                 try
                 {
-                    return new MikrotikDeviceHandler(lowerLayer, oidTable, osVersion, model, options);
+                    return new MikrotikSnmpDeviceHandler(lowerLayer, oidTable, osVersion, model, options);
                 }
                 catch(Exception ex)
                 {

@@ -311,9 +311,10 @@ namespace SnmpAbstraction
                     this.options.Retries,
                     this.options.Ver2cMaximumValuesPerRequest,
                     this.options.Ver2cMaximumRequests,
-                    false,
+                    false, // <-- this is the reason why we do this copy: keep all settings but force "enableCaching == false"
                     this.options.LoginUser,
-                    this.options.LoginPassword));
+                    this.options.LoginPassword,
+                    this.options.AllowedApis));
         }
 
         /// <summary>

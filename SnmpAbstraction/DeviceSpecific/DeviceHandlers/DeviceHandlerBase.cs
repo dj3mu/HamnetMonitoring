@@ -97,6 +97,9 @@ namespace SnmpAbstraction
         public IQuerierOptions Options { get; }
 
         /// <inheritdoc />
+        public abstract QueryApis SupportedApi { get; }
+
+        /// <inheritdoc />
         public abstract IBgpPeers FetchBgpPeers(string remotePeerIp);
 
         /// <inheritdoc />

@@ -53,13 +53,26 @@ namespace SnmpAbstraction
             var detectableDevices = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(p => type.IsAssignableFrom(p) && !p.IsAbstract && !p.IsInterface);
 
+            IDetectableDevice currentDevice = null;
             foreach (Type currentType in detectableDevices)
             {
-                IDetectableDevice currentDevice = (IDetectableDevice)Activator.CreateInstance(currentType);
+                currentDevice = (IDetectableDevice)Activator.CreateInstance(currentType);
+
+                if ((currentDevice.SupportedApi & options.AllowedApis) == 0)
+                {
+                    log.Debug($"API mismatch between {currentDevice} and allowed APIs ({options.AllowedApis}): Ignoring the device");
+                    continue;
+                }
 
                 try
                 {
-                    if (currentDevice.IsApplicable(this.lowerLayer))
+                    if (options.AllowedApis.HasFlag(QueryApis.VendorSpecific) && currentDevice.IsApplicableVendorSpecific(this.lowerLayer.Address))
+                    {
+                        detectionDuration.Stop();
+
+                        log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
+                    }
+                    else if (options.AllowedApis.HasFlag(QueryApis.Snmp) && currentDevice.IsApplicableSnmp(this.lowerLayer))
                     {
                         detectionDuration.Stop();
 
@@ -111,47 +124,61 @@ namespace SnmpAbstraction
                     continue;
                 }
 
-                try
+                if ((currentDevice != null) && options.AllowedApis.HasFlag(QueryApis.VendorSpecific) && currentDevice.SupportedApi.HasFlag(QueryApis.VendorSpecific))
                 {
-                    var handler = currentDevice.CreateHandler(this.lowerLayer, options);
-                    var handlerBase = handler as DeviceHandlerBase;
-
-                    var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;
-                    var internalSystemData = internalLowerLayer.InternalSystemData;
-                    internalSystemData.ModifyableModel = handler.Model;
-                    internalSystemData.ModifyableVersion = handler.OsVersion;
-                    internalSystemData.ModifyableMaximumSnmpVersion = handlerBase.OidLookup.MaximumSupportedSnmpVersion;
-
-                    if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
-                    {
-                        log.Info($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MaximumSupportedSnmpVersion} due to maximum version in device database");
-                        internalLowerLayer.AdjustSnmpVersion(handlerBase.OidLookup.MaximumSupportedSnmpVersion);
-                    }
-                    else
-                    {
-                        this.lowerLayer.AdjustSnmpVersion(snmpVersionBackup);
-                    }
-                    
-                    return handler;
+                    // Vendor-specific is allowed and we found an applicable device that supports the vendor-specific API --> use it with top priority
+                    break;
                 }
-                catch(SnmpException ex)
+
+                if ((currentDevice != null) && !options.AllowedApis.HasFlag(QueryApis.VendorSpecific) && currentDevice.SupportedApi.HasFlag(QueryApis.Snmp))
                 {
-                    if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
-                    {
-                        var snmpErrorInfo = $"Timeout talking to device '{this.lowerLayer.Address}' ({this.lowerLayer?.SystemData?.DeviceModel}) during handler creation{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
-                        log.Error(snmpErrorInfo, ex);
-
-                        // Re-throwing a different exception is not good practice.
-                        // But here we have a good reason: We need to add the IP address which timed out as that information is not contained in the SnmpException itself.
-                        throw new HamnetSnmpException(snmpErrorInfo, ex, this.lowerLayer?.Address?.ToString());
-                    }
-
-                    log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation: {ex.Message}");
+                    // Vendor-specific is NOT allowed but we found an applicable device that supports SNMP --> use it as there's no chance to find a better one
+                    break;
                 }
-                catch(HamnetSnmpException ex)
+
+                // continue searching for a better device (e.g. we found an SNMP device but a vendor-specific one would be preferred)
+            }
+
+            try
+            {
+                var handler = currentDevice.CreateHandler(this.lowerLayer, options);
+                var handlerBase = handler as DeviceHandlerBase;
+
+                var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;
+                var internalSystemData = internalLowerLayer.InternalSystemData;
+                internalSystemData.ModifyableModel = handler.Model;
+                internalSystemData.ModifyableVersion = handler.OsVersion;
+                internalSystemData.ModifyableMaximumSnmpVersion = handlerBase.OidLookup.MaximumSupportedSnmpVersion;
+
+                if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
                 {
-                    log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation", ex);
+                    log.Info($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MaximumSupportedSnmpVersion} due to maximum version in device database");
+                    internalLowerLayer.AdjustSnmpVersion(handlerBase.OidLookup.MaximumSupportedSnmpVersion);
                 }
+                else
+                {
+                    this.lowerLayer.AdjustSnmpVersion(snmpVersionBackup);
+                }
+                
+                return handler;
+            }
+            catch(SnmpException ex)
+            {
+                if (ex.Message.Equals("Request has reached maximum retries.") || ex.Message.ToLowerInvariant().Contains("timeout"))
+                {
+                    var snmpErrorInfo = $"Timeout talking to device '{this.lowerLayer.Address}' ({this.lowerLayer?.SystemData?.DeviceModel}) during handler creation{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
+                    log.Error(snmpErrorInfo, ex);
+
+                    // Re-throwing a different exception is not good practice.
+                    // But here we have a good reason: We need to add the IP address which timed out as that information is not contained in the SnmpException itself.
+                    throw new HamnetSnmpException(snmpErrorInfo, ex, this.lowerLayer?.Address?.ToString());
+                }
+
+                log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation: {ex.Message}");
+            }
+            catch(HamnetSnmpException ex)
+            {
+                log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation", ex);
             }
 
             detectionDuration.Stop();

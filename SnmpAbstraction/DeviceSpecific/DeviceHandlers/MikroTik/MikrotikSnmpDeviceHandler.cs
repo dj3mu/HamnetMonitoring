@@ -1,12 +1,13 @@
+﻿using System;
 using SemVersion;
 using tik4net;
 
 namespace SnmpAbstraction
 {
     /// <summary>
-    /// Device Handler class for Mikrotik devices.
+    /// Device Handler class for Mikrotik devices using SNMP communication.
     /// </summary>
-    internal class MikrotikDeviceHandler : GenericDeviceHandler
+    internal class MikrotikSnmpDeviceHandler : GenericDeviceHandler
     {
         /// <summary>
         /// The minimum version for support of MTik API v2.
@@ -28,9 +29,13 @@ namespace SnmpAbstraction
         /// <param name="osVersion">The SW version of the device.</param>
         /// <param name="model">The device's model name. Shall be the same name as used for the device name during OID database lookups.</param>
         /// <param name="options">The options to use.</param>
-        public MikrotikDeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion, string model, IQuerierOptions options)
+        public MikrotikSnmpDeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion, string model, IQuerierOptions options)
             : base(lowerLayer, oidLookup, osVersion, model, options)
         {
+            if ((options.AllowedApis & this.SupportedApi) == 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(options), $"This device handler doesn't support any of the APIs allowed by the IQuerierOptions (allowed: {options.AllowedApis}, supported {this.SupportedApi}).");
+            }
         }
 
         /// <summary>
@@ -55,6 +60,9 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
+        public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
+
+        /// <inheritdoc />
         protected override IInterfaceDetails RetrieveDeviceInterfaceDetails(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup)
         {
             return new LazyLoadingGenericInterfaceDetails(this.LowerLayer, this.OidLookup);
@@ -69,7 +77,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public override IBgpPeers FetchBgpPeers(string remotePeerIp)
         {
-            return new LazyLoadingMikrotikBgpPeerInfos(this.LowerLayer, this.OidLookup, this.TikConnection, remotePeerIp);
+            return new LazyLoadingMikrotikBgpPeerInfos(this.LowerLayer.Address, this.TikConnection, remotePeerIp);
         }
 
         protected override void Dispose(bool disposing)
