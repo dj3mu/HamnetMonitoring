@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
@@ -133,7 +132,7 @@ namespace RestService.DataFetchingService
             var status = this.resultDatabaseContext.Status;
             var nowItIs = DateTime.UtcNow;
             var timeSinceLastAquisitionStart = (nowItIs - status.LastBgpQueryStart);
-            if (status.LastRssiQueryStart > status.LastBgpQueryEnd)
+            if (status.LastBgpQueryStart > status.LastBgpQueryEnd)
             {
                 this.logger.LogInformation($"STARTING first BGP aquisition immediately: Last aquisition started {status.LastBgpQueryStart} seems not to have ended successfully (last end time {status.LastBgpQueryEnd})");
             }
@@ -251,7 +250,7 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void PerformDataAquisition()
         {
-            IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+            IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.BgpAquisitionServiceSectionKey);
 
             // detect if we're due to run and, if we are, record the start of the run
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
@@ -292,7 +291,7 @@ namespace RestService.DataFetchingService
                     || hsatc.Callsign.ToUpperInvariant().Equals("DB0ZM")
                     || hsatc.Callsign.ToUpperInvariant().Equals("DB0AAT")
                     || hsatc.Callsign.ToUpperInvariant().Equals("DM0VK")
-                    //|| hsatc.Callsign.ToUpperInvariant().Contains("DL3NCU")
+                    || hsatc.Callsign.ToUpperInvariant().Equals("DL3NCU-2")
                     || hsatc.Callsign.ToUpperInvariant().Equals("DB0ON"))
                 , new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
             host =>
@@ -433,7 +432,7 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
-        /// Calls the <see cref="IAquiredDataHandler.RecordFailingRssiQueryAsync" /> for all configured handlers.
+        /// Calls the <see cref="IAquiredDataHandler.RecordFailingBgpQueryAsync" /> for all configured handlers.
         /// </summary>
         private void SendFailToDataHandlers(Exception hitException, IHamnetDbHost host)
         {
