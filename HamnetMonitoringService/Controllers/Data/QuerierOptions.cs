@@ -26,10 +26,10 @@ namespace HamnetDbRest.Controllers
         public OctetString Community { get; set; } = new OctetString("public");
 
         /// <inheritdoc />
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
 
         /// <inheritdoc />
-        public int Retries { get; set; } = 3;
+        public int Retries { get; set; } = 1;
 
         /// <inheritdoc />
         public int Ver2cMaximumValuesPerRequest { get; set; } = 0;
@@ -41,12 +41,12 @@ namespace HamnetDbRest.Controllers
         public bool EnableCaching { get; set; } = true;
 
         /// <inheritdoc />
-        public string LoginUser { get; set; } = null;
+        public string LoginUser { get; set; } = "monitoring";
 
         /// <inheritdoc />
         public string LoginPassword { get; set; } = null;
 
         /// <inheritdoc />
-        public QueryApis AllowedApis { get; set; } = QueryApis.Snmp;
+        public QueryApis AllowedApis { get; set; } = QueryApis.Snmp | QueryApis.VendorSpecific;
     }
 }

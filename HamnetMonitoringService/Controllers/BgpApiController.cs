@@ -47,7 +47,7 @@ namespace HamnetDbRest.Controllers
         {
             IQuerierOptions optionsInUse = this.CreateOptions(options);
 
-            return await new BgpPeersAction(WebUtility.UrlDecode(host), null, optionsInUse).Execute();
+            return await new BgpPeersAction(WebUtility.UrlDecode(host), null, optionsInUse as FromUrlQueryQuerierOptions).Execute();
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace HamnetDbRest.Controllers
         {
             IQuerierOptions optionsInUse = this.CreateOptions(options);
 
-            return await new BgpPeersAction(WebUtility.UrlDecode(host), WebUtility.UrlDecode(remoteIp), optionsInUse).Execute();
+            return await new BgpPeersAction(WebUtility.UrlDecode(host), WebUtility.UrlDecode(remoteIp), optionsInUse as FromUrlQueryQuerierOptions).Execute();
         }
 
         /// <summary>

@@ -16,7 +16,8 @@ namespace HamnetDbRest.Controllers
         private string host;
 
         private string remotePeerAddress;
-        private readonly IQuerierOptions querierOptions;
+        
+        private readonly FromUrlQueryQuerierOptions querierOptions;
 
         /// <summary>
         /// Construct for a specific host.
@@ -24,7 +25,7 @@ namespace HamnetDbRest.Controllers
         /// <param name="host">The host or IP address to ping.</param>
         /// <param name="remotePeerAddress">The address of the remote peer to get the data for. If null or empty, all peer's data.</param>
         /// <param name="querierOptions">The querier options to use.</param>
-        public BgpPeersAction(string host, string remotePeerAddress, IQuerierOptions querierOptions)
+        public BgpPeersAction(string host, string remotePeerAddress, FromUrlQueryQuerierOptions querierOptions)
         {
             if (string.IsNullOrWhiteSpace(host))
             {
@@ -34,6 +35,8 @@ namespace HamnetDbRest.Controllers
             this.host = host;
             this.remotePeerAddress = remotePeerAddress;
             this.querierOptions = querierOptions ?? new FromUrlQueryQuerierOptions();
+
+            this.querierOptions.AllowedApis = QueryApis.VendorSpecific; // currently we only support vendor-specific API - no matter what user requests
         }
 
         /// <summary>
