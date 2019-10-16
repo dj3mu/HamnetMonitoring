@@ -36,14 +36,14 @@ namespace SnmpAbstraction
         public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
 
         /// <inheritdoc />
-        public override bool IsApplicableVendorSpecific(IpAddress address)
+        public override bool IsApplicableVendorSpecific(IpAddress address, IQuerierOptions options)
         {
             // we only support SNMP
             return false;
         }
 
         /// <inheritdoc />
-        public override bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer)
+        public override bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer, IQuerierOptions options)
         {
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))

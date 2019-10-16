@@ -144,8 +144,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikFetchLinkDetailsTest()
         {
-            QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
-            QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
+            //QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
+            //QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
 
             QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false);
             QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
@@ -174,7 +174,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryBgpPeersTest()
         {
-            QueryAndPrintBgpPeers(TestConstants.TestAddressMikrotikRouter1, SnmpVersion.Ver2, false);
+            QueryAndPrintBgpPeers(new IpAddress("44.225.20.1"), SnmpVersion.Ver2, false);
+            //QueryAndPrintBgpPeers(TestConstants.TestAddressMikrotikRouter1, SnmpVersion.Ver2, false);
         }
 
         /// <summary>
@@ -185,7 +186,10 @@ namespace SnmpAbstractionTests
         /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
         private static void QueryAndPrintBgpPeers(IpAddress address, SnmpVersion snmpVersion, bool useCache = false)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache));
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(QueryApis.VendorSpecific));
+
+            var systemData = querier.SystemData;
+            systemData.ForceEvaluateAll();
 
             Assert.NotNull(querier, "Create(...) returned null");
 

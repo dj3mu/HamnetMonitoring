@@ -72,7 +72,7 @@ namespace SnmpAbstraction
         public OctetString Community { get; } = new OctetString("public");
 
         /// <inheritdoc />
-        public TimeSpan Timeout { get; } = TimeSpan.FromSeconds(10);
+        public TimeSpan Timeout { get; } = TimeSpan.FromSeconds(2);
 
         /// <inheritdoc />
         public int Retries { get; } = 3;

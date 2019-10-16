@@ -102,6 +102,9 @@ namespace RestService.DataFetchingService
 
             var monitoringAccountsSection = this.configuration.GetSection(Program.MonitoringAccountsSectionKey).GetSection(Program.BgpAccountSectionKey);
 
+            // we poll BGP solely using the vendor-specific APIs (SNMP is too fragile and slow for it)
+            this.snmpQuerierOptions = this.snmpQuerierOptions.WithAllowedApis(QueryApis.VendorSpecific);
+
             var loginUserName = monitoringAccountsSection.GetValue<string>("User");
             if (!string.IsNullOrWhiteSpace(loginUserName))
             {
@@ -264,7 +267,7 @@ namespace RestService.DataFetchingService
         
                 this.logger.LogInformation($"STARTING: Retrieving BGP monitoring data as configured in HamnetDB - last run: Started {status.LastBgpQueryStart} ({sinceLastScan} ago)");
 
-                status.LastRssiQueryStart = DateTime.UtcNow;
+                status.LastBgpQueryStart = DateTime.UtcNow;
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
@@ -288,6 +291,8 @@ namespace RestService.DataFetchingService
                 .Where(hsatc => hsatc.Callsign.ToUpperInvariant().Equals("DB0EBE")
                     || hsatc.Callsign.ToUpperInvariant().Equals("DB0ZM")
                     || hsatc.Callsign.ToUpperInvariant().Equals("DB0AAT")
+                    || hsatc.Callsign.ToUpperInvariant().Equals("DM0VK")
+                    //|| hsatc.Callsign.ToUpperInvariant().Contains("DL3NCU")
                     || hsatc.Callsign.ToUpperInvariant().Equals("DB0ON"))
                 , new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
             host =>

@@ -53,10 +53,10 @@ namespace SnmpAbstraction
             var detectableDevices = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(p => type.IsAssignableFrom(p) && !p.IsAbstract && !p.IsInterface);
 
-            IDetectableDevice currentDevice = null;
+            IDetectableDevice deviceToUse = null;
             foreach (Type currentType in detectableDevices)
             {
-                currentDevice = (IDetectableDevice)Activator.CreateInstance(currentType);
+                IDetectableDevice currentDevice = (IDetectableDevice)Activator.CreateInstance(currentType);
 
                 if ((currentDevice.SupportedApi & options.AllowedApis) == 0)
                 {
@@ -66,17 +66,21 @@ namespace SnmpAbstraction
 
                 try
                 {
-                    if (options.AllowedApis.HasFlag(QueryApis.VendorSpecific) && currentDevice.IsApplicableVendorSpecific(this.lowerLayer.Address))
+                    if (options.AllowedApis.HasFlag(QueryApis.VendorSpecific) && currentDevice.IsApplicableVendorSpecific(this.lowerLayer.Address, options))
                     {
                         detectionDuration.Stop();
 
                         log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
+
+                        deviceToUse = currentDevice;
                     }
-                    else if (options.AllowedApis.HasFlag(QueryApis.Snmp) && currentDevice.IsApplicableSnmp(this.lowerLayer))
+                    else if (options.AllowedApis.HasFlag(QueryApis.Snmp) && currentDevice.IsApplicableSnmp(this.lowerLayer, options))
                     {
                         detectionDuration.Stop();
 
                         log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
+
+                        deviceToUse = currentDevice;
                     }
                     else
                     {
@@ -139,25 +143,38 @@ namespace SnmpAbstraction
                 // continue searching for a better device (e.g. we found an SNMP device but a vendor-specific one would be preferred)
             }
 
+            if (deviceToUse == null)
+            {
+                var snmpErrorInfo = $"Unsupported device at address '{this.lowerLayer.Address}': No applicable handler found (allowed APIs: {options.AllowedApis})";
+                log.Error(snmpErrorInfo);
+
+                // Re-throwing a different exception is not good practice.
+                // But here we have a good reason: We need to add the IP address which timed out as that information is not contained in the SnmpException itself.
+                throw new HamnetSnmpException(snmpErrorInfo, this.lowerLayer?.Address?.ToString());
+            }
+
             try
             {
-                var handler = currentDevice.CreateHandler(this.lowerLayer, options);
+                var handler = deviceToUse.CreateHandler(this.lowerLayer, options);
                 var handlerBase = handler as DeviceHandlerBase;
 
-                var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;
-                var internalSystemData = internalLowerLayer.InternalSystemData;
-                internalSystemData.ModifyableModel = handler.Model;
-                internalSystemData.ModifyableVersion = handler.OsVersion;
-                internalSystemData.ModifyableMaximumSnmpVersion = handlerBase.OidLookup.MaximumSupportedSnmpVersion;
+                if (handler.SupportedApi.HasFlag(QueryApis.Snmp))
+                {
+                    var internalLowerLayer = this.lowerLayer as SnmpLowerLayer;
+                    var internalSystemData = internalLowerLayer.InternalSystemData;
+                    internalSystemData.ModifyableModel = handler.Model;
+                    internalSystemData.ModifyableVersion = handler.OsVersion;
+                    internalSystemData.ModifyableMaximumSnmpVersion = handlerBase.OidLookup.MaximumSupportedSnmpVersion;
 
-                if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
-                {
-                    log.Info($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MaximumSupportedSnmpVersion} due to maximum version in device database");
-                    internalLowerLayer.AdjustSnmpVersion(handlerBase.OidLookup.MaximumSupportedSnmpVersion);
-                }
-                else
-                {
-                    this.lowerLayer.AdjustSnmpVersion(snmpVersionBackup);
+                    if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
+                    {
+                        log.Info($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MaximumSupportedSnmpVersion} due to maximum version in device database");
+                        internalLowerLayer.AdjustSnmpVersion(handlerBase.OidLookup.MaximumSupportedSnmpVersion);
+                    }
+                    else
+                    {
+                        this.lowerLayer.AdjustSnmpVersion(snmpVersionBackup);
+                    }
                 }
                 
                 return handler;

@@ -11,18 +11,40 @@ namespace SnmpAbstraction
     internal abstract class DetectableDeviceBase : IDetectableDevice
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        
+        private int circularCreateHandler = 0;
 
         /// <inheritdoc />
         public abstract QueryApis SupportedApi { get; }
 
         /// <inheritdoc />
-        public abstract IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options);
+        public virtual IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
+        {
+            if(this.circularCreateHandler++ > 1)
+            {
+                throw new InvalidOperationException($"Internal Error: DetectableDevice {this.GetType().Name} seems to neither implement CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options) nor CreateHandler(IpAddress address, IQuerierOptions options)");
+            }
+            
+            return this.CreateHandler(lowerLayer.Address, options);
+        }
 
         /// <inheritdoc />
-        public abstract bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer);
+        public virtual IDeviceHandler CreateHandler(IpAddress address, IQuerierOptions options)
+        {
+            if(this.circularCreateHandler++ > 1)
+            {
+                throw new InvalidOperationException($"Internal Error: DetectableDevice {this.GetType().Name} seems to neither implement CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options) nor CreateHandler(IpAddress address, IQuerierOptions options)");
+            }
+            
+            var lowerLayer = new SnmpLowerLayer(address, options);
+            return this.CreateHandler(lowerLayer, options);
+        }
 
         /// <inheritdoc />
-        public abstract bool IsApplicableVendorSpecific(IpAddress address);
+        public abstract bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer, IQuerierOptions options);
+
+        /// <inheritdoc />
+        public abstract bool IsApplicableVendorSpecific(IpAddress address, IQuerierOptions options);
 
         /// <summary>
         /// Gets the device handler of the given handler class name via reflection.
