@@ -54,11 +54,12 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions);
+                using(var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions))
+                {
+                    ITracerouteResult tracerouteResult = querier.Traceroute(this.remotePeerAddress, Convert.ToUInt32(this.count));
 
-                ITracerouteResult tracerouteResult = querier.Traceroute(this.remotePeerAddress, Convert.ToUInt32(this.count));
-
-                return new TracerouteWebResult(tracerouteResult);
+                    return new TracerouteWebResult(tracerouteResult);
+                }
             }
             catch(Exception ex)
             {

@@ -53,11 +53,12 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions);
+                using(var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions))
+                {
+                    var systemData = querier.SystemData;
 
-                var systemData = querier.SystemData;
-
-                return new HostInfoReply(querier.Address, systemData);
+                    return new HostInfoReply(querier.Address, systemData);
+                }
             }
             catch(Exception ex)
             {

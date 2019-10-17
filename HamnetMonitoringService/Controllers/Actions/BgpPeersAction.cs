@@ -52,12 +52,12 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions);
+                using(var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions))
+                {
+                    IBgpPeers bgpPeers = querier.FetchBgpPeers(this.remotePeerAddress);
 
-                IBgpPeers bgpPeers = querier.FetchBgpPeers(this.remotePeerAddress);
-
-                return new BgpPeersResult(bgpPeers);
-
+                    return new BgpPeersResult(bgpPeers);
+                }
             }
             catch(Exception ex)
             {

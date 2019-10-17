@@ -26,8 +26,6 @@ namespace SnmpAbstraction
         /// </summary>
         private bool disposedValue = false;
 
-        private ITikConnection tikConnectionBacking = null;
-        
         private SemanticVersion osVersionBacking = null;
 
         private IDeviceSystemData systemDataBacking = null;
@@ -142,10 +140,9 @@ namespace SnmpAbstraction
             {
                 if (disposing)
                 {
-                    if (this.tikConnectionBacking != null)
+                    if (this.TikConnection != null)
                     {
-                        this.tikConnectionBacking.Dispose();
-                        this.tikConnectionBacking = null;
+                        this.TikConnection.Dispose();
                     }
                 }
 
