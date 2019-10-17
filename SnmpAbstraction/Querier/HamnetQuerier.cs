@@ -69,6 +69,12 @@ namespace SnmpAbstraction
         public IpAddress Address => this.handler.Address;
 
         /// <inheritdoc />
+        public IBgpPeers FetchBgpPeers(string remotePeerIp)
+        {
+            return this.handler.FetchBgpPeers(remotePeerIp);
+        }
+
+        /// <inheritdoc />
         public ILinkDetails FetchLinkDetails(params string[] remoteHostNamesOrIps)
         {
             if (remoteHostNamesOrIps.Length == 0)

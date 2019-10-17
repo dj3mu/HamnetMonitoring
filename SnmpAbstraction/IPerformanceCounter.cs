@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Net;
+using Newtonsoft.Json;
 
 namespace SnmpAbstraction
 {
@@ -21,6 +22,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the mapping of result sets to devices addresses.
         /// </summary>
+        [JsonIgnore]
         IReadOnlyDictionary<IPAddress, IPerformanceSingleResultSet> ResultsPerDevice { get; }
     }
 }

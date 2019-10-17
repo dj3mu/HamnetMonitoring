@@ -16,9 +16,9 @@ using SnmpSharpNet;
 namespace RestService.DataFetchingService
 {
     /// <summary>
-    /// Hosted service to regularly retrieve the data to be reported via REST api.
+    /// Hosted service to regularly retrieve the RSSI data to be reported via REST api.
     /// </summary>
-    public class DataAquisitionService : IHostedService, IDisposable
+    public class RssiAquisitionService : IHostedService, IDisposable
     {
         private static readonly TimeSpan Hysteresis = TimeSpan.FromSeconds(10);
         
@@ -27,7 +27,7 @@ namespace RestService.DataFetchingService
         /// </summary>
         private readonly List<IAquiredDataHandler> dataHandlers = new List<IAquiredDataHandler>();
 
-        private readonly ILogger<DataAquisitionService> logger;
+        private readonly ILogger<RssiAquisitionService> logger;
 
         private readonly IConfiguration configuration;
         
@@ -56,16 +56,16 @@ namespace RestService.DataFetchingService
         /// </summary>
         /// <param name="logger">The logger to use.</param>
         /// <param name="configuration">The service configuration.</param>
-        public DataAquisitionService(ILogger<DataAquisitionService> logger, IConfiguration configuration)
+        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration)
         {
             if (logger == null)
             {
-                throw new ArgumentNullException(nameof(logger), "The logger is null when creating a DataAquisitionService");
+                throw new ArgumentNullException(nameof(logger), "The logger is null when creating a RssiAquisitionService");
             }
 
             if (configuration == null)
             {
-                throw new ArgumentNullException(nameof(configuration), "The configuration is null when creating a DataAquisitionService");
+                throw new ArgumentNullException(nameof(configuration), "The configuration is null when creating a RssiAquisitionService");
             }
 
             this.logger = logger;
@@ -94,7 +94,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            IConfigurationSection aquisisionServiceSection = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
+            IConfigurationSection aquisisionServiceSection = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
 
             // configure thread pool for number of parallel queries
             this.maxParallelQueries = aquisisionServiceSection.GetValue<int>("MaximumParallelQueries");
@@ -117,7 +117,7 @@ namespace RestService.DataFetchingService
                 this.snmpQuerierOptions = this.snmpQuerierOptions.WithProtocolVersion(snmpVersion.ToSnmpVersion());
             }
 
-            var snmpTimeoutConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey).GetValue<int>("SnmpTimeoutSeconds");
+            var snmpTimeoutConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey).GetValue<int>("SnmpTimeoutSeconds");
             if (snmpTimeoutConfig != 0)
             {
                 // 0 is the default value set by config framework and doesn't make any sense here - so we can use it to identify a missing config
@@ -146,10 +146,10 @@ namespace RestService.DataFetchingService
 
             var status = this.resultDatabaseContext.Status;
             var nowItIs = DateTime.UtcNow;
-            var timeSinceLastAquisitionStart = (nowItIs - status.LastQueryStart);
-            if (status.LastQueryStart > status.LastQueryEnd)
+            var timeSinceLastAquisitionStart = (nowItIs - status.LastRssiQueryStart);
+            if (status.LastRssiQueryStart > status.LastRssiQueryEnd)
             {
-                this.logger.LogInformation($"STARTING first aquisition immediately: Last aquisition started {status.LastQueryStart} seems not to have ended successfully (last end time {status.LastQueryEnd})");
+                this.logger.LogInformation($"STARTING first RSSI aquisition immediately: Last aquisition started {status.LastRssiQueryStart} seems not to have ended successfully (last end time {status.LastRssiQueryEnd})");
             }
             else if (timeSinceLastAquisitionStart < this.refreshInterval)
             {
@@ -158,7 +158,7 @@ namespace RestService.DataFetchingService
                 this.timerReAdjustmentNeeded = true;
             }
 
-            this.logger.LogInformation($"STARTING first aquisition after restart in {timeToFirstAquisition}: Last aquisition started {status.LastQueryStart}, configured interval {this.refreshInterval}");
+            this.logger.LogInformation($"STARTING first RSSI aquisition after restart in {timeToFirstAquisition}: Last aquisition started {status.LastRssiQueryStart}, configured interval {this.refreshInterval}");
 
             this.timer = new Timer(DoFetchData, null, timeToFirstAquisition, this.refreshInterval);
 
@@ -168,7 +168,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("Timed data fetching service is stopping.");
+            this.logger.LogInformation("Timed RSSI data fetching service is stopping.");
 
             this.timer?.Change(Timeout.Infinite, 0);
 
@@ -231,14 +231,6 @@ namespace RestService.DataFetchingService
                 {
                     this.mutex.WaitOne();
 
-                    // make sure to change back the due time of the timer
-                    if (this.timerReAdjustmentNeeded)
-                    {
-                        this.logger.LogInformation($"Re-adjusting timer with due time and interval to {this.refreshInterval}");
-                        this.timer.Change(this.refreshInterval, this.refreshInterval);
-                        this.timerReAdjustmentNeeded = false;
-                    }
-
                     this.PerformDataAquisition();
                 }
                 catch(Exception ex)
@@ -256,7 +248,7 @@ namespace RestService.DataFetchingService
             }
             else
             {
-                this.logger.LogError("SKIPPING data aquisition: Previous aquisition still ongoing. Please adjust interval.");
+                this.logger.LogError("SKIPPING RSSI data aquisition: Previous aquisition still ongoing. Please adjust interval.");
             }
         }
 
@@ -265,23 +257,26 @@ namespace RestService.DataFetchingService
         /// </summary>
         private void PerformDataAquisition()
         {
-            IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.AquisitionServiceSectionKey);
+            IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
 
             // detect if we're due to run and, if we are, record the start of the run
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var status = resultDatabaseContext.Status;
                 var nowItIs = DateTime.UtcNow;
-                var sinceLastScan = nowItIs - status.LastQueryStart;
-                if ((sinceLastScan < this.refreshInterval - Hysteresis) && (status.LastQueryStart <= status.LastQueryEnd))
+                var sinceLastScan = nowItIs - status.LastRssiQueryStart;
+                if ((sinceLastScan < this.refreshInterval - Hysteresis) && (status.LastRssiQueryStart <= status.LastRssiQueryEnd))
                 {
-                    this.logger.LogInformation($"SKIPPING: Aquisition not yet due: Last aquisition started {status.LastQueryStart} ({sinceLastScan} ago, hysteresis {Hysteresis}), configured interval {this.refreshInterval}");
+                    this.logger.LogInformation($"SKIPPING: RSSI aquisition not yet due: Last aquisition started {status.LastRssiQueryStart} ({sinceLastScan} ago, hysteresis {Hysteresis}), configured interval {this.refreshInterval}");
                     return;
                 }
         
-                this.logger.LogInformation($"STARTING: Retrieving monitoring data as configured in HamnetDB - last run: Started {status.LastQueryStart} ({sinceLastScan} ago)");
+                // we restart the timer so that in case we've been blocked by Mutexes etc. the interval really starts from scratch        
+                this.timer.Change(this.refreshInterval, this.refreshInterval);
 
-                status.LastQueryStart = DateTime.UtcNow;
+                this.logger.LogInformation($"STARTING: Retrieving RSSI monitoring data as configured in HamnetDB - last run: Started {status.LastRssiQueryStart} ({sinceLastScan} ago)");
+
+                status.LastRssiQueryStart = DateTime.UtcNow;
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
@@ -297,7 +292,7 @@ namespace RestService.DataFetchingService
             NetworkExcludeFile excludes = new NetworkExcludeFile(hamnetDbConfig);
             var excludeNets = excludes?.ParsedNetworks?.ToList();
 
-            this.logger.LogDebug($"Launching {this.maxParallelQueries} parallel aquisition threads");
+            this.logger.LogDebug($"Launching {this.maxParallelQueries} parallel RSSI aquisition threads");
 
             Parallel.ForEach(pairsSlicedAccordingToConfiguration, new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
             pair =>
@@ -314,7 +309,7 @@ namespace RestService.DataFetchingService
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError($"Exception caught and ignored in parallel data aquisition thread: {ex.ToString()}");
+                    this.logger.LogError($"Exception caught and ignored in RSSI arallel data aquisition thread: {ex.ToString()}");
                 }
             });
 
@@ -325,9 +320,9 @@ namespace RestService.DataFetchingService
             {
                 var status = resultDatabaseContext.Status;
 
-                status.LastQueryEnd = DateTime.UtcNow;
+                status.LastRssiQueryEnd = DateTime.UtcNow;
 
-                this.logger.LogInformation($"COMPLETED: Retrieving monitoring data as configured in HamnetDB at {status.LastQueryEnd}, duration {status.LastQueryEnd - status.LastQueryStart}");
+                this.logger.LogInformation($"COMPLETED: Retrieving RSSI monitoring data as configured in HamnetDB at {status.LastRssiQueryEnd}, duration {status.LastRssiQueryEnd - status.LastRssiQueryStart}");
 
                 resultDatabaseContext.SaveChanges();
                 transaction.Commit();
@@ -441,7 +436,7 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
-        /// Calls the <see cref="IAquiredDataHandler.RecordFailingQueryAsync" /> for all configured handlers.
+        /// Calls the <see cref="IAquiredDataHandler.RecordFailingRssiQueryAsync" /> for all configured handlers.
         /// </summary>
         private void SendFailToDataHandlers(Exception hitException, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair)
         {
@@ -449,7 +444,7 @@ namespace RestService.DataFetchingService
             {
                 try
                 {
-                    handler.RecordFailingQuery(hitException, pair);
+                    handler.RecordFailingRssiQuery(hitException, pair);
                 }
                 catch(Exception ex)
                 {
@@ -467,7 +462,7 @@ namespace RestService.DataFetchingService
             {
                 try
                 {
-                    handler.RecordDetailsInDatabaseAsync(pair, linkDetails, queryTime);
+                    handler.RecordRssiDetailsInDatabaseAsync(pair, linkDetails, queryTime);
                 }
                 catch(Exception ex)
                 {

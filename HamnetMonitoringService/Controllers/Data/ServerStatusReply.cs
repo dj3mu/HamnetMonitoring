@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using SnmpAbstraction;
 
 namespace HamnetDbRest.Controllers
 {
@@ -62,5 +63,8 @@ namespace HamnetDbRest.Controllers
 
         /// <inheritdoc />
         public IReadOnlyDictionary<string, IConfigurationInfo>  Configurations => this.configs;
+
+        /// <inheritdoc />
+        public IPerformanceCounter PerformanceCounter { get; } = SnmpAbstraction.SnmpAbstraction.PerformanceCounter;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
+using SnmpAbstraction;
 
 namespace HamnetDbRest.Controllers
 {
@@ -58,6 +59,11 @@ namespace HamnetDbRest.Controllers
         /// Gets the configuration settings of the application.
         /// </summary>
         IReadOnlyDictionary<string, IConfigurationInfo> Configurations { get; }
+
+        /// <summary>
+        /// Gets the values of the performance counter.
+        /// </summary>
+        IPerformanceCounter PerformanceCounter { get; }
     }
 
     /// <summary>

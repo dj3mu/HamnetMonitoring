@@ -34,6 +34,14 @@ namespace SnmpAbstraction
         IWirelessPeerInfos WirelessPeerInfos { get; }
 
         /// <summary>
+        /// Fetches the information about the BGP peers that are connected to the device that is associated
+        /// with this instance and the devices owning the listed remote host names or IP addresses.
+        /// </summary>
+        /// <param name="remotePeer">The BGP peer IP address to which the BGP details shall be fetched. If null or empty, all peers will be fetched.</param>
+        /// <returns>The BGP peers that are currently connected to this device.</returns>
+        IBgpPeers FetchBgpPeers(string remotePeer);
+
+        /// <summary>
         /// Fetches the detailed information for the link between the device that is associated
         /// with this instance and the devices owning the listed remote host names or IP addresses.
         /// </summary>
