@@ -41,11 +41,17 @@ namespace SnmpAbstraction
         {
             Stopwatch stopper = Stopwatch.StartNew();
             
+            var countToUse = (this.count <= 0) ? 1 : this.count;
             var result = this.tikConnection.LoadList<ToolTraceroute>(
                             this.tikConnection.CreateParameter("address", this.remoteIp.ToString(), TikCommandParameterFormat.NameValue),
-                            this.tikConnection.CreateParameter("count", (this.count <= 0) ? "1" : this.count.ToString(), TikCommandParameterFormat.NameValue));
+                            this.tikConnection.CreateParameter("count", countToUse.ToString(), TikCommandParameterFormat.NameValue));
 
             stopper.Stop();
+
+            if (countToUse > 1)
+            {
+                result = result.Where(h => h.Sent ==  countToUse);
+            }
 
             var hops = result.Select(h => new TracerrouteHop(h));
             var returnResult = new TracerouteResult(this.address, this.remoteIp, string.Empty, stopper.Elapsed, hops.ToList());
