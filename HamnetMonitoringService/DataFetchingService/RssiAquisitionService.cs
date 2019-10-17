@@ -231,14 +231,6 @@ namespace RestService.DataFetchingService
                 {
                     this.mutex.WaitOne();
 
-                    // make sure to change back the due time of the timer
-                    if (this.timerReAdjustmentNeeded)
-                    {
-                        this.logger.LogInformation($"Re-adjusting timer with due time and interval to {this.refreshInterval}");
-                        this.timer.Change(this.refreshInterval, this.refreshInterval);
-                        this.timerReAdjustmentNeeded = false;
-                    }
-
                     this.PerformDataAquisition();
                 }
                 catch(Exception ex)
@@ -279,6 +271,9 @@ namespace RestService.DataFetchingService
                     return;
                 }
         
+                // we restart the timer so that in case we've been blocked by Mutexes etc. the interval really starts from scratch        
+                this.timer.Change(this.refreshInterval, this.refreshInterval);
+
                 this.logger.LogInformation($"STARTING: Retrieving RSSI monitoring data as configured in HamnetDB - last run: Started {status.LastRssiQueryStart} ({sinceLastScan} ago)");
 
                 status.LastRssiQueryStart = DateTime.UtcNow;

@@ -216,14 +216,6 @@ namespace RestService.DataFetchingService
                 {
                     this.mutex.WaitOne();
 
-                    // make sure to change back the due time of the timer
-                    if (this.timerReAdjustmentNeeded)
-                    {
-                        this.logger.LogInformation($"Re-adjusting timer with due time and interval to {this.refreshInterval}");
-                        this.timer.Change(this.refreshInterval, this.refreshInterval);
-                        this.timerReAdjustmentNeeded = false;
-                    }
-
                     this.PerformDataAquisition();
                 }
                 catch(Exception ex)
@@ -263,7 +255,10 @@ namespace RestService.DataFetchingService
                     this.logger.LogInformation($"SKIPPING: BGP aquisition not yet due: Last aquisition started {status.LastBgpQueryStart} ({sinceLastScan} ago, hysteresis {Hysteresis}), configured interval {this.refreshInterval}");
                     return;
                 }
-        
+
+                // we restart the timer so that in case we've been blocked by Mutexes etc. the interval really starts from scratch        
+                this.timer.Change(this.refreshInterval, this.refreshInterval);
+
                 this.logger.LogInformation($"STARTING: Retrieving BGP monitoring data as configured in HamnetDB - last run: Started {status.LastBgpQueryStart} ({sinceLastScan} ago)");
 
                 status.LastBgpQueryStart = DateTime.UtcNow;
