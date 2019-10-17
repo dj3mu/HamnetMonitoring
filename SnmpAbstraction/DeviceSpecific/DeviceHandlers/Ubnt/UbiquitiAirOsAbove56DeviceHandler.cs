@@ -1,5 +1,6 @@
 ﻿using System;
 using SemVersion;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -32,6 +33,12 @@ namespace SnmpAbstraction
         public override IBgpPeers FetchBgpPeers(string remotePeerIp)
         {
             throw new System.NotSupportedException("Getting BGP peers is currently not supported for Ubiquiti AirOs >= 5.6 devices");
+        }
+
+        /// <inheritdoc />
+        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        {
+            throw new System.NotSupportedException("Traceroute is currently not supported for Ubiquiti AirOs >= 5.6 devices");
         }
 
         /// <inheritdoc />

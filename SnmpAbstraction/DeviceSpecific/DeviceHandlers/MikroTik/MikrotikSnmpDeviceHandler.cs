@@ -1,5 +1,6 @@
 ﻿using System;
 using SemVersion;
+using SnmpSharpNet;
 using tik4net;
 
 namespace SnmpAbstraction
@@ -41,7 +42,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the tik4Net connection handle to use for talking to this device.
         /// </summary>
-        protected ITikConnection TikConnection
+        public ITikConnection TikConnection
         {
             get
             {
@@ -72,6 +73,12 @@ namespace SnmpAbstraction
         protected override IWirelessPeerInfos RetrieveWirelessPeerInfos(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup)
         {
             return new LazyLoadingMikroTikWirelessPeerInfos(this.LowerLayer, this.OidLookup);
+        }
+
+        /// <inheritdoc />
+        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        {
+            return new MikrotikApiTracerouteOperation(this.LowerLayer.Address, this.TikConnection, remoteIp, count).Execute(); 
         }
 
         /// <inheritdoc />

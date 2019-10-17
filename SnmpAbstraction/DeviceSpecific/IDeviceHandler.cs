@@ -59,5 +59,13 @@ namespace SnmpAbstraction
         /// <param name="remotePeerIp">The BGP peer IP address to which the BGP details shall be fetched. If null or empty, all peers will be fetched.</param>
         /// <returns>The BGP peers that are currently connected to this device.</returns>
         IBgpPeers FetchBgpPeers(string remotePeerIp);
+
+        /// <summary>
+        /// Performs a traceroute 
+        /// </summary>
+        /// <param name="remoteIp">The remote device's IP address to which the traceroute shall be done.</param>
+        /// <param name="count">The number of packets to send for tracing the route.</param>
+        /// <returns>The result of the traceroute.</returns>
+        ITracerouteResult Traceroute(IpAddress remoteIp, uint count);
     }
 }

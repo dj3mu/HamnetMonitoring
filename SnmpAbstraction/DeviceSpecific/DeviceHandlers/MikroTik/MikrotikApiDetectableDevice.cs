@@ -23,6 +23,14 @@ namespace SnmpAbstraction
 
         private TikConnectionType apiInUse = TikConnectionType.Api_v2;
 
+        /// <summary>
+        /// Default-construct
+        /// </summary>
+        public MikrotikApiDetectableDevice()
+        {
+            this.Priority = 200;
+        }
+
         /// <inheritdoc />
         public override QueryApis SupportedApi { get; } = QueryApis.VendorSpecific;
 

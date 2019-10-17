@@ -16,12 +16,12 @@ namespace SnmpAbstraction
     /// </summary>
     public static class SnmpAbstraction
     {
-        private static readonly string Log4netConfigurationFile = "Config/log4net.config";
-
         /// <summary>
         /// Regex for indenting (capturing start of line).
         /// </summary>
         private static readonly Regex IndentationRegex = new Regex(@"^", RegexOptions.Compiled | RegexOptions.Multiline);
+
+        private static string Log4netConfigurationFile = "Config/log4net.config";
 
         private static Version libraryVersionBacking = null;
 
@@ -101,6 +101,21 @@ namespace SnmpAbstraction
 
                 return libraryIdBacking;
             }
+        }
+
+        /// <summary>
+        /// Sets the configuration file for the log4net logger.
+        /// </summary>
+        /// <param name="configFilePath">The new configuration file.</param>
+        public static void SetLoggerConfig(string configFilePath)
+        {
+            if (!File.Exists(configFilePath))
+            {
+                log.Error($"Cannot find log4net configuration file '{configFilePath}': Going ahead with previous logging configuration");
+            }
+
+            Log4netConfigurationFile = configFilePath;
+            log = null; // force re-init of the logger
         }
 
         /// <summary>

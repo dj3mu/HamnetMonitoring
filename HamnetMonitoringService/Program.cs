@@ -47,8 +47,6 @@ namespace HamnetDbRest
         /// </summary>
         public static readonly DateTime UnixTimeStampBase = new DateTime(1970, 1, 1);
 
-        private static readonly string Log4netConfigurationFile = "Config/log4net.config";
-
         private static Version libraryVersionBacking = null;
 
         private static string libraryIdBacking = null;
@@ -57,6 +55,8 @@ namespace HamnetDbRest
         
         private static string libraryInformationalVersionBacking = null;
         
+        private static string Log4netConfigFile = "Config/log4net.config";
+
         /// <summary>
         /// Gets the version number of the InstallationServiceLib.
         /// </summary>
@@ -144,6 +144,12 @@ namespace HamnetDbRest
                 .AddEnvironmentVariables()
                 .Build();
 
+            var logFileFromConfig = configuration.GetSection("Logging").GetValue<string>("Log4netConfigFile");
+            Log4netConfigFile = string.IsNullOrWhiteSpace(logFileFromConfig) ? Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Config", "log4net.config") : logFileFromConfig;
+
+            SnmpAbstraction.SnmpAbstraction.SetLoggerConfig(Log4netConfigFile);
+            HamnetDbAbstraction.HamnetDbAbstraction.SetLoggerConfig(Log4netConfigFile);
+
             var host = new WebHostBuilder()
                 .UseConfiguration(configuration)
                 .UseKestrel()
@@ -153,7 +159,7 @@ namespace HamnetDbRest
                         // The ILoggingBuilder minimum level determines the
                         // the lowest possible level for logging. The log4net
                         // level then sets the level that we actually log at.
-                        logging.AddLog4Net(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Config", "log4net.config"));
+                        logging.AddLog4Net(Log4netConfigFile);
 #if DEBUG
                         logging.SetMinimumLevel(LogLevel.Debug);
 #else
@@ -176,7 +182,7 @@ namespace HamnetDbRest
             {
                 var assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 XmlDocument log4netConfig = new XmlDocument();
-                log4netConfig.Load(File.OpenRead(Path.Combine(assemblyFolder, Log4netConfigurationFile)));
+                log4netConfig.Load(File.OpenRead(Path.Combine(assemblyFolder, Log4netConfigFile)));
                 var repo = log4net.LogManager.CreateRepository(Assembly.GetEntryAssembly(), typeof(log4net.Repository.Hierarchy.Hierarchy));
                 log4net.Config.XmlConfigurator.Configure(repo, log4netConfig["log4net"]);
 

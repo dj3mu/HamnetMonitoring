@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using SnmpSharpNet;
+using tik4net.Objects.Tool;
 
 namespace SnmpAbstraction
 {
