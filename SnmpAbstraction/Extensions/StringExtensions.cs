@@ -16,6 +16,8 @@ namespace SnmpAbstraction
         /// </summary>
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        
+
         /// <summary>
         /// Tries to convert the given version into a valid <see cref="SemanticVersion" />
         /// </summary>

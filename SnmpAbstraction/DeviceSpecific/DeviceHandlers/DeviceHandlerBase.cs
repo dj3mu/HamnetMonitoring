@@ -103,6 +103,9 @@ namespace SnmpAbstraction
         public abstract IBgpPeers FetchBgpPeers(string remotePeerIp);
 
         /// <inheritdoc />
+        public abstract ITracerouteResult Traceroute(IpAddress remoteIp, uint count);
+
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"{this.Model} v {this.OsVersion} @ {this.Address}";

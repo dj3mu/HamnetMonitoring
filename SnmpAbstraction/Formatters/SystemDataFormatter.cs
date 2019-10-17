@@ -73,8 +73,78 @@ namespace SnmpAbstraction
                 return this.Format(asBgpPeer);
             }
 
+            ITracerouteResult asTracerouteResult = someObject as ITracerouteResult;
+            if (asTracerouteResult != null)
+            {
+                return this.Format(asTracerouteResult);
+            }
+
+            ITracerouteHop asTracerouteHop = someObject as ITracerouteHop;
+            if (asTracerouteHop != null)
+            {
+                return this.Format(asTracerouteHop);
+            }
+
             // fallback: call the object's ToString
             return someObject.ToString();
+        }
+
+        /// <summary>
+        /// Formats as block-formatted string of an <see cref="ITracerouteResult" />.
+        /// </summary>
+        /// <param name="traceRouteResult">The data to format.</param>
+        /// <returns>The formatted string.</returns>
+        public string Format(ITracerouteResult traceRouteResult)
+        {
+            if (traceRouteResult == null)
+            {
+                return "<null>";
+            }
+
+            StringBuilder returnBuilder = new StringBuilder(traceRouteResult.HopCount * 128);
+
+            returnBuilder.Append("Routing Hops:");
+
+            if (traceRouteResult.HopCount == 0)
+            {
+                returnBuilder.Append(" No hops found.");
+            }
+            else
+            {
+                uint hopCounter = 0;
+                foreach (var item in traceRouteResult.Hops)
+                {
+                    returnBuilder.Append("Hop #").Append(++hopCounter).Append(": ").AppendLine(SnmpAbstraction.IndentLines(this.Format(item)));
+                }
+            }
+
+            return returnBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Formats as block-formatted string of an <see cref="ITracerouteHop" />.
+        /// </summary>
+        /// <param name="tracerouteHop">The data to format.</param>
+        /// <returns>The formatted string.</returns>
+        public string Format(ITracerouteHop tracerouteHop)
+        {
+            if (tracerouteHop == null)
+            {
+                return "<null>";
+            }
+
+            StringBuilder returnBuilder = new StringBuilder(256);
+
+            returnBuilder
+                .Append("Address:").Append(tracerouteHop.Address)
+                .Append(", RTT ").Append(tracerouteHop.BestRtt)
+                .Append(" / ").Append(tracerouteHop.AverageRtt)
+                .Append(" / ").Append(tracerouteHop.WorstRtt)
+                .Append(", Last RTT ").Append(tracerouteHop.LastRtt)
+                .Append(", Loss ").Append(tracerouteHop.LossPercent)
+                .Append(", Sent ").Append(tracerouteHop.SentCount);
+
+            return returnBuilder.ToString();
         }
 
         /// <summary>

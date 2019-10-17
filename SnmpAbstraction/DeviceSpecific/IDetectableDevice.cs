@@ -8,6 +8,12 @@ namespace SnmpAbstraction
     internal interface IDetectableDevice
     {
         /// <summary>
+        /// Gets the priority of this detectable device. This property is the ordering criteria when checking device applicability.
+        /// Device with highest priority value wins and no lower-priority device will be checked any more.
+        /// </summary>
+        int Priority { get; }
+
+        /// <summary>
         /// Gets the API that is supported by this handler.
         /// </summary>
         QueryApis SupportedApi { get; }

@@ -179,7 +179,40 @@ namespace SnmpAbstractionTests
         }
 
         /// <summary>
-        /// Performs procedure for *QuerySystemData tests.
+        /// Test for querying of BGP peers of Mikrotik devices.
+        /// </summary>
+        [Test]
+        public void MtikTracerouteTest()
+        {
+            QueryAndPrintTraceroute(TestConstants.TestAddressMikrotikRouter1, TestConstants.TestAddressAlix1.ToString(), SnmpVersion.Ver2, false);
+        }
+
+        /// <summary>
+        /// Performs procedure for traceroute tests.
+        /// </summary>
+        /// <param name="address">The address to test with.</param>
+        /// <param name="target">The traceroute target host name or IP address.</param>
+        /// <param name="snmpVersion">The SNMP protocol version to use.</param>
+        /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
+        private static void QueryAndPrintTraceroute(IpAddress address, string target, SnmpVersion snmpVersion, bool useCache = false)
+        {
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(QueryApis.VendorSpecific));
+
+            var systemData = querier.SystemData;
+            systemData.ForceEvaluateAll();
+
+            Assert.NotNull(querier, "Create(...) returned null");
+
+            var traceroute = querier.Traceroute(target);
+
+            Assert.NotNull(traceroute, "querier.BgpPeers returned null");
+
+            Console.WriteLine("Obtained route trace:");
+            Console.WriteLine(new BlockTextFormatter().Format(traceroute));
+        }
+
+        /// <summary>
+        /// Performs procedure for BGP tests.
         /// </summary>
         /// <param name="address">The address to test with.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use.</param>

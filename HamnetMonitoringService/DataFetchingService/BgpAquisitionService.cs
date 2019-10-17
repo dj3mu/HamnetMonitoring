@@ -44,8 +44,6 @@ namespace RestService.DataFetchingService
 
         private TimeSpan refreshInterval;
 
-        private bool timerReAdjustmentNeeded = false;
-
         private QueryResultDatabaseContext resultDatabaseContext;
 
         private int maxParallelQueries;
@@ -140,7 +138,6 @@ namespace RestService.DataFetchingService
             {
                 // no aquisition required yet (e.g. service restart)
                 timeToFirstAquisition = this.refreshInterval - timeSinceLastAquisitionStart;
-                this.timerReAdjustmentNeeded = true;
             }
 
             this.logger.LogInformation($"STARTING first BGP aquisition after restart in {timeToFirstAquisition}: Last aquisition started {status.LastBgpQueryStart}, configured interval {this.refreshInterval}");

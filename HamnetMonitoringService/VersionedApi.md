@@ -115,7 +115,7 @@ Tries to ping the given `<hostname or IP>` and returns the results. For example,
 }
 ```
 
-#### Ping
+#### Host Info (or test for working SNMP)
 URI path: `/api/v1/linktest/info/<hostname or IP>`.
 
 Gets the basic system information for the given `<hostname or IP>` and returns the results. For example, the request URI path `/api/v1/linktest/info/44.224.10.78?EnableCaching=false` could return:
@@ -188,6 +188,69 @@ For example the request URI path `/api/v1/linktest/network/44.224.10.64%2F29` co
         }
     ],
     "errorDetails": []
+}
+```
+
+
+### Network tools functionality
+URI root path: `/api/v1/tools`.
+
+All replies of this API will at least return a JSON structure with the element `errorDetails` which is an array of strings containing error information. Usually this contains text of exceptions encountered when performing the operation. Example:
+```json
+{
+    "errorDetails": [
+        "TikCommandException: invalid user name or password (6)"
+    ]
+}
+```
+
+#### Traceroute
+URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>?<options>`
+
+or
+
+URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>/<count>?<options>`
+
+Performs a traceroute operation from `start host or IP` to `destination IP`. Optionally a `count` can be added to specify how many packets shall be sent for the traceroute operation. If not specified, `count` defaults to 1.
+
+Example result:
+```json
+{
+    "errorDetails": [],
+    "fromAddress": "44.225.21.1",
+    "toAddress": "44.224.90.86",
+    "hopCount": 20,
+    "hops": [
+        {
+            "address": "44.224.10.73",
+            "lossPercent": 0.0,
+            "sentCount": 1,
+            "status": "",
+            "lastRttMs": 1.1,
+            "averageRttMs": 1.1,
+            "bestRttMs": 1.1,
+            "worstRttMs": 1.1
+        },
+        {
+            "address": "44.224.10.105",
+            "lossPercent": 0.0,
+            "sentCount": 1,
+            "status": "",
+            "lastRttMs": 5.4,
+            "averageRttMs": 5.4,
+            "bestRttMs": 5.4,
+            "worstRttMs": 5.4
+        },
+...
+]
+```
+
+If the device at `start host or IP` does not support Traceroute, there will be an error response like:
+```json
+{
+    "errorDetails": [
+        "HamnetSnmpException: Unsupported device at address '44.224.90.86': No applicable handler found (allowed APIs: VendorSpecific)"
+    ]
 }
 ```
 

@@ -54,16 +54,11 @@ namespace SnmpAbstraction
                 .Where(p => type.IsAssignableFrom(p) && !p.IsAbstract && !p.IsInterface);
 
             IDetectableDevice deviceToUse = null;
-            foreach (Type currentType in detectableDevices)
+            foreach (IDetectableDevice currentDevice in detectableDevices
+                .Select(dt => (IDetectableDevice)Activator.CreateInstance(dt)) // instantiate the detectable devices that we've found
+                .Where(d => (d.SupportedApi & options.AllowedApis) != 0)       // choose only those which are allowed by selected API
+                .OrderByDescending(d => d.Priority))                           // and order by decreasing priority (so we take highest prio device first)
             {
-                IDetectableDevice currentDevice = (IDetectableDevice)Activator.CreateInstance(currentType);
-
-                if ((currentDevice.SupportedApi & options.AllowedApis) == 0)
-                {
-                    log.Debug($"API mismatch between {currentDevice} and allowed APIs ({options.AllowedApis}): Ignoring the device");
-                    continue;
-                }
-
                 try
                 {
                     if (options.AllowedApis.HasFlag(QueryApis.VendorSpecific) && currentDevice.IsApplicableVendorSpecific(this.lowerLayer.Address, options))

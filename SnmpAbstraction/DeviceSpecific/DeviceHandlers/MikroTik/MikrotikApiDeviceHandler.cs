@@ -125,6 +125,12 @@ namespace SnmpAbstraction
             return new LazyLoadingMikrotikBgpPeerInfos(this.Address, this.TikConnection, remotePeerIp);
         }
 
+        /// <inheritdoc />
+        public ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        {
+            return new MikrotikApiTracerouteOperation(this.Address, this.TikConnection, remoteIp, count).Execute(); 
+        }
+
         /// <summary>
         /// Gets the tik4Net connection handle to use for talking to this device.
         /// </summary>

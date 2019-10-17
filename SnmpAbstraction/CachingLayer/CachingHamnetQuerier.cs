@@ -173,6 +173,16 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
+        public ITracerouteResult Traceroute(string remoteIp, uint count)
+        {
+            this.InitializeLowerQuerier();
+
+            // currently not caching BGP info at all -- it's pretty volatile
+            // not sure whether we'll implement caching at all one day.
+            return this.lowerQuerier.Traceroute(remoteIp, count);
+        }
+
+        /// <inheritdoc />
         public void Dispose()
         {
             this.Dispose(true);

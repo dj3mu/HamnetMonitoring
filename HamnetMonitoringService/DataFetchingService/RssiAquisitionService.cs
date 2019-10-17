@@ -45,8 +45,6 @@ namespace RestService.DataFetchingService
 
         private TimeSpan refreshInterval;
 
-        private bool timerReAdjustmentNeeded = false;
-
         private QueryResultDatabaseContext resultDatabaseContext;
 
         private int maxParallelQueries;
@@ -155,7 +153,6 @@ namespace RestService.DataFetchingService
             {
                 // no aquisition required yet (e.g. service restart)
                 timeToFirstAquisition = this.refreshInterval - timeSinceLastAquisitionStart;
-                this.timerReAdjustmentNeeded = true;
             }
 
             this.logger.LogInformation($"STARTING first RSSI aquisition after restart in {timeToFirstAquisition}: Last aquisition started {status.LastRssiQueryStart}, configured interval {this.refreshInterval}");

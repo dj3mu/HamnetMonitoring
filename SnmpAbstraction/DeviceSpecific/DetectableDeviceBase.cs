@@ -18,6 +18,9 @@ namespace SnmpAbstraction
         public abstract QueryApis SupportedApi { get; }
 
         /// <inheritdoc />
+        public int Priority { get; protected set; } = 100;
+
+        /// <inheritdoc />
         public virtual IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
         {
             if(this.circularCreateHandler++ > 1)
