@@ -85,21 +85,37 @@ namespace HamnetDbRest.Controllers
 
             var statusTableRow = this.dbContext.MonitoringStatus.First();
 
-            var queryResultStats = new DatabaseStatistic()
+            var rssiQueryResultStats = new DatabaseStatistic()
             {
-                { "UniqueRssiValues", this.dbContext.RssiValues.Count().ToString() },
+                { "UniqueValues", this.dbContext.RssiValues.Count().ToString() },
                 { "TotalFailures", this.dbContext.RssiFailingQueries.Count().ToString() },
                 { "TimeoutFailures", this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
                 { "NonTimeoutFailures", this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
-                { "LastRssiAquisitionStart", statusTableRow.LastRssiQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
-                { "LastRssiAquisitionEnd", statusTableRow.LastRssiQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastAquisitionStart", statusTableRow.LastRssiQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastAquisitionEnd", statusTableRow.LastRssiQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+            };
+
+            reply.Add("RssiResultDatabase", rssiQueryResultStats);
+
+            var bgpQueryResultStats = new DatabaseStatistic()
+            {
+                { "UniqueValues", this.dbContext.BgpPeers.Count().ToString() },
+                { "TotalFailures", this.dbContext.BgpFailingQueries.Count().ToString() },
+                { "TimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
+                { "NonTimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
                 { "LastBgpAquisitionStart", statusTableRow.LastBgpQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
                 { "LastBgpAquisitionEnd", statusTableRow.LastBgpQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+            };
+
+            reply.Add("BgpResultDatabase", bgpQueryResultStats);
+
+            var maintenanceResultStats = new DatabaseStatistic()
+            {
                 { "LastMaintenanceStart", statusTableRow.LastMaintenanceStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
                 { "LastMaintenanceEnd", statusTableRow.LastMaintenanceEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
             };
 
-            reply.Add("ResultDatabase", queryResultStats);
+            reply.Add("MaintenanceDatabase", maintenanceResultStats);
 
             var cacheMaintenance = new CacheMaintenance(true /* we don't want to modify anything - so set dry-run to be sure */);
             reply.Add("CacheDatabase", new DatabaseStatistic(cacheMaintenance.CacheStatistics()));
