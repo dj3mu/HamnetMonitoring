@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
@@ -45,6 +46,8 @@ namespace RestService.DataFetchingService
         private TimeSpan refreshInterval;
 
         private QueryResultDatabaseContext resultDatabaseContext;
+
+        private List<Regex> filterRegexList = null;
 
         private int maxParallelQueries;
 
@@ -120,6 +123,14 @@ namespace RestService.DataFetchingService
             if (hamnetDbConfig.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() != "MYSQL")
             {
                 throw new InvalidOperationException("Only MySQL / MariaDB is currently supported for the Hament database");
+            }
+
+            // get filter regex
+            var filterRegexConfig = aquisisionServiceSection.GetSection("WhitelistFilterRegex").GetChildren();
+            this.filterRegexList = filterRegexConfig.Select(c => new Regex(c.Value, RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)).ToList();
+            if (this.filterRegexList.Count == 0)
+            {
+                this.filterRegexList.Add(new Regex(@".*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase));
             }
 
             // by default waiting a couple of secs before first Hamnet scan
@@ -276,16 +287,15 @@ namespace RestService.DataFetchingService
 
             this.logger.LogDebug($"Launching {this.maxParallelQueries} parallel BGP aquisition threads");
 
-            Parallel.ForEach(hostsSlicedAccordingToConfiguration
+            var filteredHosts = hostsSlicedAccordingToConfiguration
                 // the following where is just a hack until HamnetDB has a flag clearly identifying routers that shall be queried for BGP
                 // and have opened their API port to "monitoring" user.
-                .Where(hsatc => hsatc.Callsign.ToUpperInvariant().Equals("DB0EBE")
-                    || hsatc.Callsign.ToUpperInvariant().Equals("DB0ZM")
-                    || hsatc.Callsign.ToUpperInvariant().Equals("DB0AAT")
-                    || hsatc.Callsign.ToUpperInvariant().Equals("DM0VK")
-                    || hsatc.Callsign.ToUpperInvariant().Equals("DL3NCU-2")
-                    || hsatc.Callsign.ToUpperInvariant().Equals("DB0ON"))
-                , new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
+                .Where(hsatc => this.filterRegexList.Any(fr => fr.IsMatch(hsatc.Callsign)))
+                .ToList(); // for debugger
+
+            Parallel.ForEach(
+                filteredHosts,
+                new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
             host =>
             {
                 if ((excludeNets != null) && (excludeNets.Any(exclude => exclude.Contains(host.Address))))
