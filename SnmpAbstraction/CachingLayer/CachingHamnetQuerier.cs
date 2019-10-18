@@ -76,14 +76,6 @@ namespace SnmpAbstraction
         //   this. Dispose(false);
         // }
 
-        /// <summary>
-        /// Thread sync / locking object.
-        /// </summary>
-        internal CachingHamnetQuerier(object syncRoot)
-        {
-            this.SyncRoot = syncRoot;
-
-        }
         public object SyncRoot { get; } = new object();
 
         /// <inheritdoc />
@@ -229,18 +221,21 @@ namespace SnmpAbstraction
         /// </summary>
         private void LowerQuerierFetchSystemData()
         {
-            if (this.cacheEntry.SystemData != null)
+            lock(this.SyncRoot)
             {
-                return;
+                if (this.cacheEntry.SystemData != null)
+                {
+                    return;
+                }
+
+                this.InitializeLowerQuerier();
+
+                this.cacheEntry.SystemData = new SerializableSystemData(this.lowerQuerier.SystemData);
+                this.cacheEntry.LastModification = DateTime.UtcNow;
+
+                this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
+                this.cacheDatabaseContext.SaveChanges();
             }
-
-            this.InitializeLowerQuerier();
-
-            this.cacheEntry.SystemData = new SerializableSystemData(this.lowerQuerier.SystemData);
-            this.cacheEntry.LastModification = DateTime.UtcNow;
-
-            this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
-            this.cacheDatabaseContext.SaveChanges();
         }
 
         /// <summary>
@@ -248,28 +243,31 @@ namespace SnmpAbstraction
         /// </summary>
         private void LowerQuerierFetchInterfaceDetails()
         {
-            if (this.volatileFetchingInterfaceDetails != null)
+            lock(this.SyncRoot)
             {
-                return;
+                if (this.volatileFetchingInterfaceDetails != null)
+                {
+                    return;
+                }
+
+                if (this.cacheEntry.InterfaceDetails == null)
+                {
+                    this.InitializeLowerQuerier();
+
+                    var lowerLayerInterfaceDetails = this.lowerQuerier.NetworkInterfaceDetails;
+
+                    // we force immediate evaluation in order to ensure that really all cachable OIDs have been set.
+                    lowerLayerInterfaceDetails.ForceEvaluateAll();
+
+                    this.cacheEntry.InterfaceDetails = new SerializableInterfaceDetails(lowerLayerInterfaceDetails);
+                    this.cacheEntry.LastModification = DateTime.UtcNow;
+
+                    this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
+                    this.cacheDatabaseContext.SaveChanges();
+                }
+
+                this.volatileFetchingInterfaceDetails = new VolatileFetchingInterfaceDetails(this.cacheEntry.InterfaceDetails, this.lowerLayer);
             }
-
-            if (this.cacheEntry.InterfaceDetails == null)
-            {
-                this.InitializeLowerQuerier();
-
-                var lowerLayerInterfaceDetails = this.lowerQuerier.NetworkInterfaceDetails;
-
-                // we force immediate evaluation in order to ensure that really all cachable OIDs have been set.
-                lowerLayerInterfaceDetails.ForceEvaluateAll();
-
-                this.cacheEntry.InterfaceDetails = new SerializableInterfaceDetails(lowerLayerInterfaceDetails);
-                this.cacheEntry.LastModification = DateTime.UtcNow;
-
-                this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
-                this.cacheDatabaseContext.SaveChanges();
-            }
-
-            this.volatileFetchingInterfaceDetails = new VolatileFetchingInterfaceDetails(this.cacheEntry.InterfaceDetails, this.lowerLayer);
         }
 
         /// <summary>
@@ -277,28 +275,31 @@ namespace SnmpAbstraction
         /// </summary>
         private void LowerQuerierFetchWirelessPeerInfo()
         {
-            if (this.volatileFetchingWirelessPeerInfo != null)
+            lock(this.SyncRoot)
             {
-                return;
+                if (this.volatileFetchingWirelessPeerInfo != null)
+                {
+                    return;
+                }
+
+                if (this.cacheEntry.WirelessPeerInfos == null)
+                {
+                    this.InitializeLowerQuerier();
+
+                    var lowerLayerWirelessPeerInfos = this.lowerQuerier.WirelessPeerInfos;
+
+                    // we force immediate evaluation in order to ensure that really all cachable OIDs have been set.
+                    lowerLayerWirelessPeerInfos.ForceEvaluateAll();
+
+                    this.cacheEntry.WirelessPeerInfos = new SerializableWirelessPeerInfos(lowerLayerWirelessPeerInfos);
+                    this.cacheEntry.LastModification = DateTime.UtcNow;
+
+                    this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
+                    this.cacheDatabaseContext.SaveChanges();
+                }
+
+                this.volatileFetchingWirelessPeerInfo = new VolatileFetchingWirelessPeerInfos(this.cacheEntry.WirelessPeerInfos, this.lowerLayer);
             }
-
-            if (this.cacheEntry.WirelessPeerInfos == null)
-            {
-                this.InitializeLowerQuerier();
-
-                var lowerLayerWirelessPeerInfos = this.lowerQuerier.WirelessPeerInfos;
-
-                // we force immediate evaluation in order to ensure that really all cachable OIDs have been set.
-                lowerLayerWirelessPeerInfos.ForceEvaluateAll();
-
-                this.cacheEntry.WirelessPeerInfos = new SerializableWirelessPeerInfos(lowerLayerWirelessPeerInfos);
-                this.cacheEntry.LastModification = DateTime.UtcNow;
-
-                this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
-                this.cacheDatabaseContext.SaveChanges();
-            }
-
-            this.volatileFetchingWirelessPeerInfo = new VolatileFetchingWirelessPeerInfos(this.cacheEntry.WirelessPeerInfos, this.lowerLayer);
         }
 
         /// <summary>
@@ -334,18 +335,21 @@ namespace SnmpAbstraction
         {
             this.InitializeDatabaseContext();
 
-            if (this.cacheEntry != null)
+            lock(this.SyncRoot)
             {
-                return;
-            }
+                if (this.cacheEntry != null)
+                {
+                    return;
+                }
 
-            this.cacheEntry = this.cacheDatabaseContext.CacheData.FirstOrDefault(e => e.Address == this.Address);
+                this.cacheEntry = this.cacheDatabaseContext.CacheData.FirstOrDefault(e => e.Address == this.Address);
 
-            if (this.cacheEntry == null)
-            {
-                this.cacheEntry = new CacheData { Address = this.Address, LastModification = DateTime.UtcNow };
-                this.cacheDatabaseContext.CacheData.Add(this.cacheEntry);
-                this.cacheDatabaseContext.SaveChanges();
+                if (this.cacheEntry == null)
+                {
+                    this.cacheEntry = new CacheData { Address = this.Address, LastModification = DateTime.UtcNow };
+                    this.cacheDatabaseContext.CacheData.Add(this.cacheEntry);
+                    this.cacheDatabaseContext.SaveChanges();
+                }
             }
 
             if (this.cacheEntry.SystemData == null)
@@ -365,12 +369,15 @@ namespace SnmpAbstraction
         /// </summary>
         private void InitializeDatabaseContext()
         {
-            if (this.cacheDatabaseContext != null)
+            lock(this.SyncRoot)
             {
-                return;
-            }
+                if (this.cacheDatabaseContext != null)
+                {
+                    return;
+                }
 
-            this.cacheDatabaseContext = CacheDatabaseProvider.Instance.CacheDatabase;
+                this.cacheDatabaseContext = CacheDatabaseProvider.Instance.CacheDatabase;
+            }
         }
     }
 }
