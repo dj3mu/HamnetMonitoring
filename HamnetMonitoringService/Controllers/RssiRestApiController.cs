@@ -38,6 +38,7 @@ namespace HamnetDbRest.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Rssi>>> GetRssi(string host)
         {
+            Program.RequestStatistics.ApiV1RssiRequests++;
             return await this.dbContext.RssiValues.ToListAsync();
         }
 
@@ -48,6 +49,7 @@ namespace HamnetDbRest.Controllers
         [HttpGet("failing")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetFailingRssiQueries()
         {
+            Program.RequestStatistics.ApiV1RssiFailingRequests++;
             return await this.dbContext.RssiFailingQueries.ToListAsync();
         }
 
@@ -58,6 +60,7 @@ namespace HamnetDbRest.Controllers
         [HttpGet("failing/timeout")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetTimeoutFailingRssiQueries()
         {
+            Program.RequestStatistics.ApiV1RssiFailingRequests++;
             return await this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
         }
 
@@ -68,6 +71,7 @@ namespace HamnetDbRest.Controllers
         [HttpGet("failing/nontimeout")]
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetNonTimeoutFailingRssiQueries()
         {
+            Program.RequestStatistics.ApiV1RssiFailingRequests++;
             return await this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
         }
     }

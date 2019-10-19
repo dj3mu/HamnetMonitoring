@@ -38,6 +38,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet()]
         public async Task<ActionResult<IEnumerable<ICacheData>>> GetAll()
         {
+            Program.RequestStatistics.ApiV1CacheInfoRequests++;
+
             return await Task.Run(this.FetchCacheEntries);
         }
 

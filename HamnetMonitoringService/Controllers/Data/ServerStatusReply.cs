@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using SnmpAbstraction;
 
 namespace HamnetDbRest.Controllers
@@ -10,7 +9,7 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class ServerStatusReply : IServerStatusReply
     {
-        private readonly Dictionary<string, IDatabasestatistic> dbStats = new Dictionary<string, IDatabasestatistic>();
+        private readonly Dictionary<string, IStatistic> dbStats = new Dictionary<string, IStatistic>();
 
         private readonly Dictionary<string, IConfigurationInfo> configs = new Dictionary<string, IConfigurationInfo>();
 
@@ -43,7 +42,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <param name="databaseId">The database key.</param>
         /// <param name="dbStats">The statistics associated with the key.</param>
-        public void Add(string databaseId, IDatabasestatistic dbStats)
+        public void Add(string databaseId, IStatistic dbStats)
         {
             this.dbStats.Add(databaseId, dbStats);
         }
@@ -59,7 +58,7 @@ namespace HamnetDbRest.Controllers
         }
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<string, IDatabasestatistic> DatabaseStatistic => this.dbStats;
+        public IReadOnlyDictionary<string, IStatistic> Statistics => this.dbStats;
 
         /// <inheritdoc />
         public IReadOnlyDictionary<string, IConfigurationInfo>  Configurations => this.configs;

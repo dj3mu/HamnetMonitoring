@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
@@ -25,6 +27,8 @@ namespace HamnetDbRest.Controllers
         private static readonly Regex PasswordReplaceRegex = new Regex(@"((Pw|Pass|Secret|Ui|User|Server)\w*=).*?;", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static readonly Regex CompletlyHideKeyRegex = new Regex(@"Pass.*|DatabaseUri", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
+        private static readonly PropertyInfo[] StatsProperties = typeof(RequestStatisticsContainer).GetProperties(BindingFlags.Default | BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
 
         private readonly ILogger logger;
 
@@ -52,6 +56,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet]
         public async Task<ActionResult<IServerStatusReply>> Get()
         {
+            Program.RequestStatistics.ApiStatusRequests++;
+
             return await Task.Run(this.GetVersionInformation);
         }
 
@@ -74,6 +80,8 @@ namespace HamnetDbRest.Controllers
                 ProcessStartTime = myProcess.StartTime,
             };
 
+            reply.Add("WebRequests", new Statistic(StatsProperties.Select(sp => new KeyValuePair<string, string>(sp.Name, sp.GetValue(Program.RequestStatistics)?.ToString()))));
+
             this.AddConfiguration(reply, Program.RssiAquisitionServiceSectionKey);
             this.AddConfiguration(reply, MaintenanceService.MaintenanceServiceSectionKey);
             this.AddConfiguration(reply, Program.InfluxSectionKey);
@@ -85,7 +93,7 @@ namespace HamnetDbRest.Controllers
 
             var statusTableRow = this.dbContext.MonitoringStatus.First();
 
-            var rssiQueryResultStats = new DatabaseStatistic()
+            var rssiQueryResultStats = new Statistic()
             {
                 { "UniqueValues", this.dbContext.RssiValues.Count().ToString() },
                 { "TotalFailures", this.dbContext.RssiFailingQueries.Count().ToString() },
@@ -97,19 +105,19 @@ namespace HamnetDbRest.Controllers
 
             reply.Add("RssiResultDatabase", rssiQueryResultStats);
 
-            var bgpQueryResultStats = new DatabaseStatistic()
+            var bgpQueryResultStats = new Statistic()
             {
                 { "UniqueValues", this.dbContext.BgpPeers.Count().ToString() },
                 { "TotalFailures", this.dbContext.BgpFailingQueries.Count().ToString() },
                 { "TimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
                 { "NonTimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
-                { "LastBgpAquisitionStart", statusTableRow.LastBgpQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
-                { "LastBgpAquisitionEnd", statusTableRow.LastBgpQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastAquisitionStart", statusTableRow.LastBgpQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastAquisitionEnd", statusTableRow.LastBgpQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
             };
 
             reply.Add("BgpResultDatabase", bgpQueryResultStats);
 
-            var maintenanceResultStats = new DatabaseStatistic()
+            var maintenanceResultStats = new Statistic()
             {
                 { "LastMaintenanceStart", statusTableRow.LastMaintenanceStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
                 { "LastMaintenanceEnd", statusTableRow.LastMaintenanceEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
@@ -118,10 +126,10 @@ namespace HamnetDbRest.Controllers
             reply.Add("MaintenanceDatabase", maintenanceResultStats);
 
             var cacheMaintenance = new CacheMaintenance(true /* we don't want to modify anything - so set dry-run to be sure */);
-            reply.Add("CacheDatabase", new DatabaseStatistic(cacheMaintenance.CacheStatistics()));
+            reply.Add("CacheDatabase", new Statistic(cacheMaintenance.CacheStatistics()));
 
             var devDbMaintenance = new DeviceDatabaseMaintenance(true /* we don't want to modify anything - so set dry-run to be sure */);
-            reply.Add("DeviceDatabase", new DatabaseStatistic(devDbMaintenance.CacheStatistics()));
+            reply.Add("DeviceDatabase", new Statistic(devDbMaintenance.CacheStatistics()));
 
             return reply;
         }
