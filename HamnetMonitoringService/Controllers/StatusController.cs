@@ -54,9 +54,14 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet]
-        public async Task<ActionResult<IServerStatusReply>> Get()
+        public async Task<ActionResult<IServerStatusReply>> Get([FromQuery] StatusQueryParameters settings)
         {
             Program.RequestStatistics.ApiStatusRequests++;
+
+            if ((settings != null) && (settings.Refresh > 0))
+            {
+                this.HttpContext.Response.Headers.Add("Refresh", settings.Refresh.ToString());
+            }
 
             return await Task.Run(this.GetVersionInformation);
         }
@@ -185,6 +190,17 @@ namespace HamnetDbRest.Controllers
             }
 
             reply.Add(sectionKey, configuration);
+        }
+
+        /// <summary>
+        /// Container for query parameters of the status request.
+        /// </summary>
+        public class StatusQueryParameters
+        {
+            /// <summary>
+            /// Gets the refresh interval in seconds. 0 to disable.
+            /// </summary>
+            public int Refresh { get; set; } = 0;
         }
     }
 }
