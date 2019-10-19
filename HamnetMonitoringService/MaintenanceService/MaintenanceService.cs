@@ -210,6 +210,8 @@ namespace RestService.DataFetchingService
                 transaction.Commit();
             }
 
+            Program.RequestStatistics.MaintenanceRuns++;
+
             this.RemoveOutdatedResults(configurationSection);
 
             var cacheMaintenance = new CacheMaintenance(this.dryRunMode);

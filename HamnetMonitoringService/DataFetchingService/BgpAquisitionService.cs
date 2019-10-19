@@ -275,6 +275,8 @@ namespace RestService.DataFetchingService
                 transaction.Commit();
             }
 
+            Program.RequestStatistics.BgpPollings++;
+
             HamnetDbPoller hamnetDbPoller = new HamnetDbPoller(this.configuration);
             List<IHamnetDbHost> hostsSlicedAccordingToConfiguration = hamnetDbPoller.FetchBgpRoutersFromHamnetDb();
 
