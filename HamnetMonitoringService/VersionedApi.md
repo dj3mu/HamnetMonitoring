@@ -4,9 +4,11 @@ Adressed via URI root path `/api/v<version>`.
 
 
 ## Server Status and API version
-URI path: `/api/status`
+URI path: `/api/status[?Referesh=<refreshIntervalSeconds>]`
 
 This request is an exception to the versioned API and it is guaranteed, that this request produces backward-compatible results, forever. Use this request to determine the API version to use for talking to the server.
+
+For manual use you may append a query parameter `Refresh` giving a refresh-interval in seconds at which the page will be reloaded.
 
 Returns the server version information, uptime, highest supported API version and, in future, probably some more server status information. Example:
 
@@ -26,6 +28,7 @@ Returns the server version information, uptime, highest supported API version an
             "LastMaintenanceStart": "30.09.2019 21:34:03",
             "LastMaintenanceEnd": "01.01.0001 00:00:00"
         },
+...
         "CacheDatabase": {
             "UniqueCacheEntries": "957"
         },

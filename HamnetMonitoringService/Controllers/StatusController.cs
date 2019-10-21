@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
@@ -26,6 +28,8 @@ namespace HamnetDbRest.Controllers
 
         private static readonly Regex CompletlyHideKeyRegex = new Regex(@"Pass.*|DatabaseUri", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
+        private static readonly PropertyInfo[] StatsProperties = typeof(RequestStatisticsContainer).GetProperties(BindingFlags.Default | BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
+
         private readonly ILogger logger;
 
         private readonly IConfiguration configuration;
@@ -50,8 +54,15 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet]
-        public async Task<ActionResult<IServerStatusReply>> Get()
+        public async Task<ActionResult<IServerStatusReply>> Get([FromQuery] StatusQueryParameters settings)
         {
+            Program.RequestStatistics.ApiStatusRequests++;
+
+            if ((settings != null) && (settings.Refresh > 0))
+            {
+                this.HttpContext.Response.Headers.Add("Refresh", settings.Refresh.ToString());
+            }
+
             return await Task.Run(this.GetVersionInformation);
         }
 
@@ -74,6 +85,8 @@ namespace HamnetDbRest.Controllers
                 ProcessStartTime = myProcess.StartTime,
             };
 
+            reply.Add("WebRequests", new Statistic(StatsProperties.Select(sp => new KeyValuePair<string, string>(sp.Name, sp.GetValue(Program.RequestStatistics)?.ToString()))));
+
             this.AddConfiguration(reply, Program.RssiAquisitionServiceSectionKey);
             this.AddConfiguration(reply, MaintenanceService.MaintenanceServiceSectionKey);
             this.AddConfiguration(reply, Program.InfluxSectionKey);
@@ -85,27 +98,43 @@ namespace HamnetDbRest.Controllers
 
             var statusTableRow = this.dbContext.MonitoringStatus.First();
 
-            var queryResultStats = new DatabaseStatistic()
+            var rssiQueryResultStats = new Statistic()
             {
-                { "UniqueRssiValues", this.dbContext.RssiValues.Count().ToString() },
+                { "UniqueValues", this.dbContext.RssiValues.Count().ToString() },
                 { "TotalFailures", this.dbContext.RssiFailingQueries.Count().ToString() },
                 { "TimeoutFailures", this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
                 { "NonTimeoutFailures", this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
-                { "LastRssiAquisitionStart", statusTableRow.LastRssiQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
-                { "LastRssiAquisitionEnd", statusTableRow.LastRssiQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
-                { "LastBgpAquisitionStart", statusTableRow.LastBgpQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
-                { "LastBgpAquisitionEnd", statusTableRow.LastBgpQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastAquisitionStart", statusTableRow.LastRssiQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastAquisitionEnd", statusTableRow.LastRssiQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+            };
+
+            reply.Add("RssiResultDatabase", rssiQueryResultStats);
+
+            var bgpQueryResultStats = new Statistic()
+            {
+                { "UniqueValues", this.dbContext.BgpPeers.Count().ToString() },
+                { "TotalFailures", this.dbContext.BgpFailingQueries.Count().ToString() },
+                { "TimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
+                { "NonTimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
+                { "LastAquisitionStart", statusTableRow.LastBgpQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+                { "LastAquisitionEnd", statusTableRow.LastBgpQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
+            };
+
+            reply.Add("BgpResultDatabase", bgpQueryResultStats);
+
+            var maintenanceResultStats = new Statistic()
+            {
                 { "LastMaintenanceStart", statusTableRow.LastMaintenanceStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
                 { "LastMaintenanceEnd", statusTableRow.LastMaintenanceEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
             };
 
-            reply.Add("ResultDatabase", queryResultStats);
+            reply.Add("MaintenanceDatabase", maintenanceResultStats);
 
             var cacheMaintenance = new CacheMaintenance(true /* we don't want to modify anything - so set dry-run to be sure */);
-            reply.Add("CacheDatabase", new DatabaseStatistic(cacheMaintenance.CacheStatistics()));
+            reply.Add("CacheDatabase", new Statistic(cacheMaintenance.CacheStatistics()));
 
             var devDbMaintenance = new DeviceDatabaseMaintenance(true /* we don't want to modify anything - so set dry-run to be sure */);
-            reply.Add("DeviceDatabase", new DatabaseStatistic(devDbMaintenance.CacheStatistics()));
+            reply.Add("DeviceDatabase", new Statistic(devDbMaintenance.CacheStatistics()));
 
             return reply;
         }
@@ -161,6 +190,17 @@ namespace HamnetDbRest.Controllers
             }
 
             reply.Add(sectionKey, configuration);
+        }
+
+        /// <summary>
+        /// Container for query parameters of the status request.
+        /// </summary>
+        public class StatusQueryParameters
+        {
+            /// <summary>
+            /// Gets the refresh interval in seconds. 0 to disable.
+            /// </summary>
+            public int Refresh { get; set; } = 0;
         }
     }
 }

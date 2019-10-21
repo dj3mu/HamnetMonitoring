@@ -116,6 +116,8 @@ namespace HamnetDbRest
         /// </summary>
         public static string ProgramWideMutexName { get; } = "HamnetMonitoringService-ProcessWideMonitor";
 
+        internal static RequestStatisticsContainer RequestStatistics { get; } = new RequestStatisticsContainer();
+
         /// <summary>
         /// The entry method.
         /// </summary>

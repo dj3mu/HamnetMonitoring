@@ -35,6 +35,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("ping/{host}")]
         public async Task<ActionResult<IStatusReply>> PingHost(string host)
         {
+            Program.RequestStatistics.ApiV1LinkTestPingRequests++;
+
             return await new PingTest(WebUtility.UrlDecode(host)).Execute();
         }
 
@@ -45,6 +47,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("info/{host}")]
         public async Task<ActionResult<IStatusReply>> HostInfo(string host, [FromQuery]FromUrlQueryQuerierOptions options)
         {
+            Program.RequestStatistics.ApiV1LinkTestInfoRequests++;
+
             return await new HostInfo(WebUtility.UrlDecode(host), this.logger, this.configuration, options).Execute();
         }
 
@@ -55,6 +59,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("link/{host1}/{host2}")]
         public async Task<ActionResult<IStatusReply>> LinkTest(string host1, string host2, [FromQuery]FromUrlQueryQuerierOptions options)
         {
+            Program.RequestStatistics.ApiV1LinkTestLinkRequests++;
+
             return await new LinkTest(WebUtility.UrlDecode(host1), WebUtility.UrlDecode(host2), options).Execute();
         }
 
@@ -65,6 +71,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("network/{net}")]
         public async Task<ActionResult<IStatusReply>> NetworkTest(string net)
         {
+            Program.RequestStatistics.ApiV1LinkTestNetworkRequests++;
+
             return await new NetworkTest(WebUtility.UrlDecode(net), this.logger, this.configuration, null).Execute();
         }
     }

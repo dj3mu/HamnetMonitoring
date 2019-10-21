@@ -43,6 +43,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("traceroute/{fromHost}/{toHost}/{count?}")]
         public async Task<ActionResult<IStatusReply>> TracerouteHost(string fromHost, string toHost, int count, [FromQuery]FromUrlQueryQuerierOptions options)
         {
+            Program.RequestStatistics.ApiV1TraceRouteRequests++;
+
             IQuerierOptions optionsInUse = this.CreateOptions(options);
 
             return await new TracerouteAction(WebUtility.UrlDecode(fromHost), WebUtility.UrlDecode(toHost), count, optionsInUse as FromUrlQueryQuerierOptions).Execute();

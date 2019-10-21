@@ -279,6 +279,8 @@ namespace RestService.DataFetchingService
                 transaction.Commit();
             }
 
+            Program.RequestStatistics.RssiPollings++;
+
             HamnetDbPoller hamnetDbPoller = new HamnetDbPoller(this.configuration);
             Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration = hamnetDbPoller.FetchSubnetsWithHostsFromHamnetDb();
 

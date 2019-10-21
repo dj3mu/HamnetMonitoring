@@ -45,6 +45,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("peers/{host}")]
         public async Task<ActionResult<IStatusReply>> PingHost(string host, [FromQuery]FromUrlQueryQuerierOptions options)
         {
+            Program.RequestStatistics.ApiV1BgpHostSpecificRequests++;
+
             IQuerierOptions optionsInUse = this.CreateOptions(options);
 
             return await new BgpPeersAction(WebUtility.UrlDecode(host), null, optionsInUse as FromUrlQueryQuerierOptions).Execute();
@@ -57,6 +59,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("peers/{host}/{remoteIp}")]
         public async Task<ActionResult<IStatusReply>> PingHost(string host, string remoteIp, [FromQuery]FromUrlQueryQuerierOptions options)
         {
+            Program.RequestStatistics.ApiV1BgpHostSpecificRequests++;
+
             IQuerierOptions optionsInUse = this.CreateOptions(options);
 
             return await new BgpPeersAction(WebUtility.UrlDecode(host), WebUtility.UrlDecode(remoteIp), optionsInUse as FromUrlQueryQuerierOptions).Execute();
@@ -69,6 +73,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("monitoredRouters/{host?}")]
         public async Task<ActionResult<IEnumerable<BgpPeerData>>> GetMonitoredRouters(string host)
         {
+            Program.RequestStatistics.ApiV1BgpMonitoredRoutersRequests++;
+
             if (!string.IsNullOrWhiteSpace(host))
             {
                 return await this.dbContext.BgpPeers.Where(p => p.LocalAddress == host).ToListAsync();
@@ -84,6 +90,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("monitoredRouters/failing")]
         public async Task<ActionResult<IEnumerable<BgpFailingQuery>>> GetFailingRouters()
         {
+            Program.RequestStatistics.ApiV1BgpFailingRequests++;
+
             return await this.dbContext.BgpFailingQueries.ToListAsync();
         }
 
@@ -94,6 +102,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("monitoredRouters/failing/timeout")]
         public async Task<ActionResult<IEnumerable<BgpFailingQuery>>> GetFailingRoutersTimeout()
         {
+            Program.RequestStatistics.ApiV1BgpFailingRequests++;
+
             return await this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
         }
 
@@ -104,6 +114,8 @@ namespace HamnetDbRest.Controllers
         [HttpGet("monitoredRouters/failing/nontimeout")]
         public async Task<ActionResult<IEnumerable<BgpFailingQuery>>> GetFailingRoutersNonTimeout()
         {
+            Program.RequestStatistics.ApiV1BgpFailingRequests++;
+
             return await this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
         }
 
