@@ -34,11 +34,27 @@ namespace SnmpAbstraction
         IWirelessPeerInfos WirelessPeerInfos { get; }
 
         /// <summary>
+        /// Fetches the information about the BGP peers that are connected to the device that is associated
+        /// with this instance and the devices owning the listed remote host names or IP addresses.
+        /// </summary>
+        /// <param name="remotePeer">The BGP peer IP address to which the BGP details shall be fetched. If null or empty, all peers will be fetched.</param>
+        /// <returns>The BGP peers that are currently connected to this device.</returns>
+        IBgpPeers FetchBgpPeers(string remotePeer);
+
+        /// <summary>
         /// Fetches the detailed information for the link between the device that is associated
         /// with this instance and the devices owning the listed remote host names or IP addresses.
         /// </summary>
         /// <param name="remoteHostNamesOrIps">The list of remote device's host name or IP address to which the link details shall be fetched.</param>
         /// <returns>The link details for the link between this device and the listed remote devices.</returns>
         ILinkDetails FetchLinkDetails(params string[] remoteHostNamesOrIps);
+
+        /// <summary>
+        /// Performs a traceroute 
+        /// </summary>
+        /// <param name="remoteHostNameOrIp">The remote device's host name or IP address to which the traceroute shall be done.</param>
+        /// <param name="count">The number of packets to send for tracing the route. Defaults to 3.</param>
+        /// <returns>The result of the traceroute.</returns>
+        ITracerouteResult Traceroute(string remoteHostNameOrIp, uint count = 1);
     }
 }

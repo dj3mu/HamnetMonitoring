@@ -1,4 +1,6 @@
-﻿using SemVersion;
+﻿using System;
+using SemVersion;
+using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -14,9 +16,29 @@ namespace SnmpAbstraction
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="osVersion">The SW version of the device.</param>
         /// <param name="model">The device's model name. Shall be the same name as used for the device name during OID database lookups.</param>
-        public UbiquitiAirOsUpTo56DeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion, string model)
-            : base(lowerLayer, oidLookup, osVersion, model)
+        /// <param name="options">The options to use.</param>
+        public UbiquitiAirOsUpTo56DeviceHandler(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemanticVersion osVersion, string model, IQuerierOptions options)
+            : base(lowerLayer, oidLookup, osVersion, model, options)
         {
+            if ((options.AllowedApis & this.SupportedApi) == 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(options), $"This device handler doesn't support any of the APIs allowed by the IQuerierOptions (allowed: {options.AllowedApis}, supported {this.SupportedApi}).");
+            }
+        }
+
+        /// <inheritdoc />
+        public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
+
+        /// <inheritdoc />
+        public override IBgpPeers FetchBgpPeers(string remotePeerIp)
+        {
+            throw new System.NotSupportedException("Getting BGP peers is currently not supported for Ubiquiti AirOs < 5.6 devices");
+        }
+
+        /// <inheritdoc />
+        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        {
+            throw new System.NotSupportedException("Traceroute is currently not supported for Ubiquiti AirOs < 5.6 devices");
         }
 
         /// <inheritdoc />

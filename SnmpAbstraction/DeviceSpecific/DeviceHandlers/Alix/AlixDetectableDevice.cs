@@ -33,7 +33,17 @@ namespace SnmpAbstraction
         private readonly Oid OsVersionOid2 = new Oid(".1.3.6.1.4.1.14988.1.1.17.1.1.4.1");
 
         /// <inheritdoc />
-        public override bool IsApplicable(ISnmpLowerLayer snmpLowerLayer)
+        public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
+
+        /// <inheritdoc />
+        public override bool IsApplicableVendorSpecific(IpAddress address, IQuerierOptions options)
+        {
+            // we only support SNMP
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer, IQuerierOptions options)
         {
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
@@ -54,7 +64,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer)
+        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
         {
             string osVersionString = "0.0.0";
 
@@ -73,7 +83,7 @@ namespace SnmpAbstraction
             {
                 try
                 {
-                    return new AlixDeviceHandler(lowerLayer, oidTable, osVersion, model);
+                    return new AlixDeviceHandler(lowerLayer, oidTable, osVersion, model, options);
                 }
                 catch(Exception ex)
                 {
@@ -84,7 +94,7 @@ namespace SnmpAbstraction
             }
             else
             {
-                return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model);
+                return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model, options);
             }
         }
     }

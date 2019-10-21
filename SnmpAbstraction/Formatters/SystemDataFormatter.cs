@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 
 namespace SnmpAbstraction
@@ -60,8 +61,171 @@ namespace SnmpAbstraction
                 return this.Format(asLinkDetails);
             }
 
+            IBgpPeers asBgpPeers = someObject as IBgpPeers;
+            if (asBgpPeers != null)
+            {
+                return this.Format(asBgpPeers);
+            }
+
+            IBgpPeer asBgpPeer = someObject as IBgpPeer;
+            if (asBgpPeer != null)
+            {
+                return this.Format(asBgpPeer);
+            }
+
+            ITracerouteResult asTracerouteResult = someObject as ITracerouteResult;
+            if (asTracerouteResult != null)
+            {
+                return this.Format(asTracerouteResult);
+            }
+
+            ITracerouteHop asTracerouteHop = someObject as ITracerouteHop;
+            if (asTracerouteHop != null)
+            {
+                return this.Format(asTracerouteHop);
+            }
+
             // fallback: call the object's ToString
             return someObject.ToString();
+        }
+
+        /// <summary>
+        /// Formats as block-formatted string of an <see cref="ITracerouteResult" />.
+        /// </summary>
+        /// <param name="traceRouteResult">The data to format.</param>
+        /// <returns>The formatted string.</returns>
+        public string Format(ITracerouteResult traceRouteResult)
+        {
+            if (traceRouteResult == null)
+            {
+                return "<null>";
+            }
+
+            StringBuilder returnBuilder = new StringBuilder(traceRouteResult.HopCount * 128);
+
+            returnBuilder.Append("Routing Hops:");
+
+            if (traceRouteResult.HopCount == 0)
+            {
+                returnBuilder.Append(" No hops found.");
+            }
+            else
+            {
+                uint hopCounter = 0;
+                foreach (var item in traceRouteResult.Hops)
+                {
+                    returnBuilder.Append("Hop #").Append(++hopCounter).Append(": ").AppendLine(SnmpAbstraction.IndentLines(this.Format(item)));
+                }
+            }
+
+            return returnBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Formats as block-formatted string of an <see cref="ITracerouteHop" />.
+        /// </summary>
+        /// <param name="tracerouteHop">The data to format.</param>
+        /// <returns>The formatted string.</returns>
+        public string Format(ITracerouteHop tracerouteHop)
+        {
+            if (tracerouteHop == null)
+            {
+                return "<null>";
+            }
+
+            StringBuilder returnBuilder = new StringBuilder(256);
+
+            returnBuilder
+                .Append("Address:").Append(tracerouteHop.Address)
+                .Append(", RTT ").Append(tracerouteHop.BestRtt)
+                .Append(" / ").Append(tracerouteHop.AverageRtt)
+                .Append(" / ").Append(tracerouteHop.WorstRtt)
+                .Append(", Last RTT ").Append(tracerouteHop.LastRtt)
+                .Append(", Loss ").Append(tracerouteHop.LossPercent)
+                .Append(", Sent ").Append(tracerouteHop.SentCount);
+
+            return returnBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Formats as block-formatted string of an <see cref="IBgpPeer" />.
+        /// </summary>
+        /// <param name="bgpPeer">The data to format.</param>
+        /// <returns>The formatted string.</returns>
+        public string Format(IBgpPeer bgpPeer)
+        {
+            if (bgpPeer == null)
+            {
+                return "<null>";
+            }
+
+            StringBuilder returnBuilder = new StringBuilder(256);
+
+            returnBuilder.Append("ID:").AppendLine(bgpPeer.Id);
+            returnBuilder.Append("Name:").AppendLine(bgpPeer.Name);
+            returnBuilder.Append("Instance").AppendLine(bgpPeer.Instance);
+            returnBuilder.Append("Local Address: ").AppendLine(bgpPeer.LocalAddress?.ToString());
+            returnBuilder.Append("Remote Address: ").AppendLine(bgpPeer.RemoteAddress?.ToString());
+            returnBuilder.Append("Remote AS: ").AppendLine(bgpPeer.RemoteAs.ToString());
+            returnBuilder.Append("NextHop choice: ").AppendLine(bgpPeer.NexthopChoice);
+            returnBuilder.Append("Multihop: ").AppendLine(bgpPeer.Multihop.ToString());
+            returnBuilder.Append("RouteReflex: ").AppendLine(bgpPeer.RouteReflect.ToString());
+            returnBuilder.Append("HoldTime: ").AppendLine(bgpPeer.HoldTime.ToString());
+            returnBuilder.Append("Ttl: ").AppendLine(bgpPeer.Ttl.ToString());
+            returnBuilder.Append("Address Families: ").AppendLine(string.Join(", ", bgpPeer.AddressFamilies.Select(f => f.ToString())));
+            returnBuilder.Append("Default Originate: ").AppendLine(bgpPeer.DefaultOriginate);
+            returnBuilder.Append("Remove Priv. AS: ").AppendLine(bgpPeer.RemovePrivateAs.ToString());
+            returnBuilder.Append("AS Override: ").AppendLine(bgpPeer.AsOverride.ToString());
+            returnBuilder.Append("Passive: ").AppendLine(bgpPeer.Passive.ToString());
+            returnBuilder.Append("Use BFD: ").AppendLine(bgpPeer.UseBfd.ToString());
+            returnBuilder.Append("Remote ID: ").AppendLine(bgpPeer.RemoteId);
+            returnBuilder.Append("Uptime: ").AppendLine(bgpPeer.Uptime.ToString()); 
+            returnBuilder.Append("Prefix count: ").AppendLine(bgpPeer.PrefixCount.ToString());
+            returnBuilder.Append("Updates sent: ").AppendLine(bgpPeer.UpdatesSent.ToString());
+            returnBuilder.Append("Updates received: ").AppendLine(bgpPeer.UpdatesReceived.ToString());
+            returnBuilder.Append("Withdrawn sent: ").AppendLine(bgpPeer.WithdrawnSent.ToString());
+            returnBuilder.Append("Withdrawn received: ").AppendLine(bgpPeer.WithdrawnReceived.ToString()); 
+            returnBuilder.Append("Remote hold time: ").AppendLine(bgpPeer.RemoteHoldTime.ToString());
+            returnBuilder.Append("Used hold time: ").AppendLine(bgpPeer.UsedHoldTime.ToString());
+            returnBuilder.Append("Used Keepalive time: ").AppendLine(bgpPeer.UsedKeepaliveTime.ToString());
+            returnBuilder.Append("Refresh Capability: ").AppendLine(bgpPeer.RefreshCapability.ToString());
+            returnBuilder.Append("AS4 Capability: ").AppendLine(bgpPeer.As4Capability.ToString());
+            returnBuilder.Append("State: ").AppendLine(bgpPeer.State);
+            returnBuilder.Append("Established: ").AppendLine(bgpPeer.Established.ToString());
+            returnBuilder.Append("Disabled: ").AppendLine(bgpPeer.Disabled.ToString());
+
+            return returnBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Formats as block-formatted string of an <see cref="IBgpPeers" />.
+        /// </summary>
+        /// <param name="bgpPeers">The data to format.</param>
+        /// <returns>The formatted string.</returns>
+        public string Format(IBgpPeers bgpPeers)
+        {
+            if (bgpPeers == null)
+            {
+                return "<null>";
+            }
+
+            StringBuilder returnBuilder = new StringBuilder((bgpPeers.Details?.Count ?? 1) * 128);
+
+            returnBuilder.Append("BGP Peers:");
+
+            if (bgpPeers.Details.Count == 0)
+            {
+                returnBuilder.Append(" No BGP peers found.");
+            }
+            else
+            {
+                foreach (var item in bgpPeers.Details)
+                {
+                    returnBuilder.AppendLine().AppendLine(SnmpAbstraction.IndentLines(this.Format(item)));
+                }
+            }
+
+            return returnBuilder.ToString();
         }
 
         /// <summary>

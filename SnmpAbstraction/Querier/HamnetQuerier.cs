@@ -69,6 +69,12 @@ namespace SnmpAbstraction
         public IpAddress Address => this.handler.Address;
 
         /// <inheritdoc />
+        public IBgpPeers FetchBgpPeers(string remotePeerIp)
+        {
+            return this.handler.FetchBgpPeers(remotePeerIp);
+        }
+
+        /// <inheritdoc />
         public ILinkDetails FetchLinkDetails(params string[] remoteHostNamesOrIps)
         {
             if (remoteHostNamesOrIps.Length == 0)
@@ -78,10 +84,10 @@ namespace SnmpAbstraction
 
             List<IHamnetQuerier> remoteQueriers = remoteHostNamesOrIps.Select(remoteHostNamesOrIp => 
             {
-                IPAddress outAddress;
-                if (!remoteHostNamesOrIp.TryGetResolvedConnecionIPAddress(out outAddress))
+
+                if (!remoteHostNamesOrIp.TryGetResolvedConnecionIPAddress(out IPAddress outAddress))
                 {
-                    log.Error($"Cannot resolve host name or IP string '{remoteHostNamesOrIp}' to a valid IPAddres. Skipping that remote for link detail fetching");
+                    log.Error($"Cannot resolve host name or IP string '{remoteHostNamesOrIp}' to a valid IPAddress. Skipping that remote for link detail fetching");
                 }
 
                 return SnmpQuerierFactory.Instance.Create(outAddress, this.options);
@@ -100,6 +106,17 @@ namespace SnmpAbstraction
             }
 
             return new LinkDetails(fetchedDetails, this.Address, this.SystemData.DeviceModel);
+        }
+
+        /// <inheritdoc />
+        public ITracerouteResult Traceroute(string remoteHostNameOrIp, uint count)
+        {
+            if (!remoteHostNameOrIp.TryGetResolvedConnecionIPAddress(out IPAddress outAddress))
+            {
+                throw new HamnetSnmpException($"Cannot resolve host name or IP string '{remoteHostNameOrIp}' to a valid IPAddress.");
+            }
+
+            return this.handler.Traceroute(new IpAddress(outAddress), count);
         }
 
         /// <inheritdoc />

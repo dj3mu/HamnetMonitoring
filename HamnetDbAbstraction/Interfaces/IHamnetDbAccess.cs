@@ -18,5 +18,11 @@ namespace HamnetDbAbstraction
         /// </summary>
         /// <returns>The list of subnets defined in the HamnetDB.</returns>
         IHamnetDbSubnets QuerySubnets();
+        
+        /// <summary>
+        /// Queries the hosts that are considered to be BGP routers (i.e. for which the &quot;...&quot; field is set to <c>true</c>).
+        /// </summary>
+        /// <returns>The list of hosts which are BGP routers.</returns>
+        IHamnetDbHosts QueryBgpRouters();
     }
 }

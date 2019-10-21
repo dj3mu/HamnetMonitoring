@@ -75,7 +75,17 @@ namespace SnmpAbstraction
         private string detectedModel = null;
 
         /// <inheritdoc />
-        public override bool IsApplicable(ISnmpLowerLayer snmpLowerLayer)
+        public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
+
+        /// <inheritdoc />
+        public override bool IsApplicableVendorSpecific(IpAddress address, IQuerierOptions options)
+        {
+            // we only support SNMP
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer, IQuerierOptions options)
         {
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
@@ -112,7 +122,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer)
+        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
         {
             if (!this.detectionId.HasValue)
             {
@@ -168,12 +178,12 @@ namespace SnmpAbstraction
                 if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
                 {
                     return (model == AirFiberFakeModelString)
-                        ? new UbiquitiAirFiberDeviceHandler(lowerLayer, oidTable, osVersion, model) as IDeviceHandler
-                        : new UbiquitiAirOsAbove56DeviceHandler(lowerLayer, oidTable, osVersion, model) as IDeviceHandler;
+                        ? new UbiquitiAirFiberDeviceHandler(lowerLayer, oidTable, osVersion, model, options) as IDeviceHandler
+                        : new UbiquitiAirOsAbove56DeviceHandler(lowerLayer, oidTable, osVersion, model, options) as IDeviceHandler;
                 }
                 else
                 {
-                    return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model);
+                    return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model, options);
                 }
 
             }

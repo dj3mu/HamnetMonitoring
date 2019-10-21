@@ -20,7 +20,21 @@ namespace SnmpAbstraction
         /// <param name="ver2cMaximumRequests">A value telling the SNMP Agent how many VBs to include in a single request.<br/>
         /// Only valid on GETBULK requests.</param>
         /// <param name="enableCaching">Value indicating whether to use caching of non-volatile data.</param>
-        public QuerierOptions(int port, SnmpVersion protocolVersion, OctetString community, TimeSpan timeout, int retries, int ver2cMaximumValuesPerRequest, int ver2cMaximumRequests, bool enableCaching)
+        /// <param name="loginUser">The user name for logins (if needed).</param>
+        /// <param name="loginPassword">The password for logins (if needed).</param>
+        /// <param name="allowedApis">The allowed APIs. By default, only SNMP is allowed.</param>
+        public QuerierOptions(
+            int port,
+            SnmpVersion protocolVersion,
+            OctetString community,
+            TimeSpan timeout,
+            int retries,
+            int ver2cMaximumValuesPerRequest,
+            int ver2cMaximumRequests,
+            bool enableCaching,
+            string loginUser,
+            string loginPassword,
+            QueryApis allowedApis)
         {
             this.Port = port;
             this.ProtocolVersion = protocolVersion;
@@ -30,6 +44,9 @@ namespace SnmpAbstraction
             this.Ver2cMaximumRequests = ver2cMaximumRequests;
             this.Ver2cMaximumValuesPerRequest = ver2cMaximumValuesPerRequest;
             this.EnableCaching = enableCaching;
+            this.LoginUser = loginUser;
+            this.LoginPassword = loginPassword;
+            this.AllowedApis = allowedApis;
         }
 
         /// <summary>
@@ -55,7 +72,7 @@ namespace SnmpAbstraction
         public OctetString Community { get; } = new OctetString("public");
 
         /// <inheritdoc />
-        public TimeSpan Timeout { get; } = TimeSpan.FromSeconds(10);
+        public TimeSpan Timeout { get; } = TimeSpan.FromSeconds(2);
 
         /// <inheritdoc />
         public int Retries { get; } = 3;
@@ -69,6 +86,15 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public bool EnableCaching { get; } = true;
 
+        /// <inheritdoc />
+        public string LoginUser { get; } = "monitoring";
+
+        /// <inheritdoc />
+        public string LoginPassword { get; } = string.Empty;
+
+        /// <inheritdoc />
+        public QueryApis AllowedApis { get; } = QueryApis.Snmp;
+
         /// <summary>
         /// Creates a new object that is a copy of this object with modified Ver2cMaximumRequests number.
         /// </summary>
@@ -76,7 +102,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified ver2cMaximumRequests number.</returns>
         public QuerierOptions WithVer2cMaximumRequests(int ver2cMaximumRequests)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, ver2cMaximumRequests, this.EnableCaching);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, ver2cMaximumRequests, this.EnableCaching, this.LoginUser, this.LoginPassword, this.AllowedApis);
         }
 
         /// <summary>
@@ -86,7 +112,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified ver2cMaximumValuesPerRequest number.</returns>
         public QuerierOptions WithVer2cMaximumValuesPerRequest(int ver2cMaximumValuesPerRequest)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, this.LoginUser, this.LoginPassword, this.AllowedApis);
         }
 
         /// <summary>
@@ -96,7 +122,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified port number.</returns>
         public QuerierOptions WithPort(int port)
         {
-            return new QuerierOptions(port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
+            return new QuerierOptions(port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, this.LoginUser, this.LoginPassword, this.AllowedApis);
         }
 
         /// <summary>
@@ -106,7 +132,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified SNMP protocol version.</returns>
         public QuerierOptions WithProtocolVersion(SnmpVersion protocolVersion)
         {
-            return new QuerierOptions(this.Port, protocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
+            return new QuerierOptions(this.Port, protocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, this.LoginUser, this.LoginPassword, this.AllowedApis);
         }
 
         /// <summary>
@@ -116,7 +142,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified community string.</returns>
         public QuerierOptions WithCommunity(OctetString community)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, this.LoginUser, this.LoginPassword, this.AllowedApis);
         }
 
         /// <summary>
@@ -126,7 +152,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified timeout.</returns>
         public QuerierOptions WithTimeout(TimeSpan timeout)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, this.LoginUser, this.LoginPassword, this.AllowedApis);
         }
 
         /// <summary>
@@ -136,7 +162,7 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified retries count.</returns>
         public QuerierOptions WithRetries(int retries)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, this.LoginUser, this.LoginPassword, this.AllowedApis);
         }
 
         /// <summary>
@@ -146,7 +172,41 @@ namespace SnmpAbstraction
         /// <returns>A new object that is a copy of this object with modified caching setting.</returns>
         public QuerierOptions WithCaching(bool enableCaching)
         {
-            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, enableCaching);
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, enableCaching, this.LoginUser, this.LoginPassword, this.AllowedApis);
+        }
+
+        /// <summary>
+        /// Creates a new object that is a copy of this object with modified login user name.
+        /// </summary>
+        /// <param name="user">The user to use for logins to APIs (if needed)</param>
+        /// <returns>A new object that is a copy of this object with modified login user name setting.</returns>
+        public QuerierOptions WithUser(string user)
+        {
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, user, this.LoginPassword, this.AllowedApis);
+        }
+
+        /// <summary>
+        /// Creates a new object that is a copy of this object with modified login password.
+        /// </summary>
+        /// <param name="password">The password to use for logins to APIs (if needed)</param>
+        /// <returns>A new object that is a copy of this object with modified login password setting.</returns>
+        /// <remarks>We're not taking any measures to protect this password.<br/>
+        /// In Hamnet we will anyway have to transfer it in plain text due to regulatory rules (Amateur Radio has to be public).<br/>
+        /// So let's save the additonal effort of fiddling around with SecretString etc.
+        /// </remarks>
+        public QuerierOptions WithPassword(string password)
+        {
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, this.LoginUser, password, this.AllowedApis);
+        }
+
+        /// <summary>
+        /// Creates a new object that is a copy of this object with modified allowed APIs setting.
+        /// </summary>
+        /// <param name="allowedApis">The allowed APIs. By default, only SNMP is allowed.</param>
+        /// <returns>A new object that is a copy of this object with modified allowed APIs setting.</returns>
+        public QuerierOptions WithAllowedApis(QueryApis allowedApis)
+        {
+            return new QuerierOptions(this.Port, this.ProtocolVersion, this.Community, this.Timeout, this.Retries, this.Ver2cMaximumValuesPerRequest, this.Ver2cMaximumRequests, this.EnableCaching, this.LoginUser, this.LoginPassword, allowedApis);
         }
     }
 }

@@ -11,12 +11,43 @@ namespace SnmpAbstraction
     internal abstract class DetectableDeviceBase : IDetectableDevice
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        
+        private int circularCreateHandler = 0;
 
         /// <inheritdoc />
-        public abstract IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer);
+        public abstract QueryApis SupportedApi { get; }
 
         /// <inheritdoc />
-        public abstract bool IsApplicable(ISnmpLowerLayer snmpLowerLayer);
+        public int Priority { get; protected set; } = 100;
+
+        /// <inheritdoc />
+        public virtual IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
+        {
+            if(this.circularCreateHandler++ > 1)
+            {
+                throw new InvalidOperationException($"Internal Error: DetectableDevice {this.GetType().Name} seems to neither implement CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options) nor CreateHandler(IpAddress address, IQuerierOptions options)");
+            }
+            
+            return this.CreateHandler(lowerLayer.Address, options);
+        }
+
+        /// <inheritdoc />
+        public virtual IDeviceHandler CreateHandler(IpAddress address, IQuerierOptions options)
+        {
+            if(this.circularCreateHandler++ > 1)
+            {
+                throw new InvalidOperationException($"Internal Error: DetectableDevice {this.GetType().Name} seems to neither implement CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options) nor CreateHandler(IpAddress address, IQuerierOptions options)");
+            }
+            
+            var lowerLayer = new SnmpLowerLayer(address, options);
+            return this.CreateHandler(lowerLayer, options);
+        }
+
+        /// <inheritdoc />
+        public abstract bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer, IQuerierOptions options);
+
+        /// <inheritdoc />
+        public abstract bool IsApplicableVendorSpecific(IpAddress address, IQuerierOptions options);
 
         /// <summary>
         /// Gets the device handler of the given handler class name via reflection.
@@ -26,8 +57,9 @@ namespace SnmpAbstraction
         /// <param name="oidTable">The OID lookup table for the device.</param>
         /// <param name="osVersion">The SW version of the device.</param>
         /// <param name="model">The device's model name. Shall be the same name as used for the device name during OID database lookups.</param>
+        /// <param name="options">The options to use.</param>
         /// <returns>The generated device handler.</returns>
-        protected IDeviceHandler GetHandlerViaReflection(string handlerClassName, ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidTable, SemanticVersion osVersion, string model)
+        protected IDeviceHandler GetHandlerViaReflection(string handlerClassName, ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidTable, SemanticVersion osVersion, string model, IQuerierOptions options)
         {
             var type = Type.GetType($"SnmpAbstraction.{handlerClassName}");
             if (type == null)
@@ -38,7 +70,7 @@ namespace SnmpAbstraction
             object myObject = null;
             try
             {
-                myObject = Activator.CreateInstance(type, lowerLayer, oidTable, osVersion, model);
+                myObject = Activator.CreateInstance(type, lowerLayer, oidTable, osVersion, model, options);
             }
             catch(Exception ex)
             {

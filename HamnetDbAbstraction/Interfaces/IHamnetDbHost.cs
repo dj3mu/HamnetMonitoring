@@ -16,5 +16,15 @@ namespace HamnetDbAbstraction
         /// Gets the callsign of the host.
         /// </summary>
         string Callsign { get; }
+    
+        /// <summary>
+        /// Gets the name of the host.
+        /// </summary>
+        string Name { get; }
+    
+        /// <summary>
+        /// Gets the Type of the host.
+        /// </summary>
+        string HostType { get; }
     }
 }

@@ -7,7 +7,6 @@ using HamnetDbAbstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using RestService.DataFetchingService;
 using SnmpAbstraction;
 
 namespace HamnetDbRest.Controllers
@@ -64,7 +63,7 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                var matchingHosts = this.FetchSubnetsWithHostsFromHamnetDb(this.configuration.GetSection(Program.AquisitionServiceSectionKey));
+                var matchingHosts = this.FetchSubnetsWithHostsFromHamnetDb(this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey));
 
                 if ((matchingHosts == null) || (matchingHosts.Count == 0))
                 {

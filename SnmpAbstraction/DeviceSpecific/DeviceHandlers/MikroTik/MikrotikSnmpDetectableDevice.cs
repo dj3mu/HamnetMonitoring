@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 using SemVersion;
 using SnmpSharpNet;
@@ -8,16 +8,16 @@ namespace SnmpAbstraction
     /// <summary>
     /// Detectable device implementation for MikroTik devices
     /// </summary>
-    internal class MikrotikDetectableDevice : DetectableDeviceBase
+    internal class MikrotikSnmpDetectableDevice : DetectableDeviceBase
     {
+        private static readonly Regex OsVersionExtractionRegex = new Regex(RouterOsDetectionString + @"\s+([0-9.]+)\s+", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// String in system description to detect RouterOS
         /// </summary>
         private const string RouterOsDetectionString = "RouterOS";
-
-        private static readonly Regex OsVersionExtractionRegex = new Regex(RouterOsDetectionString + @"\s+([0-9.]+)\s+");
 
         /// <summary>
         /// The OID to obtain the string including the OS version.<br/>
@@ -32,7 +32,17 @@ namespace SnmpAbstraction
         private readonly Oid OsVersionOid2 = new Oid(".1.3.6.1.4.1.14988.1.1.17.1.1.4.1");
 
         /// <inheritdoc />
-        public override bool IsApplicable(ISnmpLowerLayer snmpLowerLayer)
+        public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
+
+        /// <inheritdoc />
+        public override bool IsApplicableVendorSpecific(IpAddress address, IQuerierOptions options)
+        {
+            // at them moment vendor-specific is not yet implemented
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override bool IsApplicableSnmp(ISnmpLowerLayer snmpLowerLayer, IQuerierOptions options)
         {
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
@@ -53,7 +63,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer)
+        public override IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
         {
             string osVersionString = null;
 
@@ -92,7 +102,7 @@ namespace SnmpAbstraction
             {
                 try
                 {
-                    return new MikrotikDeviceHandler(lowerLayer, oidTable, osVersion, model);
+                    return new MikrotikSnmpDeviceHandler(lowerLayer, oidTable, osVersion, model, options);
                 }
                 catch(Exception ex)
                 {
@@ -103,7 +113,7 @@ namespace SnmpAbstraction
             }
             else
             {
-                return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model);
+                return this.GetHandlerViaReflection(deviceVersion.HandlerClassName, lowerLayer, oidTable, osVersion, model, options);
             }
         }
     }

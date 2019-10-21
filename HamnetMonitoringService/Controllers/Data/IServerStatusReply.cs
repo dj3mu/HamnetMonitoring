@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Configuration;
+using SnmpAbstraction;
 
 namespace HamnetDbRest.Controllers
 {
@@ -52,18 +52,23 @@ namespace HamnetDbRest.Controllers
         /// <summary>
         /// Gets the database statistics
         /// </summary>
-        IReadOnlyDictionary<string, IDatabasestatistic> DatabaseStatistic { get; }
+        IReadOnlyDictionary<string, IStatistic> Statistics { get; }
 
         /// <summary>
         /// Gets the configuration settings of the application.
         /// </summary>
         IReadOnlyDictionary<string, IConfigurationInfo> Configurations { get; }
+
+        /// <summary>
+        /// Gets the values of the performance counter.
+        /// </summary>
+        IPerformanceCounter PerformanceCounter { get; }
     }
 
     /// <summary>
     /// Interface to a single database statistic.
     /// </summary>
-    public interface IDatabasestatistic : IReadOnlyDictionary<string, string>
+    public interface IStatistic : IReadOnlyDictionary<string, string>
     {
     }
 

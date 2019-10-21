@@ -16,6 +16,8 @@ namespace SnmpAbstraction
         /// </summary>
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        
+
         /// <summary>
         /// Tries to convert the given version into a valid <see cref="SemanticVersion" />
         /// </summary>
@@ -118,6 +120,11 @@ namespace SnmpAbstraction
             if (hexString == null)
             {
                 throw new ArgumentNullException(nameof(hexString), "The hex string to convert is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(hexString))
+            {
+                return new byte[0];
             }
 
             return hexString.Split(separator).Select(x => Convert.ToByte(x.Trim(), 16)).ToArray();

@@ -17,18 +17,73 @@ namespace HamnetDbRest.Migrations
                 .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("RestService.Database.MonitoringPerstistence", b =>
+            modelBuilder.Entity("RestService.Model.BgpFailingQuery", b =>
+                {
+                    b.Property<string>("Host")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ErrorInfo")
+                        .IsRequired();
+
+                    b.Property<DateTime>("TimeStamp");
+
+                    b.HasKey("Host");
+
+                    b.ToTable("BgpFailingQueries");
+                });
+
+            modelBuilder.Entity("RestService.Model.BgpPeerData", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("LocalAddress")
+                        .IsRequired();
+
+                    b.Property<string>("LocalCallsign")
+                        .IsRequired();
+
+                    b.Property<string>("PeeringName");
+
+                    b.Property<string>("PeeringState")
+                        .IsRequired();
+
+                    b.Property<long>("PrefixCount");
+
+                    b.Property<string>("RemoteAddress")
+                        .IsRequired();
+
+                    b.Property<string>("TimeStampString")
+                        .IsRequired();
+
+                    b.Property<ulong>("UnixTimeStamp");
+
+                    b.Property<string>("Uptime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RemoteAddress", "LocalAddress")
+                        .IsUnique();
+
+                    b.ToTable("BgpPeers");
+                });
+
+            modelBuilder.Entity("RestService.Model.MonitoringPerstistence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("LastBgpQueryEnd");
+
+                    b.Property<DateTime>("LastBgpQueryStart");
 
                     b.Property<DateTime>("LastMaintenanceEnd");
 
                     b.Property<DateTime>("LastMaintenanceStart");
 
-                    b.Property<DateTime>("LastQueryEnd");
+                    b.Property<DateTime>("LastRssiQueryEnd");
 
-                    b.Property<DateTime>("LastQueryStart");
+                    b.Property<DateTime>("LastRssiQueryStart");
 
                     b.HasKey("Id");
 

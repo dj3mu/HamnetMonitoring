@@ -28,7 +28,8 @@ namespace SnmpAbstraction
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="osVersion">The SW version of the device.</param>
         /// <param name="model">The device's model name. Shall be the same name as used for the device name during OID database lookups.</param>
-        public DeviceHandlerBase(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemVersion.SemanticVersion osVersion, string model)
+        /// <param name="options">The options to use.</param>
+        public DeviceHandlerBase(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemVersion.SemanticVersion osVersion, string model, IQuerierOptions options)
         {
             if (lowerLayer == null)
             {
@@ -54,6 +55,7 @@ namespace SnmpAbstraction
             this.OidLookup = oidLookup;
             this.OsVersion = osVersion;
             this.Model = model;
+            this.Options = options ?? throw new ArgumentNullException(nameof(options), "The options are null when constructing a device handler");
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -90,6 +92,18 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public string Model { get; }
+
+        /// <inheritdoc />
+        public IQuerierOptions Options { get; }
+
+        /// <inheritdoc />
+        public abstract QueryApis SupportedApi { get; }
+
+        /// <inheritdoc />
+        public abstract IBgpPeers FetchBgpPeers(string remotePeerIp);
+
+        /// <inheritdoc />
+        public abstract ITracerouteResult Traceroute(IpAddress remoteIp, uint count);
 
         /// <inheritdoc />
         public override string ToString()
