@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using SemVersion;
 using SnmpSharpNet;
 using tik4net;
 using tik4net.Objects;
 using tik4net.Objects.System;
+using tik4net.Objects.User;
 
 namespace SnmpAbstraction
 {
@@ -182,6 +184,36 @@ namespace SnmpAbstraction
 
             this.modelBacking = sysRouterboard.Model.Replace("RouterBOARD", "RB").Replace(" ", string.Empty);
 
+            var users = this.TikConnection.LoadList<User>();
+            var groups = this.TikConnection.LoadList<UserGroup>();
+            
+            var detectedFeatures = DeviceSupportedFeatures.None;
+            var myUser = users.SingleOrDefault(u => u.Name == this.Options.LoginUser);
+            if (myUser != null)
+            {
+                var myGroup = groups.SingleOrDefault(g => g.Name == myUser.Group);
+                if (myGroup != null)
+                {
+                    string[] policies = myGroup.Policy.Split(',');
+                    if (policies.Contains("api"))
+                    {
+                        // only with API allowed we need to check further (well - since we connected to it, this should always be true)
+                        if (policies.Contains("read"))
+                        {
+                            // yes, other features would also be supported with "read" policiy
+                            // but since we've not implemented retrieval of RSSI & Co, we also don't report it for now
+                            // TODO: Add more features once implemented
+                            detectedFeatures |= DeviceSupportedFeatures.BgpPeers;
+                        }
+
+                        if (policies.Contains("test"))
+                        {
+                            detectedFeatures |= DeviceSupportedFeatures.Traceroute;
+                        }
+                    }
+                }
+            }
+
             this.systemDataBacking = new SerializableSystemData
             {
                 Contact = string.Empty,
@@ -195,7 +227,8 @@ namespace SnmpAbstraction
                 Name = sysIdent.Name,
                 Uptime = sysResource.Uptime,
                 Version = this.osVersionBacking,
-                QueryDuration = stopper.Elapsed
+                QueryDuration = stopper.Elapsed,
+                SupportedFeatures = detectedFeatures
             };
         }
 

@@ -174,8 +174,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryBgpPeersTest()
         {
-            QueryAndPrintBgpPeers(new IpAddress("44.225.20.1"), SnmpVersion.Ver2, false);
-            //QueryAndPrintBgpPeers(TestConstants.TestAddressMikrotikRouter1, SnmpVersion.Ver2, false);
+            //QueryAndPrintBgpPeers(new IpAddress("44.225.20.1"), SnmpVersion.Ver2, false);
+            QueryAndPrintBgpPeers(TestConstants.TestAddressMikrotikRouter1, SnmpVersion.Ver2, false);
         }
 
         /// <summary>

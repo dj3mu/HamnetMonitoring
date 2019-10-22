@@ -218,6 +218,9 @@ namespace SnmpAbstraction
         internal SnmpVersion ModifyableMaximumSnmpVersion { get; set; }
 
         /// <inheritdoc />
+        public DeviceSupportedFeatures SupportedFeatures { get; set; } = DeviceSupportedFeatures.None;
+
+        /// <inheritdoc />
         public override void ForceEvaluateAll()
         {
             this.PopulateAdminContact();
@@ -235,6 +238,7 @@ namespace SnmpAbstraction
 
             returnBuilder.Append("  - System Model                     : ").AppendLine(string.IsNullOrWhiteSpace(this.Model) ? "not available" : this.Model);
             returnBuilder.Append("  - System SW Version                : ").AppendLine((this.Version == null) ? "not available" : this.Version.ToString());
+            returnBuilder.Append("  - Supported Features               : ").Append(this.SupportedFeatures);
             returnBuilder.Append("  - System Name        (queried=").Append(this.systemNameQueried).Append("): ").AppendLine(this.systemName);
             returnBuilder.Append("  - System location    (queried=").Append(this.systemLocationQueried).Append("): ").AppendLine(this.systemLocation);
             returnBuilder.Append("  - System description (queried=").Append(this.systemDescriptionQueried).Append("): ").AppendLine(this.systemDescrition);

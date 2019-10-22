@@ -37,6 +37,13 @@ namespace SnmpAbstraction
             {
                 throw new ArgumentOutOfRangeException(nameof(options), $"This device handler doesn't support any of the APIs allowed by the IQuerierOptions (allowed: {options.AllowedApis}, supported {this.SupportedApi}).");
             }
+
+            LazyLoadingDeviceSystemData llsd = lowerLayer.SystemData as LazyLoadingDeviceSystemData;
+            if (llsd != null)
+            {
+                // for SNMP-based MikroTik devices we currently only support RSSI querying
+                llsd.SupportedFeatures = DeviceSupportedFeatures.Rssi;
+            }
         }
 
         /// <summary>

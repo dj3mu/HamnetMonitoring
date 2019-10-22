@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace HamnetDbRest.Controllers
 {
@@ -52,5 +53,10 @@ namespace HamnetDbRest.Controllers
         /// Gets the device's maximum supported SNMP version.
         /// </summary>
         string MaximumSnmpVersion { get; }
+
+        /// <summary>
+        /// Gets the list of supported features.
+        /// </summary>
+        IEnumerable<string> SupportedFeatures { get; }
     }
 }
