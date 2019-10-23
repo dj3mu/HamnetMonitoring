@@ -10,6 +10,11 @@ namespace SnmpAbstraction
     public enum QueryApis
     {
         /// <summary>
+        /// Just for giving the value of 0 (no flag selected at all) a name.
+        /// </summary>
+        None = 0x0,
+
+        /// <summary>
         /// Allow queries using SNMP.
         /// </summary>
         Snmp = 0x1,
@@ -99,5 +104,11 @@ namespace SnmpAbstraction
         /// log entries for invalid login or similar on the devices.
         /// </remarks>
         QueryApis AllowedApis { get; }
+
+        /// <summary>
+        /// Gets a full qualified class name of the handler class to use (if possible). Use null or empty to not provide any handler class hint.
+        /// </summary>
+        /// <remarks>Mainly intended for internal purposed. Not much useful for library users.</remarks>
+        string QuerierClassHint { get; }
     }
 }

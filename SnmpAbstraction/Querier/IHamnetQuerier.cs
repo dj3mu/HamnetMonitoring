@@ -14,6 +14,16 @@ namespace SnmpAbstraction
         IpAddress Address { get; }
 
         /// <summary>
+        /// Gets the API(s) that this querier is using.
+        /// </summary>
+        QueryApis Api { get; }
+
+        /// <summary>
+        /// Gets the type of the device handler that is currently in use.
+        /// </summary>
+        Type HandlerType { get; }
+
+        /// <summary>
         /// Gets the device system data (i.e. the .1.3.6.1.2.1.1 subtree which is mainly device-agnostic).
         /// </summary>
         /// <remarks>This data will implicitly be queried when a instance of an SNMP Querier initialized.<br/>

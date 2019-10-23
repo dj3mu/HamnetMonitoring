@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -6,6 +7,8 @@ using SemVersion;
 using SnmpSharpNet;
 using tik4net;
 using tik4net.Objects;
+using tik4net.Objects.Interface;
+using tik4net.Objects.Interface.Wireless;
 using tik4net.Objects.System;
 using tik4net.Objects.User;
 
@@ -33,6 +36,9 @@ namespace SnmpAbstraction
         private IDeviceSystemData systemDataBacking = null;
         
         private string modelBacking = null;
+        
+        private IInterfaceDetails networkInterfaceDetailsBacking = null;
+        private IWirelessPeerInfos wirelessPeerInfosBacking;
 
         /// <summary>
         /// Constructs for the given lower layer.
@@ -101,11 +107,25 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public IInterfaceDetails NetworkInterfaceDetails => throw new NotSupportedException("Getting network interface details is not (yet) supported for a Mikrotik API-based device handler. Please use the SNMP-based device handler");
+        public IInterfaceDetails NetworkInterfaceDetails
+        {
+            get
+            {
+                this.FetchNetworkInterfaceData();
+                return this.networkInterfaceDetailsBacking;
+            }
+        }
 
         /// <inheritdoc />
-        public IWirelessPeerInfos WirelessPeerInfos => throw new NotSupportedException("Getting wireless peers is not (yet) supported for a Mikrotik API-based device handler. Please use the SNMP-based device handler");
-        
+        public IWirelessPeerInfos WirelessPeerInfos
+        {
+            get
+            {
+                this.FetchWirelessPeerInfo();
+                return this.wirelessPeerInfosBacking;
+            }
+        }
+
         /// <summary>
         /// Gets the connection type that has been used when checking whether this device support MTik API.
         /// </summary>
@@ -150,6 +170,99 @@ namespace SnmpAbstraction
 
                 this.disposedValue = true;
             }
+        }
+
+        /// <summary>
+        /// Fetches wireless peer data.
+        /// </summary>
+        private void FetchWirelessPeerInfo()
+        {
+            if (this.wirelessPeerInfosBacking != null)
+            {
+                return;
+            }
+
+            Stopwatch stopper = Stopwatch.StartNew();
+
+            this.EnsureOpenConnection();
+
+            var wirelessPeers = this.TikConnection.LoadList<WirelessRegistrationTable>();
+
+            stopper.Stop();
+
+            this.wirelessPeerInfosBacking = new SerializableWirelessPeerInfos
+            {
+                DeviceAddress = this.Address,
+                DeviceModel = this.SystemData.DeviceModel,
+                Details = wirelessPeers.Select(d => this.MakeWirelessPeerInfo(d)).ToList(),
+                QueryDuration = stopper.Elapsed
+            };
+        }
+
+        private IWirelessPeerInfo MakeWirelessPeerInfo(WirelessRegistrationTable registrationTableEntry)
+        {
+            var returnDetail = new SerializableWirelessPeerInfo
+            {
+                DeviceAddress = this.Address,
+                DeviceModel = this.SystemData.DeviceModel,
+                InterfaceId = this.NetworkInterfaceDetails.Details.Single(i => i.InterfaceName == registrationTableEntry.Interface).InterfaceId,
+                RemoteMacString = registrationTableEntry.MacAddress,
+                IsAccessPoint = !registrationTableEntry.Ap,
+                LinkUptime = registrationTableEntry.Uptime,
+                Oids = new Dictionary<CachableValueMeanings, ICachableOid>(),
+                RxSignalStrength = new string[]{ registrationTableEntry.SignalStrengthCh0, registrationTableEntry.SignalStrengthCh1, registrationTableEntry.SignalStrengthCh2 }
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Select(s => Convert.ToDouble(s))
+                    .DecibelLogSum(),
+                TxSignalStrength = new string[]{ registrationTableEntry.TxSignalStrengthCh0, registrationTableEntry.TxSignalStrengthCh1, registrationTableEntry.TxSignalStrengthCh2 }
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Select(s => Convert.ToDouble(s))
+                    .DecibelLogSum()
+            };
+
+            return returnDetail;
+        }
+
+        /// <summary>
+        /// Fetches network interface data.
+        /// </summary>
+        private void FetchNetworkInterfaceData()
+        {
+            if (this.networkInterfaceDetailsBacking != null)
+            {
+                return;
+            }
+
+            Stopwatch stopper = Stopwatch.StartNew();
+
+            this.EnsureOpenConnection();
+
+            var interfaceData = this.TikConnection.LoadList<Interface>();
+
+            stopper.Stop();
+
+            this.networkInterfaceDetailsBacking = new SerializableInterfaceDetails
+            {
+                DeviceAddress = this.Address,
+                DeviceModel = this.SystemData.DeviceModel,
+                Details = interfaceData.Select(d => this.MakeInterfaceDetail(d)).ToList(),
+                QueryDuration = stopper.Elapsed
+            };
+        }
+
+        private IInterfaceDetail MakeInterfaceDetail(Interface interfaceDetail)
+        {
+            var returnDetail = new SerializableInterfaceDetail
+            {
+                DeviceAddress = this.Address,
+                DeviceModel = this.SystemData.DeviceModel,
+                InterfaceId = Convert.ToInt32(interfaceDetail.Id.Trim('*')),
+                InterfaceName = interfaceDetail.Name,
+                MacAddressString = interfaceDetail.MacAddress,
+                InterfaceType = interfaceDetail.Type.ToIanaInterfaceType()
+            };
+
+            return returnDetail;
         }
 
         /// <summary>
@@ -200,10 +313,7 @@ namespace SnmpAbstraction
                         // only with API allowed we need to check further (well - since we connected to it, this should always be true)
                         if (policies.Contains("read"))
                         {
-                            // yes, other features would also be supported with "read" policiy
-                            // but since we've not implemented retrieval of RSSI & Co, we also don't report it for now
-                            // TODO: Add more features once implemented
-                            detectedFeatures |= DeviceSupportedFeatures.BgpPeers;
+                            detectedFeatures |= DeviceSupportedFeatures.BgpPeers | DeviceSupportedFeatures.Rssi;
                         }
 
                         if (policies.Contains("test"))
@@ -220,7 +330,7 @@ namespace SnmpAbstraction
                 Description = $"RouterOS {this.modelBacking}",
                 DeviceAddress = this.Address,
                 DeviceModel = $"{this.modelBacking} v {this.osVersionBacking}",
-                EnterpriseObjectId = null,
+                EnterpriseObjectId = new Oid(),
                 Location = string.Empty,
                 MaximumSnmpVersion = SnmpVersion.Ver2, // we know that MTik supports SNMPv2c
                 Model = this.modelBacking,

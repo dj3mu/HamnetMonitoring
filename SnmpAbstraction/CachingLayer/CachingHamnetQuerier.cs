@@ -52,12 +52,12 @@ namespace SnmpAbstraction
         /// <summary>
         /// The volatile data fetching wireless peer info object.
         /// </summary>
-        private VolatileFetchingWirelessPeerInfos volatileFetchingWirelessPeerInfo = null;
+        private IWirelessPeerInfos volatileFetchingWirelessPeerInfo = null;
 
         /// <summary>
         /// The volatile data fetching interface details object.
         /// </summary>
-        private VolatileFetchingInterfaceDetails volatileFetchingInterfaceDetails = null;
+        private IInterfaceDetails volatileFetchingInterfaceDetails = null;
 
         /// <summary>
         /// Initializes using the given lower layer.
@@ -103,7 +103,7 @@ namespace SnmpAbstraction
 
                 this.LowerQuerierFetchInterfaceDetails();
 
-                return this.cacheEntry.InterfaceDetails;
+                return this.volatileFetchingInterfaceDetails;
             }
         }
 
@@ -117,6 +117,28 @@ namespace SnmpAbstraction
                 this.LowerQuerierFetchWirelessPeerInfo();
 
                 return this.volatileFetchingWirelessPeerInfo;
+            }
+        }
+
+        /// <inheritdoc />
+        public QueryApis Api
+        {
+            get
+            {
+                this.InitializeLowerQuerier();
+
+                return this.lowerQuerier.Api;
+            }
+        }
+
+        /// <inheritdoc />
+        public Type HandlerType
+        {
+            get
+            {
+                this.InitializeLowerQuerier();
+
+                return this.lowerQuerier.HandlerType;
             }
         }
 
@@ -266,7 +288,16 @@ namespace SnmpAbstraction
                     this.cacheDatabaseContext.SaveChanges();
                 }
 
-                this.volatileFetchingInterfaceDetails = new VolatileFetchingInterfaceDetails(this.cacheEntry.InterfaceDetails, this.lowerLayer);
+                if (this.cacheEntry.ApiUsed.HasFlag(QueryApis.VendorSpecific))
+                {
+                    log.Info($"Forcing non-cached operation for FetchInterfaceDetails of device {this.Address} due to vendor specific API usage");
+                    this.InitializeLowerQuerier();
+                    this.volatileFetchingInterfaceDetails = this.lowerQuerier.NetworkInterfaceDetails;
+                }
+                else
+                {
+                    this.volatileFetchingInterfaceDetails = new VolatileFetchingInterfaceDetails(this.cacheEntry.InterfaceDetails, this.lowerLayer);
+                }
             }
         }
 
@@ -298,7 +329,16 @@ namespace SnmpAbstraction
                     this.cacheDatabaseContext.SaveChanges();
                 }
 
-                this.volatileFetchingWirelessPeerInfo = new VolatileFetchingWirelessPeerInfos(this.cacheEntry.WirelessPeerInfos, this.lowerLayer);
+                if (this.cacheEntry.ApiUsed.HasFlag(QueryApis.VendorSpecific))
+                {
+                    log.Info($"Forcing non-cached operation for FetchWirelessPeerInfo of device {this.Address} due to vendor specific API usage");
+                    this.InitializeLowerQuerier();
+                    this.volatileFetchingWirelessPeerInfo = this.lowerQuerier.WirelessPeerInfos;
+                }
+                else
+                {
+                    this.volatileFetchingWirelessPeerInfo = new VolatileFetchingWirelessPeerInfos(this.cacheEntry.WirelessPeerInfos, this.lowerLayer);
+                }
             }
         }
 
@@ -310,6 +350,24 @@ namespace SnmpAbstraction
             if (this.lowerQuerier != null)
             {
                 return;
+            }
+
+            QueryApis allowedApis = this.options.AllowedApis;
+            string deviceHandlerHint = string.Empty;
+            lock(this.SyncRoot)
+            {
+                if (this.cacheEntry == null)
+                {
+                    this.InitializeCacheEntry();
+                    if (this.lowerQuerier != null)
+                    {
+                        // InitializeCacheEntry might call InitializeLowerQuerier
+                        return;
+                    }
+                }
+
+                allowedApis = ((this.options.AllowedApis & this.cacheEntry.ApiUsed) != 0) ? this.cacheEntry.ApiUsed : this.options.AllowedApis;
+                deviceHandlerHint = this.cacheEntry.DeviceHandlerClass;
             }
 
             this.lowerQuerier = SnmpQuerierFactory.Instance.Create(
@@ -325,7 +383,18 @@ namespace SnmpAbstraction
                     false, // <-- this is the reason why we do this copy: keep all settings but force "enableCaching == false"
                     this.options.LoginUser,
                     this.options.LoginPassword,
-                    this.options.AllowedApis));
+                    allowedApis,
+                    deviceHandlerHint));
+
+            lock(this.SyncRoot)
+            {
+                if (this.cacheEntry != null)
+                {
+                    this.cacheEntry.DeviceHandlerClass = this.lowerQuerier.HandlerType.FullName;
+                    this.cacheEntry.ApiUsed = this.lowerQuerier.Api;
+                    this.cacheDatabaseContext.SaveChanges();
+                }
+            }
         }
 
         /// <summary>
@@ -346,7 +415,13 @@ namespace SnmpAbstraction
 
                 if (this.cacheEntry == null)
                 {
-                    this.cacheEntry = new CacheData { Address = this.Address, LastModification = DateTime.UtcNow };
+                    this.cacheEntry = new CacheData
+                    {
+                        Address = this.Address,
+                        LastModification = DateTime.UtcNow,
+                        ApiUsed = this.options.AllowedApis,
+                        DeviceHandlerClass = string.Empty
+                    };
                     this.cacheDatabaseContext.CacheData.Add(this.cacheEntry);
                     this.cacheDatabaseContext.SaveChanges();
                 }

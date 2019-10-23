@@ -9,7 +9,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// The main SNMP Querier implementation.
     /// </summary>
-    internal partial class HamnetQuerier : IHamnetQuerier
+    internal class HamnetQuerier : IHamnetQuerier
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -67,6 +67,12 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public IpAddress Address => this.handler.Address;
+
+        /// <inheritdoc />
+        public QueryApis Api => this.handler.SupportedApi;
+
+        /// <inheritdoc />
+        public Type HandlerType => this.handler.GetType();
 
         /// <inheritdoc />
         public IBgpPeers FetchBgpPeers(string remotePeerIp)
