@@ -32,5 +32,15 @@ namespace SnmpAbstraction
         /// Gets the date and time of last modification of this table row.
         /// </summary>
         DateTime LastModification { get; }
+
+        /// <summary>
+        /// Gets the API that has been used to query the data recorded in the cache. Recommendation is to try talking to the device again using this API.
+        /// </summary>
+        QueryApis ApiUsed { get; }
+
+        /// <summary>
+        /// Gets the full qualified class name of the device handle that has been used to query the data recorded in the cache. Recommendation is to try talking to the device again using this API.
+        /// </summary>
+        string DeviceHandlerClass { get; }
     }
 }

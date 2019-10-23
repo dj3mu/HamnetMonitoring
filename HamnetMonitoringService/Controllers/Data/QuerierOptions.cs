@@ -48,5 +48,8 @@ namespace HamnetDbRest.Controllers
 
         /// <inheritdoc />
         public QueryApis AllowedApis { get; set; } = QueryApis.Snmp | QueryApis.VendorSpecific;
+
+        /// <inheritdoc />
+        public string QuerierClassHint { get; set; } = null;
     }
 }

@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using System.IO;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace SnmpAbstraction
 {
@@ -29,7 +33,7 @@ namespace SnmpAbstraction
 
         private object lockObject = new object();
 
-        private bool ensureCreatedCalled = false;
+        private bool migrateCalled = false;
 
         /// <summary>
         /// Prevent construction from outside the singleton getter.
@@ -59,15 +63,48 @@ namespace SnmpAbstraction
                 {
                     var context = new CacheDatabaseContext(this.Configuration);
                     
-                    if (!this.ensureCreatedCalled)
+                    if (!this.migrateCalled)
                     {
-                        context.Database.EnsureCreated();
-                        this.ensureCreatedCalled = true;
+                        context.Database.Migrate();
+                        this.migrateCalled = true;
                     }
 
                     return context;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Factory class for the purpose of Entitiy Framework design-time.
+    /// </summary>
+    internal class CacheDatabaseContextFactory : IDesignTimeDbContextFactory<CacheDatabaseContext>
+    {
+        /// <summary>
+        /// Handle to the logger.
+        /// </summary>
+        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <inheritdoc />
+        public CacheDatabaseContext CreateDbContext(string[] args)
+        {
+            var configFile = (args != null) && (args.Length > 0) && !string.IsNullOrWhiteSpace(args[0])
+                ? args[0] // first command line options is the config file to use
+                : "~/hamnetMonitorSettings.json"; // this is the fallback config file - only good for Linux
+
+            configFile = configFile.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+
+            log.Debug($"Using config file '{configFile}'");
+
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(configFile, optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
+            
+            CacheDatabaseProvider.Instance.Configuration = configuration.GetSection(CacheDatabaseProvider.CacheDatabaseSectionName);
+
+            return CacheDatabaseProvider.Instance.CacheDatabase;
         }
     }
 }

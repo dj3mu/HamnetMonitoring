@@ -105,7 +105,8 @@ namespace SnmpAbstraction
             else
             {
                 var detector = new DeviceDetector(lowerLayer);
-                var handler = detector.Detect(options);
+
+                IDeviceHandler handler = detector.Detect(options);
 
                 if (handler == null)
                 {

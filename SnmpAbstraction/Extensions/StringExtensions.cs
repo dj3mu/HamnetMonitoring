@@ -131,6 +131,43 @@ namespace SnmpAbstraction
         }
  
         /// <summary>
+        /// Converts a string to a <see cref="IanaInterfaceType" /> enum.
+        /// </summary>
+        /// <param name="interfaceTypeString">The string to convert.</param>
+        /// <returns>The enum of the converstion result. Returns <see cref="IanaInterfaceType.NotAvailable" /> 
+        /// if the input is invalid. Returns <see cref="IanaInterfaceType.Other" /> if the input is a valid string but cannot be convert.</returns>
+        public static IanaInterfaceType ToIanaInterfaceType(this string interfaceTypeString)
+        {
+            if (interfaceTypeString == null)
+            {
+                throw new ArgumentNullException(nameof(interfaceTypeString), "The interface type string to convert is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(interfaceTypeString))
+            {
+                return IanaInterfaceType.NotAvailable;
+            }
+
+            if (Enum.TryParse<IanaInterfaceType>(interfaceTypeString, true, out IanaInterfaceType interfaceType))
+            {
+                // simple enum parsing success
+                return interfaceType;
+            }
+
+            switch(interfaceTypeString.ToUpperInvariant())
+            {
+                case "ETHER":
+                    return IanaInterfaceType.EthernetCsmacd;
+
+                case "WLAN":
+                    return IanaInterfaceType.Ieee80211;
+
+                default:
+                    return IanaInterfaceType.Other;
+            }
+        }
+
+        /// <summary>
         /// Resolve string as either IP or host name (derived from <see href="https://www.codeproject.com/Tips/440861/Resolving-a-hostname-in-Csharp-and-retrieving-IP-v" />).
         /// </summary>
         /// <param name="hostNameOrAddress">The string containing the host name or IP address.</param>
