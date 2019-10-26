@@ -11,7 +11,7 @@ For example: None of the tools supports detection and retrieval of the statistic
 
 So we decided to create our own tool supporting only the really required features for `Hamnet` monitoring use while exchanging as few data as possible with the involved nodes.
 
-**So project is the data collecting backend for the [Hamnet Database](https://hamnetdb.net). The [Hamnet Database](https://hamnetdb.net) accesses the tool via the REST API of the [background service](HamnetMonitoringService/README.md). It's using the tool for both, getting pre-collected values (e.g. RSSI) but also for interactive (i.e. on user click) commands like link tests.
+**This project is the data collecting backend for the [Hamnet Database](https://hamnetdb.net). The [Hamnet Database](https://hamnetdb.net) is accessing the tool via the REST API of the [background service](HamnetMonitoringService/README.md). It's using the tool for both, getting regularly collected and stored values (e.g. RSSI) but also for interactive (i.e. on user click) commands like link tests.**
 
 
 ## Beta State
