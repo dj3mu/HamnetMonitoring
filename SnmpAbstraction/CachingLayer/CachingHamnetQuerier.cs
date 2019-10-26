@@ -223,12 +223,6 @@ namespace SnmpAbstraction
 
                     if (this.cacheDatabaseContext != null)
                     {
-                        //if (this.cacheEntry != null)
-                        //{
-                        //    this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
-                        //    this.cacheDatabaseContext.SaveChanges();
-                        //}
-
                         this.cacheDatabaseContext.Dispose();
                         this.cacheDatabaseContext = null;
                     }

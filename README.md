@@ -1,8 +1,8 @@
 # `Hamnet` SNMP Monitoring Tools
 
-The `Hamnet` is the Internet of the Radio Amateurs [(German Wikipedia)](https://de.wikipedia.org/wiki/HAMNET) based solely on radio links on licensed (unattended automatic Amateur Radio station) or ISM (standard WLAN frequencies).
+The `Hamnet` is the Internet of the Radio Amateurs [(German Wikipedia)](https://de.wikipedia.org/wiki/HAMNET) based on radio links on licensed (unattended automatic Amateur Radio station) or ISM (standard WLAN frequencies).
 
-From past experience it was noticed that monitoring of `Hamnet` nodes is not straight forward. None of the tools available seems to support what is needed. Instead the generic approach of such tools offers a lot of features that are actually irrelevant for `Hamnet` use.
+From past experience it was noticed that monitoring of `Hamnet` nodes is not as straight forward as it is for regular Internet or LAN. None of the tools available seems to support what is needed. Instead the generic approach of such tools offers a lot of features that are actually irrelevant for `Hamnet` use.
 
 Additionally it turned out that a lot of traffic can be caused by the monitoring tools, querying plenty of values that are not actually important to *the* `Hamnet` itself. This is a problem as `Hamnet` links can be quite limited in bandwidth. So a requirement is to cause as few traffic for monitoring as possible.  
 Another requirement is to be able to auto-provision the monitoring from the central [Hamnet Database](https://hamnetdb.net).
@@ -10,6 +10,8 @@ Another requirement is to be able to auto-provision the monitoring from the cent
 For example: None of the tools supports detection and retrieval of the statistics of the two sides of a `Hamnet` RF link. Hard-coding them is possible but whenever the hardware changes, (mostly manual) adaption of monitoring would be required. 
 
 So we decided to create our own tool supporting only the really required features for `Hamnet` monitoring use while exchanging as few data as possible with the involved nodes.
+
+**So project is the data collecting backend for the [Hamnet Database](https://hamnetdb.net). The [Hamnet Database](https://hamnetdb.net) accesses the tool via the REST API of the [background service](HamnetMonitoringService/README.md). It's using the tool for both, getting pre-collected values (e.g. RSSI) but also for interactive (i.e. on user click) commands like link tests.
 
 
 ## Beta State
