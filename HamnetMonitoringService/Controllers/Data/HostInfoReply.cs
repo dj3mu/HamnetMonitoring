@@ -25,6 +25,8 @@ namespace HamnetDbRest.Controllers
             this.address = address ?? throw new ArgumentNullException(nameof(address), "The IP address to construct a HostInfoReply for is null");
             this.systemData = systemData ?? throw new ArgumentNullException(nameof(systemData), "The system data to construct a HostInfoReply from is null");
 
+            this.systemData.ForceEvaluateAll();
+
             this.SupportedFeatures = this.systemData.SupportedFeatures
                 .ToString()
                 .Split(',' , StringSplitOptions.RemoveEmptyEntries)

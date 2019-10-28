@@ -1,4 +1,5 @@
 using System;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using SnmpSharpNet;
 using tik4net;
@@ -74,6 +75,18 @@ namespace SnmpAbstraction
                     this.tikConnection.Dispose();
                     this.tikConnection = null;
                 }
+            }
+            catch(SocketException socketEx)
+            {
+                log.Info($"Device {address}: Socket Exception in Mikrotik API connection: {socketEx.Message}. Considering device as not applicable");
+
+                if (this.tikConnection != null)
+                {
+                    this.tikConnection.Dispose();
+                    this.tikConnection = null;
+                }
+
+                return false;
             }
 
             this.apiInUse = TikConnectionType.Api;

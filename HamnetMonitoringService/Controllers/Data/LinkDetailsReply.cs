@@ -21,6 +21,8 @@ namespace HamnetDbRest.Controllers
                 throw new ArgumentNullException(nameof(linkDetails), "The link details to return is null");
             }
 
+            linkDetails.ForceEvaluateAll();
+
             this.Details = linkDetails.Details.Select(d => new LinkDetailReply(d)).ToList();
         }
 
