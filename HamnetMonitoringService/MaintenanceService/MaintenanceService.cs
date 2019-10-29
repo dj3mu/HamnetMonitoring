@@ -258,13 +258,20 @@ namespace RestService.DataFetchingService
         {
             TimeSpan resultsOutdatedAfter = configuration.GetValue<TimeSpan>("ResultsOutdatedAfter");
 
-            var currentUnixTimeStamp = (DateTime.UtcNow - Program.UnixTimeStampBase).TotalSeconds;
+            var nowItIs = DateTime.UtcNow;
+            var currentUnixTimeStamp = (nowItIs - Program.UnixTimeStampBase).TotalSeconds;
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
                 var outdatedRssis = this.resultDatabaseContext.RssiValues.Where(r => (currentUnixTimeStamp - r.UnixTimeStamp) > resultsOutdatedAfter.TotalSeconds);
                 foreach (var item in outdatedRssis)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI entry for host {item.ForeignId} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
+                }
+
+                var outdatedRssiFailures = this.resultDatabaseContext.RssiFailingQueries.Where(r => (r.TimeStamp - nowItIs) > resultsOutdatedAfter);
+                foreach (var item in outdatedRssiFailures)
+                {
+                    this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI failing query entry for host {item.Subnet} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
                 }
 
                 var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
@@ -276,10 +283,18 @@ namespace RestService.DataFetchingService
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP peer entry from host {item.LocalAddress} to {item.RemoteAddress} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
                 }
 
+                var outdatedBgpPeerFailures = this.resultDatabaseContext.BgpFailingQueries.Where(r => (r.TimeStamp - nowItIs) > resultsOutdatedAfter);
+                foreach (var item in outdatedBgpPeerFailures)
+                {
+                    this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP failing peer entry from host {item.Host} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
+                }
+
                 if (!this.dryRunMode)
                 {
                     this.resultDatabaseContext.RemoveRange(outdatedRssis);
+                    this.resultDatabaseContext.RemoveRange(outdatedRssiFailures);
                     this.resultDatabaseContext.RemoveRange(outdatedBgpPeers);
+                    this.resultDatabaseContext.RemoveRange(outdatedBgpPeerFailures);
 
                     this.resultDatabaseContext.SaveChanges();
                     transaction.Commit();
