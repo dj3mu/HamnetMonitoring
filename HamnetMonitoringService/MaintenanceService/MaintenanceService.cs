@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RestService.Database;
+using RestService.Model;
 using SnmpAbstraction;
 
 namespace RestService.DataFetchingService
@@ -141,6 +142,34 @@ namespace RestService.DataFetchingService
         }
 
         /// <summary>
+        /// Checks if the given value is outdated.
+        /// </summary>
+        /// <param name="nowItIs">The current time.</param>
+        /// <param name="dataSetWithTimeStampColumn">The dataset with a &quot;TimeStamp&quot; column.</param>
+        /// <param name="resultsOutdatedAfter">The maximum allowed age of the dataset.</param>
+        /// <returns><c>true</c> if the dataset is outdated.</returns>
+        private static bool IsOutdatedTimeStampColumn(DateTime nowItIs, dynamic dataSetWithTimeStampColumn, TimeSpan resultsOutdatedAfter)
+        {
+            bool isOutdated = (nowItIs - dataSetWithTimeStampColumn.TimeStamp) > resultsOutdatedAfter;
+
+            return isOutdated;
+        }
+
+        /// <summary>
+        /// Checks if the given value is outdated.
+        /// </summary>
+        /// <param name="currentUnixTimeStamp">The current unix time stamp.</param>
+        /// <param name="dataSetWithUnixTimeStampColumn">The dataset with a unix timestamp column.</param>
+        /// <param name="resultsOutdatedAfter">The maximum allowed age of the dataset.</param>
+        /// <returns><c>true</c> if the dataset is outdated.</returns>
+        private static bool IsOutdatedUnixTimeStampColumn(double currentUnixTimeStamp, dynamic dataSetWithUnixTimeStampColumn, TimeSpan resultsOutdatedAfter)
+        {
+            bool isOutdated = (currentUnixTimeStamp - dataSetWithUnixTimeStampColumn.UnixTimeStamp) > resultsOutdatedAfter.TotalSeconds;
+
+            return isOutdated;
+        }
+
+        /// <summary>
         /// The asynchronuous method that is called by the timer to execute the periodic data aquisiation.
         /// </summary>
         /// <param name="state">Required by timer but not used. Using field <see cref="configuration" /> instead.</param>
@@ -258,36 +287,39 @@ namespace RestService.DataFetchingService
         {
             TimeSpan resultsOutdatedAfter = configuration.GetValue<TimeSpan>("ResultsOutdatedAfter");
 
-            var nowItIs = DateTime.UtcNow;
-            var currentUnixTimeStamp = (nowItIs - Program.UnixTimeStampBase).TotalSeconds;
+            DateTime nowItIs = DateTime.UtcNow;
+            double currentUnixTimeStamp = (nowItIs - Program.UnixTimeStampBase).TotalSeconds;
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
-                var outdatedRssis = this.resultDatabaseContext.RssiValues.Where(r => (currentUnixTimeStamp - r.UnixTimeStamp) > resultsOutdatedAfter.TotalSeconds);
+                var outdatedRssis = this.resultDatabaseContext.RssiValues.Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedRssis)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI entry for host {item.ForeignId} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
                 }
 
-                var outdatedRssiFailures = this.resultDatabaseContext.RssiFailingQueries.Where(r => (r.TimeStamp - nowItIs) > resultsOutdatedAfter);
+                var outdatedRssiFailures = this.resultDatabaseContext.RssiFailingQueries.Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedRssiFailures)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI failing query entry for host {item.Subnet} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
                 }
 
-                var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
-                cacheMaintenance.DeleteForAddress(outdatedRssis.Select(e => IPAddress.Parse(e.ForeignId)));
-
-                var outdatedBgpPeers = this.resultDatabaseContext.BgpPeers.Where(r => (currentUnixTimeStamp - r.UnixTimeStamp) > resultsOutdatedAfter.TotalSeconds);
+                var outdatedBgpPeers = this.resultDatabaseContext.BgpPeers.Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedBgpPeers)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP peer entry from host {item.LocalAddress} to {item.RemoteAddress} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
                 }
 
-                var outdatedBgpPeerFailures = this.resultDatabaseContext.BgpFailingQueries.Where(r => (r.TimeStamp - nowItIs) > resultsOutdatedAfter);
+                var outdatedBgpPeerFailures = this.resultDatabaseContext.BgpFailingQueries.Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedBgpPeerFailures)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP failing peer entry from host {item.Host} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
                 }
+
+                var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
+                cacheMaintenance.DeleteForAddress(outdatedRssis.Select(e => IPAddress.Parse(e.ForeignId)));
+                cacheMaintenance.DeleteForAddress(outdatedRssiFailures.SelectMany(e => e.AffectedHosts.Select(h => IPAddress.Parse(h))));
+                cacheMaintenance.DeleteForAddress(outdatedBgpPeers.Select(e => IPAddress.Parse(e.LocalAddress)));
+                cacheMaintenance.DeleteForAddress(outdatedBgpPeerFailures.Select(e => IPAddress.Parse(e.Host)));
 
                 if (!this.dryRunMode)
                 {

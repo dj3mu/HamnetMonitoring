@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/HamnetMonitorCmdLine.dll",
+            "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/win10-x64/HamnetMonitorCmdLine.dll",
             "args": [ "LinkDetails", "-h", "44.224.28.58", "44.224.28.61" ],
-            "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2",
+            "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/win10-x64",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false
@@ -23,9 +23,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/HamnetMonitorCmdLine.dll",
+            "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/win10-x64/HamnetMonitorCmdLine.dll",
             "args": [ "WirelessPeers", "-h", "44.143.47.101" ],
-            "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2",
+            "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/win10-x64",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false
@@ -36,9 +36,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/HamnetMonitorCmdLine.dll",
+            "program": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/win10-x64/HamnetMonitorCmdLine.dll",
             "args": [ "InterfaceData", "-h", "44.224.38.117" ],
-            "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2",
+            "cwd": "${workspaceFolder}/HamnetMonitorCmdLine/bin/Debug/netcoreapp2.2/win10-x64",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false
@@ -49,9 +49,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/HamnetMonitoringService/bin/Debug/netcoreapp2.2/HamnetMonitoringService.dll",
+            "program": "${workspaceFolder}/HamnetMonitoringService/bin/Debug/netcoreapp2.2/win10-x64/HamnetMonitoringService.dll",
             "args": [ "~/hamnetMonitorSettings.json" ],
-            "cwd": "${workspaceFolder}/HamnetMonitoringService/bin/Debug/netcoreapp2.2",
+            "cwd": "${workspaceFolder}/HamnetMonitoringService/bin/Debug/netcoreapp2.2/win10-x64",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false
