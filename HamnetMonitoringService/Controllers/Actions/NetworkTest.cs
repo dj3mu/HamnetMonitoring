@@ -63,7 +63,7 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                var matchingHosts = this.FetchSubnetsWithHostsFromHamnetDb(this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey));
+                var matchingHosts = this.FetchSubnetsWithHostsFromHamnetDb(this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName));
 
                 if ((matchingHosts == null) || (matchingHosts.Count == 0))
                 {
@@ -91,9 +91,7 @@ namespace HamnetDbRest.Controllers
         /// <returns>The list of subnets with their hosts to monitor from HamnetDB.</returns>
         private IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> FetchSubnetsWithHostsFromHamnetDb(IConfigurationSection hamnetDbConfig)
         {
-            string connectionStringFile = hamnetDbConfig.GetValue<string>("ConnectionStringFile");
-
-            using(var accessor = HamnetDbProvider.Instance.GetHamnetDb(connectionStringFile))
+            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
             {
                 var uniquePairs = accessor.UniqueMonitoredHostPairsInSubnet(this.network);
 
@@ -101,7 +99,7 @@ namespace HamnetDbRest.Controllers
             }
         }
 
-                /// <summary>
+        /// <summary>
         /// Queries the link for a single subnet.
         /// </summary>
         /// <param name="pair">The pair of hosts inside the subnet to query.</param>

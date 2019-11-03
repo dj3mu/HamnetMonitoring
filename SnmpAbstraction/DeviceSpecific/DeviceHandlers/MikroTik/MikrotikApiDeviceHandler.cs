@@ -34,11 +34,18 @@ namespace SnmpAbstraction
         private SemanticVersion osVersionBacking = null;
 
         private IDeviceSystemData systemDataBacking = null;
-        
+
         private string modelBacking = null;
-        
+
         private IInterfaceDetails networkInterfaceDetailsBacking = null;
-        private IWirelessPeerInfos wirelessPeerInfosBacking;
+
+        private IWirelessPeerInfos wirelessPeerInfosBacking = null;
+
+        private readonly SystemIdentity sysIdent = null;
+
+        private readonly SystemResource sysResource = null;
+
+        private readonly SystemRouterboard sysRouterboard = null;
 
         /// <summary>
         /// Constructs for the given lower layer.
@@ -47,12 +54,19 @@ namespace SnmpAbstraction
         /// <param name="connectionType">The type of the connection in use (required in case we have to re-open).</param>
         /// <param name="tikConnection">The lower layer connection for talking to this device.</param>
         /// <param name="options">The options to use.</param>
-        public MikrotikApiDeviceHandler(IpAddress address, TikConnectionType connectionType, ITikConnection tikConnection, IQuerierOptions options)
+        /// <param name="sysIdent">The system ident (to create SystemData from).</param>
+        /// /// <param name="sysResource">The system resource info (to create SystemData from).</param>
+        /// <param name="sysRouterboard">The system routerboard info (to create SystemData from).</param>
+        public MikrotikApiDeviceHandler(IpAddress address, TikConnectionType connectionType, ITikConnection tikConnection, IQuerierOptions options, SystemIdentity sysIdent, SystemResource sysResource, SystemRouterboard sysRouterboard)
         {
             if ((options.AllowedApis & this.SupportedApi) == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(options), $"This device handler doesn't support any of the APIs allowed by the IQuerierOptions (allowed: {options.AllowedApis}, supported {this.SupportedApi}).");
             }
+
+            this.sysRouterboard = sysRouterboard ?? throw new ArgumentNullException(nameof(sysRouterboard), "sysRouterboard is null when creating a MikrotikApiDeviceHandler");
+            this.sysResource = sysResource ?? throw new ArgumentNullException(nameof(sysResource), "sysResource is null when creating a MikrotikApiDeviceHandler");
+            this.sysIdent = sysIdent ?? throw new ArgumentNullException(nameof(sysIdent), "sysIdent is null when creating a MikrotikApiDeviceHandler");
 
             this.Address = address ?? throw new ArgumentNullException(nameof(address), "address is null when creating a MikrotikApiDeviceHandler");
             this.TikConnection = tikConnection ?? throw new ArgumentNullException(nameof(tikConnection), "tikConnection is null when creating a MikrotikApiDeviceHandler");
@@ -148,7 +162,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
         {
-            return new MikrotikApiTracerouteOperation(this.Address, this.TikConnection, remoteIp, count).Execute(); 
+            return new MikrotikApiTracerouteOperation(this.Address, this.TikConnection, remoteIp, count).Execute();
         }
 
         /// <summary>
@@ -210,11 +224,11 @@ namespace SnmpAbstraction
                 IsAccessPoint = !registrationTableEntry.Ap,
                 LinkUptime = registrationTableEntry.Uptime,
                 Oids = new Dictionary<CachableValueMeanings, ICachableOid>(),
-                RxSignalStrength = new string[]{ registrationTableEntry.SignalStrengthCh0, registrationTableEntry.SignalStrengthCh1, registrationTableEntry.SignalStrengthCh2 }
+                RxSignalStrength = new string[] { registrationTableEntry.SignalStrengthCh0, registrationTableEntry.SignalStrengthCh1, registrationTableEntry.SignalStrengthCh2 }
                     .Where(s => !string.IsNullOrWhiteSpace(s))
                     .Select(s => Convert.ToDouble(s))
                     .DecibelLogSum(),
-                TxSignalStrength = new string[]{ registrationTableEntry.TxSignalStrengthCh0, registrationTableEntry.TxSignalStrengthCh1, registrationTableEntry.TxSignalStrengthCh2 }
+                TxSignalStrength = new string[] { registrationTableEntry.TxSignalStrengthCh0, registrationTableEntry.TxSignalStrengthCh1, registrationTableEntry.TxSignalStrengthCh2 }
                     .Where(s => !string.IsNullOrWhiteSpace(s))
                     .Select(s => Convert.ToDouble(s))
                     .DecibelLogSum()
@@ -275,16 +289,6 @@ namespace SnmpAbstraction
                 return;
             }
 
-            Stopwatch stopper = Stopwatch.StartNew();
-
-            this.EnsureOpenConnection();
-
-            var sysResource = this.TikConnection.LoadSingle<SystemResource>();
-            var sysRouterboard = this.TikConnection.LoadSingle<SystemRouterboard>();
-            var sysIdent = this.TikConnection.LoadSingle<SystemIdentity>();
-
-            stopper.Stop();
-
             var versionMatch = OsVersionExtractionRegex.Match(sysResource.Version);
             if (versionMatch.Success)
             {
@@ -295,11 +299,11 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"Cannot convert version string '{sysResource.Version}' to a valid SemanticVersion: It's not matching the version Regex '{OsVersionExtractionRegex.ToString()}'");
             }
 
-            this.modelBacking = sysRouterboard.Model.Replace("RouterBOARD", "RB").Replace(" ", string.Empty);
+            this.modelBacking = this.sysRouterboard.Model.Replace("RouterBOARD", "RB").Replace(" ", string.Empty);
 
             var users = this.TikConnection.LoadList<User>();
             var groups = this.TikConnection.LoadList<UserGroup>();
-            
+
             var detectedFeatures = DeviceSupportedFeatures.None;
             var myUser = users.SingleOrDefault(u => u.Name == this.Options.LoginUser);
             if (myUser != null)
@@ -334,10 +338,10 @@ namespace SnmpAbstraction
                 Location = string.Empty,
                 MaximumSnmpVersion = SnmpVersion.Ver2, // we know that MTik supports SNMPv2c
                 Model = this.modelBacking,
-                Name = sysIdent.Name,
-                Uptime = sysResource.Uptime,
+                Name = this.sysIdent.Name,
+                Uptime = this.sysResource.Uptime,
                 Version = this.osVersionBacking,
-                QueryDuration = stopper.Elapsed,
+                QueryDuration = TimeSpan.Zero,
                 SupportedFeatures = detectedFeatures
             };
         }
