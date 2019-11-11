@@ -147,16 +147,16 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikFetchLinkDetailsTest()
         {
-            //QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
+            QueryAndPrintLinkDetails(new IpAddress("44.224.72.82"), new IpAddress("44.224.72.86"), SnmpVersion.Ver2, false);
             //QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
 
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
-
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, false);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
+//
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, false);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
