@@ -22,6 +22,11 @@ namespace SnmpAbstraction
         /// The uptime of the wireless link as provided by <see cref="IWirelessPeerInfo" />.
         /// </summary>
         WirelessLinkUptime = 3,
+
+        /// <summary>
+        /// The uptime of the system as provided by <see cref="IDeviceSystemData" />.
+        /// </summary>
+        SystemUptime = 4,
     }
 
     /// <summary>

@@ -34,7 +34,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// Container to the device's system data (i.e. the .1.3.6.1.2.1.1 subtree)
     /// </summary>
-    public interface IDeviceSystemData : IHamnetSnmpQuerierResult, ILazyEvaluated
+    public interface IDeviceSystemData : IHamnetSnmpQuerierResult, ILazyEvaluated, ICachableOids
     {
         /// <summary>
         /// Gets the system's description or null if not provided.

@@ -26,6 +26,7 @@ namespace RestService.DataFetchingService
             this.ModelAndVersion2 = linkDetail.ModelAndVersion2;
             this.RxLevel1at2 = linkDetail.RxLevel1at2;
             this.RxLevel2at1 = linkDetail.RxLevel2at1;
+            this.LinkUptime = linkDetail.LinkUptime;
             this.SideOfAccessPoint = linkDetail.SideOfAccessPoint;
             this.DeviceAddress = linkDetail.DeviceAddress;
             this.DeviceModel = linkDetail.DeviceModel;

@@ -29,7 +29,7 @@ namespace HamnetDbAbstraction
                 throw new ArgumentNullException(nameof(hosts), "Host list is null");
             }
 
-            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> returnDict = new Dictionary<IHamnetDbSubnet, IHamnetDbHosts>(new SubnetContainedComparer());
+            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> returnDict = new Dictionary<IHamnetDbSubnet, IHamnetDbHosts>();
             foreach (IHamnetDbSubnet subnet in nets)
             {
                 var hostsInSubnet = from host in hosts
@@ -40,9 +40,13 @@ namespace HamnetDbAbstraction
                 {
                     // due to comparer we might already have a parent subnet in the dict which we hereby delete
                     // for to replace it with the smaller subnet
-                    if (returnDict.Remove(subnet))
+                    var alreadyHandledParentSubnet = returnDict.Keys.FirstOrDefault(k => {
+                        return k.Subnet.Contains(subnet.Subnet);
+                    });
+                    if (alreadyHandledParentSubnet != null)
                     {
-                        log.Debug($"Replacing already stored parent of subnet '{subnet}' with this, smaller subnet");
+                        log.Debug($"Replacing already stored parent '{alreadyHandledParentSubnet.Subnet}' of subnet '{subnet.Subnet}' with this, smaller subnet");
+                        returnDict.Remove(alreadyHandledParentSubnet);
                     }
 
                     returnDict.Add(subnet, new HamnetDbHosts(hostsInSubnet));

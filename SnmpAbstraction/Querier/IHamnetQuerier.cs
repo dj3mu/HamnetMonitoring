@@ -60,6 +60,14 @@ namespace SnmpAbstraction
         ILinkDetails FetchLinkDetails(params string[] remoteHostNamesOrIps);
 
         /// <summary>
+        /// Fetches the detailed information for the link between the device that is associated
+        /// with this instance and the devices owning the listed remote host names or IP addresses.
+        /// </summary>
+        /// <param name="remoteQueriers">The list of queriers to the remote devices to which the link details shall be fetched.</param>
+        /// <returns>The link details for the link between this device and the listed remote devices.</returns>
+        ILinkDetails FetchLinkDetails(params IHamnetQuerier[] remoteQueriers);
+
+        /// <summary>
         /// Performs a traceroute 
         /// </summary>
         /// <param name="remoteHostNameOrIp">The remote device's host name or IP address to which the traceroute shall be done.</param>

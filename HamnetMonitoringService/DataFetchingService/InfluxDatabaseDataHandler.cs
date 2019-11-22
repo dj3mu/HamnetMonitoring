@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
 using HamnetDbRest;
@@ -20,11 +21,17 @@ namespace RestService.DataFetchingService
 
         private const string InfluxRssiDatapointName = "RSSI";
 
+        private const string InfluxLinkUptimeDatapointName = "LinkUptime";
+
+        private const string InfluxDeviceUptimeDatapointName = "DeviceUptime";
+
         private const string InfluxHostTagName = "host";
 
         private const string InfluxSubnetTagName = "subnet";
 
         private const string InfluxCallTagName = "call";
+        
+        private const string InfluxCall2TagName = "call2";
 
         private const string InfluxDescriptionTagName = "desc";
 
@@ -84,6 +91,22 @@ namespace RestService.DataFetchingService
 
                 string host1call = inputData.Value.First().Callsign?.ToUpperInvariant();
                 string host2call = inputData.Value.Last().Callsign?.ToUpperInvariant();
+
+                this.currentPayload.Add(
+                    new LineProtocolPoint(
+                        InfluxLinkUptimeDatapointName,
+                        new Dictionary<string, object>
+                        {
+                            { InfluxValueKey, linkDetails.Details.First().LinkUptime }
+                        },
+                        new Dictionary<string, string>
+                        {
+                            { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
+                            { InfluxCallTagName, host1call },
+                            { InfluxCall2TagName, host2call },
+                            { InfluxDescriptionTagName, $"{host1call} and {host2call}" }
+                        },
+                        queryTime.ToUniversalTime()));
 
                 foreach (var item in linkDetails.Details)
                 {
@@ -178,6 +201,86 @@ namespace RestService.DataFetchingService
         {
             // NOP here - as of now, no failing queries recorded in InfluxDB
             return Task.CompletedTask;
+        }
+
+        /// <inheritdoc />
+        public void RecordUptimesInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, IEnumerable<IDeviceSystemData> systemDatas, DateTime queryTime)
+        {
+            lock(this.recordingLock)
+            {
+                this.CreateNewPayload();
+
+                string host1call = inputData.Value.First().Callsign?.ToUpperInvariant();
+                string host2call = inputData.Value.Last().Callsign?.ToUpperInvariant();
+
+                this.currentPayload.Add(
+                    new LineProtocolPoint(
+                        InfluxLinkUptimeDatapointName,
+                        new Dictionary<string, object>
+                        {
+                            { InfluxValueKey, linkDetails.Details.First().LinkUptime }
+                        },
+                        new Dictionary<string, string>
+                        {
+                            { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
+                            { InfluxCallTagName, host1call },
+                            { InfluxCall2TagName, host2call },
+                            { InfluxDescriptionTagName, $"{host1call} and {host2call}" }
+                        },
+                        queryTime.ToUniversalTime()));
+
+                foreach (var item in systemDatas)
+                {
+                    if (!item.Uptime.HasValue)
+                    {
+                        continue;
+                    }
+
+                    var itemDbHost = inputData.Value.FirstOrDefault(h => h.Address.Equals((IPAddress)item.DeviceAddress));
+                    if (itemDbHost == null)
+                    {
+                        log.Error($"Cannot find address {item.DeviceAddress} in HamnetDB. Hence cannot provide call for that address. Skipping this device for recording of device uptime in InfluxDB");
+                        continue;
+                    }
+        
+                    string hostCall = itemDbHost.Callsign.ToUpperInvariant();
+
+                    this.currentPayload.Add(
+                        new LineProtocolPoint(
+                            InfluxDeviceUptimeDatapointName,
+                            new Dictionary<string, object>
+                            {
+                                { InfluxValueKey, item.Uptime.Value }
+                            },
+                            new Dictionary<string, string>
+                            {
+                                { InfluxHostTagName, item.DeviceAddress.ToString() },
+                                { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
+                                { InfluxCallTagName, hostCall },
+                                { InfluxDescriptionTagName, $"System Uptime {hostCall}" }
+                            },
+                            queryTime.ToUniversalTime()));
+                }
+
+                this.SendCurrentPayload();
+            }
+        }
+
+         /// <inheritdoc />
+        public Task RecordUptimesInDatabaseAsync(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, IEnumerable<IDeviceSystemData> systemDatas, DateTime queryTime)
+        {
+            return Task.Run(() =>
+            {
+                try
+                {
+                    this.RecordUptimesInDatabase(inputData, linkDetails, systemDatas, queryTime);
+                }
+                catch(Exception ex)
+                {
+                    // we don not want to throw from an async task
+                    log.Error($"Caught and ignored exception in async recording of details for {inputData.Key} @ {queryTime}: {ex.Message}", ex);
+                }
+            });
         }
 
         public void Dispose()

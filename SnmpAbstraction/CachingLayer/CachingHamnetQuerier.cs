@@ -60,6 +60,11 @@ namespace SnmpAbstraction
         private IInterfaceDetails volatileFetchingInterfaceDetails = null;
 
         /// <summary>
+        /// The volatile data fetching system data object.
+        /// </summary>
+        private IDeviceSystemData volatileFetchingSystemData = null;
+
+        /// <summary>
         /// Initializes using the given lower layer.
         /// </summary>
         /// <param name="lowerLayer">The lower layer to use.</param>
@@ -90,7 +95,7 @@ namespace SnmpAbstraction
 
                 this.LowerQuerierFetchSystemData();
 
-                return this.cacheEntry.SystemData;
+                return this.volatileFetchingSystemData;
             }
         }
 
@@ -166,7 +171,13 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"No remote IP address available at all after resolving {remoteHostNamesOrIps.Length} host name or address string to IP addresses");
             }
 
-            List<ILinkDetail> fetchedDetails = new List<ILinkDetail>(remoteQueriers.Count);
+            return this.FetchLinkDetails(remoteQueriers.ToArray());
+        }
+
+        /// <inheritdoc />
+        public ILinkDetails FetchLinkDetails(params IHamnetQuerier[] remoteQueriers)
+        {
+            List<ILinkDetail> fetchedDetails = new List<ILinkDetail>(remoteQueriers.Length);
             foreach (var remoteQuerier in remoteQueriers)
             {
                 var linkDetectionAlgorithm = new LinkDetectionAlgorithm(this, remoteQuerier);
@@ -239,18 +250,32 @@ namespace SnmpAbstraction
         {
             lock(this.SyncRoot)
             {
-                if (this.cacheEntry.SystemData != null)
+                if (this.volatileFetchingSystemData != null)
                 {
                     return;
                 }
 
-                this.InitializeLowerQuerier();
+                if (this.cacheEntry.SystemData == null)
+                {
+                    this.InitializeLowerQuerier();
 
-                this.cacheEntry.SystemData = new SerializableSystemData(this.lowerQuerier.SystemData);
-                this.cacheEntry.LastModification = DateTime.UtcNow;
+                    this.cacheEntry.SystemData = new SerializableSystemData(this.lowerQuerier.SystemData);
+                    this.cacheEntry.LastModification = DateTime.UtcNow;
 
-                this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
-                this.cacheDatabaseContext.SaveChanges();
+                    this.cacheDatabaseContext.CacheData.Update(this.cacheEntry);
+                    this.cacheDatabaseContext.SaveChanges();
+                }
+
+                if (this.cacheEntry.ApiUsed.HasFlag(QueryApis.VendorSpecific))
+                {
+                    log.Info($"Forcing non-cached operation for FetchSystemData of device {this.Address} due to vendor specific API usage");
+                    this.InitializeLowerQuerier();
+                    this.volatileFetchingSystemData = this.lowerQuerier.SystemData;
+                }
+                else
+                {
+                    this.volatileFetchingSystemData = new VolatileFetchingSystemData(this.cacheEntry.SystemData, this.lowerLayer);
+                }
             }
         }
 

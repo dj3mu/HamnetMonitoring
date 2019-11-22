@@ -88,7 +88,7 @@ namespace SnmpAbstraction
                 throw new ArgumentOutOfRangeException(nameof(remoteHostNamesOrIps), "No remote IP address specified at all: You need to specify at least two host names or addresses for fetching link details");
             }
 
-            List<IHamnetQuerier> remoteQueriers = remoteHostNamesOrIps.Select(remoteHostNamesOrIp => 
+            List<IHamnetQuerier> remoteQueriers = remoteHostNamesOrIps.Select(remoteHostNamesOrIp =>
             {
 
                 if (!remoteHostNamesOrIp.TryGetResolvedConnecionIPAddress(out IPAddress outAddress))
@@ -104,7 +104,13 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"No remote IP address available at all after resolving {remoteHostNamesOrIps.Length} host name or address string to IP addresses");
             }
 
-            List<ILinkDetail> fetchedDetails = new List<ILinkDetail>(remoteQueriers.Count);
+            return FetchLinkDetails(remoteQueriers.ToArray());
+        }
+
+        /// <inheritdoc />
+        public ILinkDetails FetchLinkDetails(params IHamnetQuerier[] remoteQueriers)
+        {
+            List<ILinkDetail> fetchedDetails = new List<ILinkDetail>(remoteQueriers.Length);
             foreach (var remoteQuerier in remoteQueriers)
             {
                 var linkDetectionAlgorithm = new LinkDetectionAlgorithm(this, remoteQuerier);
