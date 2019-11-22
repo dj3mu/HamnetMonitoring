@@ -29,6 +29,25 @@ namespace SnmpAbstraction
             {
                 this.SideOfAccessPoint = this.linkRelatedResultCollection.WirelessPeerInfo1.IsAccessPoint.Value ? 1 : 2;
             }
+
+            // heuristics to detect a usable link uptime
+            // contained in both WirelessPeerInfo but e.g. Ubnt AirOS 5 doesn't provide it
+            // in which case we can see if we can get it from the "other" side
+            if ((this.linkRelatedResultCollection?.WirelessPeerInfo2?.LinkUptime ?? TimeSpan.Zero) == TimeSpan.Zero)
+            {
+                if ((this.linkRelatedResultCollection?.WirelessPeerInfo1?.LinkUptime ?? TimeSpan.Zero) == TimeSpan.Zero)
+                {
+                    this.LinkUptime = TimeSpan.Zero;
+                }
+                else
+                {
+                    this.LinkUptime = this.linkRelatedResultCollection.WirelessPeerInfo1.LinkUptime;
+                }
+            }
+            else
+            {
+                this.LinkUptime = this.linkRelatedResultCollection.WirelessPeerInfo2.LinkUptime;
+            }
         }
 
         /// <inheritdoc />
@@ -47,7 +66,7 @@ namespace SnmpAbstraction
         public override TimeSpan QueryDuration => this.linkRelatedResultCollection?.TotalQueryDuration ?? TimeSpan.Zero;
 
         /// <inheritdoc />
-        public TimeSpan LinkUptime => this.linkRelatedResultCollection?.WirelessPeerInfo2?.LinkUptime ?? TimeSpan.Zero;
+        public TimeSpan LinkUptime { get; }
 
         /// <inheritdoc />
         public int? SideOfAccessPoint { get; } = null;
