@@ -1,3 +1,5 @@
+#define DEBUG
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -229,6 +231,10 @@ namespace RestService.DataFetchingService
                         },
                         queryTime.ToUniversalTime()));
 
+#if DEBUG
+                log.Info($"Recording LINK uptime {linkDetails.Details.First().LinkUptime} for subnet {inputData.Key.Subnet}, (calls '{host1call}' and '{host2call}') in InfluxDB");
+#endif
+
                 foreach (var item in systemDatas)
                 {
                     if (!item.Uptime.HasValue)
@@ -244,6 +250,10 @@ namespace RestService.DataFetchingService
                     }
         
                     string hostCall = itemDbHost.Callsign.ToUpperInvariant();
+
+#if DEBUG
+                    log.Info($"Recording DEVICE uptime {item.Uptime.Value} for {item.DeviceAddress} (subnet {inputData.Key.Subnet}, call '{hostCall}') in InfluxDB");
+#endif
 
                     this.currentPayload.Add(
                         new LineProtocolPoint(

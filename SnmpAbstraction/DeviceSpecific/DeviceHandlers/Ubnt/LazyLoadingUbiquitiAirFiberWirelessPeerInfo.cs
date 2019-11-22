@@ -153,7 +153,8 @@ namespace SnmpAbstraction
 
             var interfactTypeOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.peerIndex });
 
-            this.LinkUptimeBacking = TimeSpan.FromSeconds(this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, link uptime"));
+            var uptimeQueried = this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, link uptime");
+            this.LinkUptimeBacking = TimeSpan.FromSeconds(uptimeQueried < 0 ? 0 : uptimeQueried);
 
             durationWatch.Stop();
 

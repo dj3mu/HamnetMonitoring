@@ -40,7 +40,8 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <NaN> for TxSignalStrength");
+                    return double.NaN;
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -68,7 +69,8 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <NaN> for RxSignalStrength");
+                    return double.NaN;
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -96,13 +98,14 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <Zero> for link uptime");
+                    return TimeSpan.Zero;
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
                 {
                     // value is not available for this device
-                    return TimeSpan.MinValue;
+                    return TimeSpan.Zero;
                 }
 
                 var queryResult = this.lowerLayer.QueryAsTimeSpan(queryOid.Oid, "Link Uptime");

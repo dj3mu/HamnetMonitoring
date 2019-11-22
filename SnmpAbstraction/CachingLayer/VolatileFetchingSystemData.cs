@@ -50,7 +50,8 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingSystemData.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <null> for uptime");
+                    return null;
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))

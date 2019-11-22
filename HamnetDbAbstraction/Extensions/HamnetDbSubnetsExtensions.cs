@@ -45,7 +45,9 @@ namespace HamnetDbAbstraction
                     });
                     if (alreadyHandledParentSubnet != null)
                     {
+#if DEBUG
                         log.Debug($"Replacing already stored parent '{alreadyHandledParentSubnet.Subnet}' of subnet '{subnet.Subnet}' with this, smaller subnet");
+#endif
                         returnDict.Remove(alreadyHandledParentSubnet);
                     }
 
