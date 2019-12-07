@@ -130,6 +130,31 @@ namespace SnmpAbstraction
         public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids => this.underlyingPeerInfo.Oids;
 
         /// <inheritdoc />
+        public double? Ccq
+        {
+            get
+            {
+                var neededValue = CachableValueMeanings.Ccq;
+                ICachableOid queryOid = null;
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
+                {
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <null> for CCQ");
+                    return null;
+                }
+                
+                if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
+                {
+                    // value is not available for this device
+                    return null;
+                }
+
+                var queryResult = Convert.ToDouble(this.lowerLayer.QueryAsInt(queryOid.Oid, "CCQ"));
+
+                return queryResult;
+            }
+        }
+
+        /// <inheritdoc />
         public void ForceEvaluateAll()
         {
             // NOP here - the volatile values are supposed to be queried every time
@@ -146,6 +171,7 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - Link Uptime    : not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.RxSignalStrength.ToString("0.0 dBm"));
             returnBuilder.Append("  - TX signal [dBm]: ").Append(this.TxSignalStrength.ToString("0.0 dBm"));
+            returnBuilder.Append("  - CCQ            : ").Append(this.Ccq?.ToString("0.0 dBm") ?? "not available");
 
             return returnBuilder.ToString();
         }

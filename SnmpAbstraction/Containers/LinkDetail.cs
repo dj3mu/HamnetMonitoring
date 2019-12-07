@@ -48,6 +48,9 @@ namespace SnmpAbstraction
             {
                 this.LinkUptime = this.linkRelatedResultCollection.WirelessPeerInfo2.LinkUptime;
             }
+
+            // heuristic to take CCQ from either side
+            this.Ccq = this.linkRelatedResultCollection.WirelessPeerInfo1.Ccq ?? this.linkRelatedResultCollection.WirelessPeerInfo2.Ccq;
         }
 
         /// <inheritdoc />
@@ -77,10 +80,16 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public IPAddress Address2 => (IPAddress)this.linkRelatedResultCollection.InterfaceDetail2.DeviceAddress;
 
+        /// <inheritdoc />
         public string ModelAndVersion1 => this.linkRelatedResultCollection.InterfaceDetail1.DeviceModel;
 
+        /// <inheritdoc />
         public string ModelAndVersion2 => this.linkRelatedResultCollection.InterfaceDetail2.DeviceModel;
 
+        /// <inheritdoc />
+        public double? Ccq { get; } = null;
+
+        /// <inheritdoc />
         public void ForceEvaluateAll()
         {
             this.linkRelatedResultCollection?.InterfaceDetail1?.ForceEvaluateAll();
@@ -106,6 +115,7 @@ namespace SnmpAbstraction
             returnBuilder.Append("Rx level of side #1 at side #2: ").AppendLine(this.RxLevel1at2.ToString("0.0 dBm"));
             returnBuilder.Append("Rx level of side #2 at side #1: ").AppendLine(this.RxLevel2at1.ToString("0.0 dBm"));
             returnBuilder.Append("Link Uptime: ").Append(this.LinkUptime.ToString());
+            returnBuilder.Append("Link CCQ: ").Append(this.Ccq.ToString());
 
             return returnBuilder.ToString();
         }

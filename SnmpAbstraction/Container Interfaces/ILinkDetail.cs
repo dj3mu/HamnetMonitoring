@@ -58,5 +58,11 @@ namespace SnmpAbstraction
         /// Null if side of access point cannot be determined.
         /// </summary>
         int? SideOfAccessPoint { get; }
+
+        /// <summary>
+        /// Gets the client connection quality value.<br/>
+        /// Null if CCQ could not be obtained from this device.
+        /// </summary>
+        double? Ccq { get; }
     }
 }

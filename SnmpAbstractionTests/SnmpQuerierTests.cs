@@ -128,8 +128,8 @@ namespace SnmpAbstractionTests
 
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.Snmp);
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.Snmp);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.Snmp);
         }
 
         /// <summary>

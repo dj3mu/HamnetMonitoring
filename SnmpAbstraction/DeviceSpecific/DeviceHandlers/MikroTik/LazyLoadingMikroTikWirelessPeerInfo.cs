@@ -142,5 +142,32 @@ namespace SnmpAbstraction
 
             return true;
         }
+
+        /// <inheritdoc />
+        protected override bool RetrieveCcq()
+        {
+            var valueToQuery = RetrievableValuesEnum.OverallCcqAppendInterfaceId;
+            DeviceSpecificOid interfaceIdRootOid;
+            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            {
+                log.Warn($"Failed to obtain OID for '{valueToQuery}'");
+                this.CcqBacking = null;
+                return true;
+            }
+
+            Stopwatch durationWatch = Stopwatch.StartNew();
+
+            var interfactTypeOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.InterfaceId.Value });
+
+            this.CcqBacking = Convert.ToDouble(this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, CCQ"));
+
+            durationWatch.Stop();
+
+            this.localQueryDuration += durationWatch.Elapsed;
+
+            this.RecordCachableOid(CachableValueMeanings.Ccq, interfactTypeOid);
+
+            return true;
+        }
     }
 }

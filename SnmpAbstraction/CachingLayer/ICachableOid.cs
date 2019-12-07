@@ -27,6 +27,11 @@ namespace SnmpAbstraction
         /// The uptime of the system as provided by <see cref="IDeviceSystemData" />.
         /// </summary>
         SystemUptime = 4,
+
+        /// <summary>
+        /// The overall CCQ provided by <see cref="IWirelessPeerInfo" />.
+        /// </summary>
+        Ccq = 5,
     }
 
     /// <summary>

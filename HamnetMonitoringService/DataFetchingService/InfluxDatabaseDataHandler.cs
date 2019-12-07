@@ -23,6 +23,8 @@ namespace RestService.DataFetchingService
 
         private const string InfluxRssiDatapointName = "RSSI";
 
+        private const string InfluxCcqDatapointName = "CCQ";
+
         private const string InfluxLinkUptimeDatapointName = "LinkUptime";
 
         private const string InfluxDeviceUptimeDatapointName = "DeviceUptime";
@@ -143,6 +145,25 @@ namespace RestService.DataFetchingService
                                 { InfluxDescriptionTagName, $"{host2call} at {host1call}" }
                             },
                             queryTime.ToUniversalTime()));
+
+                    if (item.Ccq.HasValue)
+                    {
+                        this.currentPayload.Add(
+                                new LineProtocolPoint(
+                                InfluxCcqDatapointName,
+                                new Dictionary<string, object>
+                                {
+                                    { InfluxValueKey, item.Ccq.Value }
+                                },
+                                new Dictionary<string, string>
+                                {
+                                    { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
+                                    { InfluxCallTagName, host1call },
+                                    { InfluxCall2TagName, host2call },
+                                    { InfluxDescriptionTagName, $"{host1call} and {host2call}" }
+                                },
+                                queryTime.ToUniversalTime()));
+                    }
                 }
 
                 this.SendCurrentPayload();
