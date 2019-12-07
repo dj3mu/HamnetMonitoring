@@ -159,13 +159,22 @@ namespace SnmpAbstraction
 
             var interfactTypeOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.InterfaceId.Value });
 
-            this.CcqBacking = Convert.ToDouble(this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, CCQ"));
+            try
+            {
+                this.CcqBacking = Convert.ToDouble(this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, CCQ"));
+
+                this.RecordCachableOid(CachableValueMeanings.Ccq, interfactTypeOid);
+            }
+            catch(HamnetSnmpException)
+            {
+                log.Debug($"Ignoring HamnetSnmpException during CCQ retrieval");
+                this.RecordCachableOid(CachableValueMeanings.Ccq, new Oid("0"));
+                this.CcqBacking = null;
+            }
 
             durationWatch.Stop();
 
             this.localQueryDuration += durationWatch.Elapsed;
-
-            this.RecordCachableOid(CachableValueMeanings.Ccq, interfactTypeOid);
 
             return true;
         }

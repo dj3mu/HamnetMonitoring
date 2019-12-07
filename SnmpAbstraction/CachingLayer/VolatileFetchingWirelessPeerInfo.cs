@@ -148,9 +148,17 @@ namespace SnmpAbstraction
                     return null;
                 }
 
-                var queryResult = Convert.ToDouble(this.lowerLayer.QueryAsInt(queryOid.Oid, "CCQ"));
+                try
+                {
+                    var queryResult = Convert.ToDouble(this.lowerLayer.QueryAsInt(queryOid.Oid, "CCQ"));
 
-                return queryResult;
+                    return queryResult;
+                }
+                catch(HamnetSnmpException)
+                {
+                    log.Debug($"Ignoring HamnetSnmpException during CCQ retrieval");
+                    return null;
+                }
             }
         }
 
