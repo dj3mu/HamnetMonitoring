@@ -30,6 +30,8 @@ namespace RestService.DataFetchingService
             this.SideOfAccessPoint = linkDetail.SideOfAccessPoint;
             this.DeviceAddress = linkDetail.DeviceAddress;
             this.DeviceModel = linkDetail.DeviceModel;
+            this.Ccq1 = linkDetail.Ccq1;
+            this.Ccq2 = linkDetail.Ccq2;
             this.Ccq = linkDetail.Ccq;
             
             // assign this last so it contains the sum of the possibly lazy evaluations triggered by above assignments
@@ -63,6 +65,10 @@ namespace RestService.DataFetchingService
         public TimeSpan QueryDuration { get; }
 
         public double? Ccq { get; }
+
+        public double? Ccq1 { get; }
+
+        public double? Ccq2 { get; }
 
         public void ForceEvaluateAll()
         {

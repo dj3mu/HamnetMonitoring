@@ -48,9 +48,6 @@ namespace SnmpAbstraction
             {
                 this.LinkUptime = this.linkRelatedResultCollection.WirelessPeerInfo2.LinkUptime;
             }
-
-            // heuristic to take CCQ from either side
-            this.Ccq = this.linkRelatedResultCollection.WirelessPeerInfo1.Ccq ?? this.linkRelatedResultCollection.WirelessPeerInfo2.Ccq;
         }
 
         /// <inheritdoc />
@@ -87,7 +84,11 @@ namespace SnmpAbstraction
         public string ModelAndVersion2 => this.linkRelatedResultCollection.InterfaceDetail2.DeviceModel;
 
         /// <inheritdoc />
-        public double? Ccq { get; } = null;
+        public double? Ccq => this.Ccq1 ?? this.Ccq2;
+
+        public double? Ccq1 => this.linkRelatedResultCollection.WirelessPeerInfo1.Ccq;
+
+        public double? Ccq2 => this.linkRelatedResultCollection.WirelessPeerInfo2.Ccq;
 
         /// <inheritdoc />
         public void ForceEvaluateAll()
@@ -115,7 +116,9 @@ namespace SnmpAbstraction
             returnBuilder.Append("Rx level of side #1 at side #2: ").AppendLine(this.RxLevel1at2.ToString("0.0 dBm"));
             returnBuilder.Append("Rx level of side #2 at side #1: ").AppendLine(this.RxLevel2at1.ToString("0.0 dBm"));
             returnBuilder.Append("Link Uptime: ").Append(this.LinkUptime.ToString());
-            returnBuilder.Append("Link CCQ: ").Append(this.Ccq.ToString());
+            returnBuilder.Append("Link CCQ side #1: ").Append(this.Ccq1.ToString());
+            returnBuilder.Append("Link CCQ side #2: ").Append(this.Ccq2.ToString());
+            returnBuilder.Append("Link CCQ (any side, pref #1): ").Append(this.Ccq.ToString());
 
             return returnBuilder.ToString();
         }

@@ -60,9 +60,21 @@ namespace SnmpAbstraction
         int? SideOfAccessPoint { get; }
 
         /// <summary>
-        /// Gets the client connection quality value.<br/>
-        /// Null if CCQ could not be obtained from this device.
+        /// Gets the client connection quality value if the side which delivers it. Perferring side #1 if both sides provide the value.<br/>
+        /// Null if CCQ could not be obtained from an of the devices.
         /// </summary>
         double? Ccq { get; }
+
+        /// <summary>
+        /// Gets the client connection quality value reported by side #1.<br/>
+        /// Null if CCQ could not be obtained from the device on side #1.
+        /// </summary>
+        double? Ccq1 { get; }
+
+        /// <summary>
+        /// Gets the client connection quality value reported by side #2.<br/>
+        /// Null if CCQ could not be obtained from the device on side #2.
+        /// </summary>
+        double? Ccq2 { get; }
     }
 }

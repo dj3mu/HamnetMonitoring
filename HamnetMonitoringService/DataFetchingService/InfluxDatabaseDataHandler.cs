@@ -25,6 +25,8 @@ namespace RestService.DataFetchingService
 
         private const string InfluxCcqDatapointName = "CCQ";
 
+        private const string InfluxCcqHostDatapointName = "CCQPerHost";
+
         private const string InfluxLinkUptimeDatapointName = "LinkUptime";
 
         private const string InfluxDeviceUptimeDatapointName = "DeviceUptime";
@@ -146,6 +148,42 @@ namespace RestService.DataFetchingService
                             },
                             queryTime.ToUniversalTime()));
 
+                    if (item.Ccq1.HasValue)
+                    {
+                        this.currentPayload.Add(
+                                new LineProtocolPoint(
+                                InfluxCcqHostDatapointName,
+                                new Dictionary<string, object>
+                                {
+                                    { InfluxValueKey, item.Ccq1.Value }
+                                },
+                                new Dictionary<string, string>
+                                {
+                                    { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
+                                    { InfluxCallTagName, host1call },
+                                    { InfluxDescriptionTagName, $"{host1call} CCQ" }
+                                },
+                                queryTime.ToUniversalTime()));
+                    }
+
+                    if (item.Ccq2.HasValue)
+                    {
+                        this.currentPayload.Add(
+                                new LineProtocolPoint(
+                                InfluxCcqHostDatapointName,
+                                new Dictionary<string, object>
+                                {
+                                    { InfluxValueKey, item.Ccq2.Value }
+                                },
+                                new Dictionary<string, string>
+                                {
+                                    { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
+                                    { InfluxCallTagName, host2call },
+                                    { InfluxDescriptionTagName, $"{host2call} CCQ" }
+                                },
+                                queryTime.ToUniversalTime()));
+                    }
+
                     if (item.Ccq.HasValue)
                     {
                         this.currentPayload.Add(
@@ -160,7 +198,7 @@ namespace RestService.DataFetchingService
                                     { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                                     { InfluxCallTagName, host1call },
                                     { InfluxCall2TagName, host2call },
-                                    { InfluxDescriptionTagName, $"{host1call} and {host2call}" }
+                                    { InfluxDescriptionTagName, $"{host1call} and {host2call} CCQ" }
                                 },
                                 queryTime.ToUniversalTime()));
                     }
