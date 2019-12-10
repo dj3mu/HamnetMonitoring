@@ -223,6 +223,7 @@ namespace SnmpAbstraction
                 RemoteMacString = registrationTableEntry.MacAddress,
                 IsAccessPoint = !registrationTableEntry.Ap,
                 LinkUptime = registrationTableEntry.Uptime,
+                Ccq = Convert.ToDouble(registrationTableEntry.TxCcq),
                 Oids = new Dictionary<CachableValueMeanings, ICachableOid>(),
                 RxSignalStrength = new string[] { registrationTableEntry.SignalStrengthCh0, registrationTableEntry.SignalStrengthCh1, registrationTableEntry.SignalStrengthCh2 }
                     .Where(s => !string.IsNullOrWhiteSpace(s))

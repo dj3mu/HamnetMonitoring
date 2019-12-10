@@ -132,13 +132,49 @@ namespace SnmpAbstraction
 
             var interfactTypeOid = interfaceIdRootOid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
 
-            this.LinkUptimeBacking = this.LowerSnmpLayer.QueryAsTimeSpan(interfactTypeOid, "wireless peer info, link uptime").Value;
+            this.LinkUptimeBacking = this.LowerSnmpLayer.QueryAsTimeSpan(interfactTypeOid, "wireless peer info, link uptime") ?? TimeSpan.Zero;
 
             durationWatch.Stop();
 
             this.localQueryDuration += durationWatch.Elapsed;
 
             this.RecordCachableOid(CachableValueMeanings.WirelessLinkUptime, interfactTypeOid);
+
+            return true;
+        }
+
+        /// <inheritdoc />
+        protected override bool RetrieveCcq()
+        {
+            var valueToQuery = RetrievableValuesEnum.OverallCcqAppendInterfaceId;
+            DeviceSpecificOid interfaceIdRootOid;
+            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            {
+                log.Warn($"Failed to obtain OID for '{valueToQuery}'");
+                this.CcqBacking = null;
+                return true;
+            }
+
+            Stopwatch durationWatch = Stopwatch.StartNew();
+
+            var interfactTypeOid = interfaceIdRootOid.Oid + new Oid(new int[] { this.InterfaceId.Value });
+
+            try
+            {
+                this.CcqBacking = Convert.ToDouble(this.LowerSnmpLayer.QueryAsInt(interfactTypeOid, "wireless peer info, CCQ"));
+
+                this.RecordCachableOid(CachableValueMeanings.Ccq, interfactTypeOid);
+            }
+            catch(HamnetSnmpException)
+            {
+                log.Debug($"Ignoring HamnetSnmpException during CCQ retrieval");
+                this.RecordCachableOid(CachableValueMeanings.Ccq, new Oid("0"));
+                this.CcqBacking = null;
+            }
+
+            durationWatch.Stop();
+
+            this.localQueryDuration += durationWatch.Elapsed;
 
             return true;
         }

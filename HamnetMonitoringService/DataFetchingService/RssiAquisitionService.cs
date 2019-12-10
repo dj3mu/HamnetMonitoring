@@ -365,15 +365,16 @@ namespace RestService.DataFetchingService
             try
             {
                 using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.snmpQuerierOptions))
+                using(var querier2 = SnmpQuerierFactory.Instance.Create(address2, this.snmpQuerierOptions))
                 {
                     // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
                     //       Else the lazy-loading containers might fail to lazy-query the required values.
 
-                    var linkDetails = querier.FetchLinkDetails(address2.ToString());
+                    var linkDetails = querier.FetchLinkDetails(querier2);
 
                     var storeOnlyDetailsClone = new LinkDetailsStoreOnlyContainer(linkDetails);
 
-                    this.SendResultsToDataHandlers(pair, storeOnlyDetailsClone, DateTime.UtcNow);
+                    this.SendResultsToDataHandlers(pair, storeOnlyDetailsClone, new IDeviceSystemData[] { new SystemDataStoreOnlyContainer(querier.SystemData), new SystemDataStoreOnlyContainer(querier2.SystemData) }, DateTime.UtcNow);
                 }
             }
             catch (HamnetSnmpException ex)
@@ -455,13 +456,14 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Calls the <see cref="IAquiredDataHandler.RecordDetailsInDatabaseAsync" /> for all configured handlers.
         /// </summary>
-        private void SendResultsToDataHandlers(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair, ILinkDetails linkDetails, DateTime queryTime)
+        private void SendResultsToDataHandlers(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> pair, ILinkDetails linkDetails, IEnumerable<IDeviceSystemData> systemDatas, DateTime queryTime)
         {
             foreach (IAquiredDataHandler handler in this.dataHandlers)
             {
                 try
                 {
                     handler.RecordRssiDetailsInDatabaseAsync(pair, linkDetails, queryTime);
+                    handler.RecordUptimesInDatabase(pair, linkDetails, systemDatas, queryTime);
                 }
                 catch(Exception ex)
                 {

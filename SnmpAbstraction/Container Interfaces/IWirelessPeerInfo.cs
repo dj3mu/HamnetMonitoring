@@ -37,5 +37,11 @@ namespace SnmpAbstraction
         /// Gets a value indicating whether this is peer is in Access Point mode.
         /// </summary>
         bool? IsAccessPoint { get; }
+
+        /// <summary>
+        /// Gets the client connection quality value.<br/>
+        /// Null if CCQ could not be obtained from this device.
+        /// </summary>
+        double? Ccq { get; }
     }
 }

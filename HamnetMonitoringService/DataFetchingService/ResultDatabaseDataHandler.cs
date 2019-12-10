@@ -215,6 +215,19 @@ namespace RestService.DataFetchingService
             });
         }
 
+        /// <inheritdoc />
+        public void RecordUptimesInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, IEnumerable<IDeviceSystemData> systemDatas, DateTime queryTime)
+        {
+            // Currently a NOP for this database handler
+        }
+
+        /// <inheritdoc />
+        public Task RecordUptimesInDatabaseAsync(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, IEnumerable<IDeviceSystemData> systemDatas, DateTime queryTime)
+        {
+            // Currently a NOP for this database handler
+            return Task.CompletedTask;
+        }
+
         // Dieser Code wird hinzugefügt, um das Dispose-Muster richtig zu implementieren.
         public void Dispose()
         {
@@ -426,5 +439,5 @@ namespace RestService.DataFetchingService
 
             failEntry.ErrorInfo = ex.ToString();
         }
-   }
+    }
 }

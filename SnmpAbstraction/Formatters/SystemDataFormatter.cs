@@ -303,7 +303,8 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - On interface ID: ").AppendLine(wirelessPeerInfo.InterfaceId.HasValue ? wirelessPeerInfo.InterfaceId.Value.ToString() : NotAvailableString);
             returnBuilder.Append("  - Link Uptime    : ").AppendLine(wirelessPeerInfo.LinkUptime.ToString());
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(wirelessPeerInfo.RxSignalStrength.ToString("0.0 dBm"));
-            returnBuilder.Append("  - TX signal [dBm]: ").Append(wirelessPeerInfo.TxSignalStrength.ToString("0.0 dBm"));
+            returnBuilder.Append("  - TX signal [dBm]: ").AppendLine(wirelessPeerInfo.TxSignalStrength.ToString("0.0 dBm"));
+            returnBuilder.Append("  - CCQ            : ").Append(wirelessPeerInfo.Ccq?.ToString("0") ?? "not available");
 
             return returnBuilder.ToString();
         }

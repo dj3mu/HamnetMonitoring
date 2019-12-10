@@ -40,7 +40,8 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <NaN> for TxSignalStrength");
+                    return double.NaN;
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -68,7 +69,8 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <NaN> for RxSignalStrength");
+                    return double.NaN;
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
@@ -96,13 +98,14 @@ namespace SnmpAbstraction
                 ICachableOid queryOid = null;
                 if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
                 {
-                    throw new HamnetSnmpException($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel})", this.DeviceAddress?.ToString());
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <Zero> for link uptime");
+                    return TimeSpan.Zero;
                 }
                 
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
                 {
                     // value is not available for this device
-                    return TimeSpan.MinValue;
+                    return TimeSpan.Zero;
                 }
 
                 var queryResult = this.lowerLayer.QueryAsTimeSpan(queryOid.Oid, "Link Uptime");
@@ -127,6 +130,39 @@ namespace SnmpAbstraction
         public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids => this.underlyingPeerInfo.Oids;
 
         /// <inheritdoc />
+        public double? Ccq
+        {
+            get
+            {
+                var neededValue = CachableValueMeanings.Ccq;
+                ICachableOid queryOid = null;
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
+                {
+                    log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <null> for CCQ");
+                    return null;
+                }
+                
+                if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
+                {
+                    // value is not available for this device
+                    return null;
+                }
+
+                try
+                {
+                    var queryResult = Convert.ToDouble(this.lowerLayer.QueryAsInt(queryOid.Oid, "CCQ"));
+
+                    return queryResult;
+                }
+                catch(HamnetSnmpException)
+                {
+                    log.Debug($"Ignoring HamnetSnmpException during CCQ retrieval");
+                    return null;
+                }
+            }
+        }
+
+        /// <inheritdoc />
         public void ForceEvaluateAll()
         {
             // NOP here - the volatile values are supposed to be queried every time
@@ -143,6 +179,7 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - Link Uptime    : not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.RxSignalStrength.ToString("0.0 dBm"));
             returnBuilder.Append("  - TX signal [dBm]: ").Append(this.TxSignalStrength.ToString("0.0 dBm"));
+            returnBuilder.Append("  - CCQ            : ").Append(this.Ccq?.ToString("0.0 dBm") ?? "not available");
 
             return returnBuilder.ToString();
         }
