@@ -156,5 +156,14 @@ namespace SnmpAbstraction
             // this value is simply not available for UBNT AirOS v 4.x devices, at least not via SNMP (but for some models even not in Web GUI)
             return false;
         }
+
+        /// <inheritdoc />
+        protected override bool RetrieveCcq()
+        {
+            this.RecordCachableOid(CachableValueMeanings.Ccq, new Oid("0"));
+
+            // TODO: Implement this
+            return false;
+        }
     }
 }

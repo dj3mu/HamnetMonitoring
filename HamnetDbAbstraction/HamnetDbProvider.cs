@@ -45,21 +45,6 @@ namespace HamnetDbAbstraction
         /// <summary>
         /// Gets an abstract functionality handle to the HamnetDB.
         /// </summary>
-        /// <param name="connectionStringFile">A path to and name of a file containing the database connection string.</param>
-        /// <returns>A handle to an abstract database interface.</returns>
-        public IHamnetDbAccess GetHamnetDb(string connectionStringFile)
-        {
-            if (string.IsNullOrWhiteSpace(connectionStringFile))
-            {
-                throw new ArgumentNullException(nameof(connectionStringFile), "The connections string file name is null, empty or white-space-only");
-            }
-
-            return this.ManufactureHamnetDbAccess(connectionStringFile);
-        }
-
-        /// <summary>
-        /// Gets an abstract functionality handle to the HamnetDB.
-        /// </summary>
         /// <param name="configurationSection">The configuration section.</param>
         /// <returns>A handle to an abstract database interface.</returns>
         public IHamnetDbAccess GetHamnetDbFromConfiguration(IConfigurationSection configurationSection)
@@ -75,6 +60,21 @@ namespace HamnetDbAbstraction
             }
 
             return this.InstantiateAccessor(configurationSection.GetValue<string>(HamnetDbProvider.ConnectionStringKey));
+        }
+
+        /// <summary>
+        /// Gets an abstract functionality handle to the HamnetDB.
+        /// </summary>
+        /// <param name="connectionStringFile">A path to and name of a file containing the database connection string.</param>
+        /// <returns>A handle to an abstract database interface.</returns>
+        public IHamnetDbAccess GetHamnetDb(string connectionStringFile)
+        {
+            if (string.IsNullOrWhiteSpace(connectionStringFile))
+            {
+                throw new ArgumentNullException(nameof(connectionStringFile), "The connections string file name is null, empty or white-space-only");
+            }
+
+            return this.ManufactureHamnetDbAccess(connectionStringFile);
         }
 
         /// <summary>

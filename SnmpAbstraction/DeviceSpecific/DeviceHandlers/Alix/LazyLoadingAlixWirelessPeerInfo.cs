@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -75,6 +74,15 @@ namespace SnmpAbstraction
         protected override bool RetrieveLinkUptime()
         {
             this.RecordCachableOid(CachableValueMeanings.WirelessLinkUptime, new Oid("0"));
+
+            // this value is simply not available for ALIX devices, at least not via SNMP (but for some models even not in Web GUI)
+            return false;
+        }
+
+        /// <inheritdoc />
+        protected override bool RetrieveCcq()
+        {
+            this.RecordCachableOid(CachableValueMeanings.Ccq, new Oid("0"));
 
             // this value is simply not available for ALIX devices, at least not via SNMP (but for some models even not in Web GUI)
             return false;

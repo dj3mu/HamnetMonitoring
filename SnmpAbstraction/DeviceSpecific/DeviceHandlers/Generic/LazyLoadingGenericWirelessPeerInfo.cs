@@ -26,6 +26,11 @@ namespace SnmpAbstraction
         private bool linkUptimePopulated = false;
 
         /// <summary>
+        /// Indicating whether <see cref="CcqBacking" /> has already been populated.
+        /// </summary>
+        private bool ccqPopulated = false;
+
+        /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
@@ -87,6 +92,17 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
+        public double? Ccq
+        {
+            get
+            {
+                this.PopulateCcq();
+
+                return this.CcqBacking;
+            }
+        }
+
+        /// <inheritdoc />
         public virtual bool? IsAccessPoint { get; }
 
         /// <inheritdoc />
@@ -95,6 +111,7 @@ namespace SnmpAbstraction
             this.PopulateLinkUptime();
             this.PopulateRxSignalStrength();
             this.PopulateTxSignalStrength();
+            this.PopulateCcq();
         }
 
         /// <summary>
@@ -111,6 +128,11 @@ namespace SnmpAbstraction
         /// Gets or sets the backing property (accessible by inheriting classes) for link uptime.
         /// </summary>
         protected TimeSpan LinkUptimeBacking { get; set; } = TimeSpan.Zero;
+
+        /// <summary>
+        /// Gets or sets the backing property (accessible by inheriting classes) for CCQ.
+        /// </summary>
+        protected double? CcqBacking { get; set; } = null;
 
         /// <summary>
         /// Gets the OID lookup table.
@@ -134,6 +156,7 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - Link Uptime    : ").AppendLine(this.linkUptimePopulated ? this.LinkUptimeBacking.ToString() : "not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.rxSignalStrengthPopulated ? this.RxSignalStrengthBacking.ToString("0.0 dBm") : "not available");
             returnBuilder.Append("  - TX signal [dBm]: ").Append(this.txSignalStrengthPopulated ? this.TxSignalStrengthBacking.ToString("0.0 dBm") : "not available");
+            returnBuilder.Append("  - CCQ            : ").Append(this.ccqPopulated ? this.Ccq?.ToString("0.0 dBm") ?? "not reported" : "not available");
             //returnBuilder.Append("  - MAC : ").Append(this.macAddressStringQueried ? this.macAddressStringBacking?.ToString() : "not available");
 
             return returnBuilder.ToString();
@@ -155,6 +178,11 @@ namespace SnmpAbstraction
         protected abstract bool RetrieveTxSignalStrength();
 
         /// <summary>
+        /// To be implemented by deriving classes in order to actually populate the CCQ value.
+        /// </summary>
+        protected abstract bool RetrieveCcq();
+
+        /// <summary>
         /// Layz-loading of TX signal strength.
         /// </summary>
         private void PopulateTxSignalStrength()
@@ -165,6 +193,19 @@ namespace SnmpAbstraction
             }
 
             this.txSignalStrengthPopulated = this.RetrieveTxSignalStrength();
+        }
+
+        /// <summary>
+        /// Layz-loading of CCQ.
+        /// </summary>
+        private void PopulateCcq()
+        {
+            if (this.ccqPopulated)
+            {
+                return;
+            }
+
+            this.ccqPopulated = this.RetrieveCcq();
         }
 
         /// <summary>

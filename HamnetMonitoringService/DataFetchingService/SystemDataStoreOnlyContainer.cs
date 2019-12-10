@@ -1,26 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Newtonsoft.Json;
 using SemVersion;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
     /// <summary>
-    /// A simple container for storing a serializable version of the system data.
+    /// A simple container for just storing a system data.
     /// </summary>
-    [JsonObject(MemberSerialization.OptOut, ItemRequired = Required.Always)]
-    internal class SerializableSystemData : IDeviceSystemData
+    internal class SystemDataStoreOnlyContainer : IDeviceSystemData
     {
         /// <summary>
         /// Construct from device address.
         /// </summary>
-        public SerializableSystemData(IDeviceSystemData inputSystemData)
+        public SystemDataStoreOnlyContainer(IDeviceSystemData inputSystemData)
         {
             if (inputSystemData is null)
             {
-                throw new ArgumentNullException(nameof(inputSystemData), "The IDeviceSystemData to make serializable is null");
+                throw new ArgumentNullException(nameof(inputSystemData), "The IDeviceSystemData to 'store only' is null");
             }
 
             // as we'll anyway need all values, we trigger immediate aquisition hoping for better performance
@@ -46,55 +44,51 @@ namespace SnmpAbstraction
         /// <summary>
         /// Prevent default-construction from outside.
         /// </summary>
-        internal SerializableSystemData()
+        private SystemDataStoreOnlyContainer()
         {
         }
 
         /// <inheritdoc />
-        public string Description { get; set; } = "<description not available>";
+        public string Description { get; }
 
         /// <inheritdoc />
-        public Oid EnterpriseObjectId { get; set; } = null;
+        public Oid EnterpriseObjectId { get; }
 
         /// <inheritdoc />
-        public string Contact { get; set; } = "<contact not available>";
+        public string Contact { get; }
 
         /// <inheritdoc />
-        public string Location { get; set; } = "<location not available>";
+        public string Location { get; }
 
         /// <inheritdoc />
-        public string Name { get; set; } = "<name not available>";
+        public string Name { get; }
 
         /// <inheritdoc />
-        [JsonIgnore]
-        public TimeSpan? Uptime { get; set; } = null;
+        public TimeSpan? Uptime { get; }
 
         /// <inheritdoc />
-        public string Model { get; set; } = "<model not available>";
+        public string Model { get; }
 
         /// <inheritdoc />
-        public SemanticVersion Version { get; set; } = new SemanticVersion(0, 0, 0, string.Empty, string.Empty);
+        public SemanticVersion Version { get; }
 
         /// <inheritdoc />
-        public IpAddress DeviceAddress { get; set; }
+        public IpAddress DeviceAddress { get; }
 
         /// <inheritdoc />
-        public string DeviceModel { get; set; } = "<device model not available>";
+        public string DeviceModel { get; }
 
         /// <inheritdoc />
-        [JsonIgnore]
-        public TimeSpan QueryDuration { get; set; } = TimeSpan.Zero;
+        public TimeSpan QueryDuration { get; }
 
         /// <inheritdoc />
-        public SnmpVersion MaximumSnmpVersion { get; set; }
+        public SnmpVersion MaximumSnmpVersion { get; }
 
         /// <inheritdoc />
-        [JsonProperty(Required = Required.Default)]
-        public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids { get; set; } = new Dictionary<CachableValueMeanings, ICachableOid>();
+        public DeviceSupportedFeatures SupportedFeatures { get; }
 
         /// <inheritdoc />
-        [JsonProperty(Required = Required.Default)]
-        public DeviceSupportedFeatures SupportedFeatures { get; set; } = DeviceSupportedFeatures.None;
+        public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids { get; }
 
         /// <inheritdoc />
         public void ForceEvaluateAll()

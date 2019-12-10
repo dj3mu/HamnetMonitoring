@@ -19,6 +19,11 @@ namespace SnmpAbstraction
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
+        /// The OID to get the system uptime (a quite standard OID that works for 99% of the devices)
+        /// </summary>
+        private static Oid SystemUptimeOid = new Oid(".1.3.6.1.2.1.1.3.0");
+
+        /// <summary>
         /// The cache field for the system description.
         /// </summary>
         private string systemDescrition;
@@ -218,6 +223,9 @@ namespace SnmpAbstraction
         internal SnmpVersion ModifyableMaximumSnmpVersion { get; set; }
 
         /// <inheritdoc />
+        public DeviceSupportedFeatures SupportedFeatures { get; set; } = DeviceSupportedFeatures.None;
+
+        /// <inheritdoc />
         public override void ForceEvaluateAll()
         {
             this.PopulateAdminContact();
@@ -235,6 +243,7 @@ namespace SnmpAbstraction
 
             returnBuilder.Append("  - System Model                     : ").AppendLine(string.IsNullOrWhiteSpace(this.Model) ? "not available" : this.Model);
             returnBuilder.Append("  - System SW Version                : ").AppendLine((this.Version == null) ? "not available" : this.Version.ToString());
+            returnBuilder.Append("  - Supported Features               : ").Append(this.SupportedFeatures);
             returnBuilder.Append("  - System Name        (queried=").Append(this.systemNameQueried).Append("): ").AppendLine(this.systemName);
             returnBuilder.Append("  - System location    (queried=").Append(this.systemLocationQueried).Append("): ").AppendLine(this.systemLocation);
             returnBuilder.Append("  - System description (queried=").Append(this.systemDescriptionQueried).Append("): ").AppendLine(this.systemDescrition);
@@ -396,13 +405,15 @@ namespace SnmpAbstraction
             this.BackupSnmpVersionAndSetV1();
 
             this.AddQueryDuration( () => {
-                this.uptime = this.LowerSnmpLayer.QueryAsTimeSpan(new Oid(".1.3.6.1.2.1.1.3.0"), "system uptime");
+                this.uptime = this.LowerSnmpLayer.QueryAsTimeSpan(SystemUptimeOid, "system uptime");
                 if (this.uptime == null)
                 {
-                    log.Debug($"Querying for system uptime of '{this.LowerSnmpLayer.Address}' produced null or empty uptime string");
+                    log.Debug($"Querying for system uptime of '{LowerSnmpLayer.Address}' produced null or empty uptime string");
                     this.uptime = null;
                 }
             });
+
+            this.RecordCachableOid(CachableValueMeanings.SystemUptime, SystemUptimeOid);
 
             this.RestoreSnmpVersion();
             

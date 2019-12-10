@@ -62,11 +62,30 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Records the link details in the database asynchronuously in a separate task.
         /// </summary>
+        /// <param name="inputData">The input data to record uptime for.</param>
+        /// <param name="linkDetails">The link details to to take the link uptime from.</param>
+        /// <param name="systemDatas">The device system datas to take  the system uptime from.</param>
+        /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
+        void RecordUptimesInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, IEnumerable<IDeviceSystemData> systemDatas, DateTime queryTime);
+
+        /// <summary>
+        /// Records the link details in the database asynchronuously in a separate task.
+        /// </summary>
         /// <param name="inputData">The input data to record link details for.</param>
         /// <param name="linkDetails">The link details to record.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
         /// <returns>The task that is asynchronuously executing the recording.</returns>
         Task RecordRssiDetailsInDatabaseAsync(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime);
+
+        /// <summary>
+        /// Records the link details in the database asynchronuously in a separate task.
+        /// </summary>
+        /// <param name="inputData">The input data to record uptime for.</param>
+        /// <param name="linkDetails">The link details to to take the link uptime from.</param>
+        /// <param name="systemDatas">The device system datas to take  the system uptime from.</param>
+        /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
+        /// <returns>The task that is asynchronuously executing the recording.</returns>
+        Task RecordUptimesInDatabaseAsync(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, IEnumerable<IDeviceSystemData> systemDatas, DateTime queryTime);
 
         /// <summary>
         /// Records the link details in the database.

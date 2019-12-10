@@ -70,13 +70,15 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryInterfaceDataTest()
         {
-            QueryAndPrintInterfaces(new IpAddress("44.224.10.109"), SnmpVersion.Ver2, false);
-            QueryAndPrintInterfaces(new IpAddress("44.224.10.109"), SnmpVersion.Ver2, true);
-            QueryAndPrintInterfaces(new IpAddress("44.224.10.109"), SnmpVersion.Ver2, true);
+            //QueryAndPrintInterfaces(new IpAddress("44.225.21.1"), SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
+            //QueryAndPrintInterfaces(new IpAddress("44.225.21.1"), SnmpVersion.Ver2, false, QueryApis.Snmp);
+            //QueryAndPrintInterfaces(new IpAddress("44.224.10.109"), SnmpVersion.Ver2, true);
+            //QueryAndPrintInterfaces(new IpAddress("44.224.10.109"), SnmpVersion.Ver2, true);
 
-            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false);
-            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
-            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
+            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
+            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.Snmp);
+            //QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
+            //QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
@@ -120,13 +122,14 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryWirelessPeersTest()
         {
-            QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, false);
-            QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, true);
-            QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, true);
+            //QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, false);
+            //QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, true);
+            //QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, true);
 
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false);
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.Snmp);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.Snmp);
         }
 
         /// <summary>
@@ -144,16 +147,16 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikFetchLinkDetailsTest()
         {
-            //QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
+            QueryAndPrintLinkDetails(new IpAddress("44.224.72.82"), new IpAddress("44.224.72.86"), SnmpVersion.Ver2, false);
             //QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
 
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
-
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, false);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
+//
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, false);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
+//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
@@ -174,8 +177,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryBgpPeersTest()
         {
-            QueryAndPrintBgpPeers(new IpAddress("44.225.20.1"), SnmpVersion.Ver2, false);
-            //QueryAndPrintBgpPeers(TestConstants.TestAddressMikrotikRouter1, SnmpVersion.Ver2, false);
+            //QueryAndPrintBgpPeers(new IpAddress("44.225.20.1"), SnmpVersion.Ver2, false);
+            QueryAndPrintBgpPeers(TestConstants.TestAddressMikrotikRouter1, SnmpVersion.Ver2, false);
         }
 
         /// <summary>
@@ -194,9 +197,10 @@ namespace SnmpAbstractionTests
         /// <param name="target">The traceroute target host name or IP address.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use.</param>
         /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
-        private static void QueryAndPrintTraceroute(IpAddress address, string target, SnmpVersion snmpVersion, bool useCache = false)
+        /// <param name="allowedApis">The list of allowed APIs</param>
+        private static void QueryAndPrintTraceroute(IpAddress address, string target, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.VendorSpecific)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(QueryApis.VendorSpecific));
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             var systemData = querier.SystemData;
             systemData.ForceEvaluateAll();
@@ -217,9 +221,10 @@ namespace SnmpAbstractionTests
         /// <param name="address">The address to test with.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use.</param>
         /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
-        private static void QueryAndPrintBgpPeers(IpAddress address, SnmpVersion snmpVersion, bool useCache = false)
+        /// <param name="allowedApis">The list of allowed APIs</param>
+        private static void QueryAndPrintBgpPeers(IpAddress address, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.VendorSpecific)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(QueryApis.VendorSpecific));
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             var systemData = querier.SystemData;
             systemData.ForceEvaluateAll();
@@ -243,9 +248,10 @@ namespace SnmpAbstractionTests
         /// <param name="address2">The address of side #2 to test with.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use.</param>
         /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
-        private static void QueryAndPrintLinkDetails(IpAddress address1, IpAddress address2, SnmpVersion snmpVersion, bool useCache = false)
+        /// <param name="allowedApis">The list of allowed APIs</param>
+        private static void QueryAndPrintLinkDetails(IpAddress address1, IpAddress address2, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.Snmp)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address1.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache));
+            var querier = SnmpQuerierFactory.Instance.Create(address1.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -266,9 +272,10 @@ namespace SnmpAbstractionTests
         /// <param name="address">The address to test with.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use.</param>
         /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
-        private static void QueryAndPrintSystemData(IpAddress address, SnmpVersion snmpVersion, bool useCache = false)
+        /// <param name="allowedApis">The list of allowed APIs</param>
+        private static void QueryAndPrintSystemData(IpAddress address, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.Snmp)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache));
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -288,9 +295,10 @@ namespace SnmpAbstractionTests
         /// <param name="address">The address to test with.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use.</param>
         /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
-        private static void QueryAndPrintWirelessPeers(IpAddress address, SnmpVersion snmpVersion, bool useCache = false)
+        /// <param name="allowedApis">The list of allowed APIs</param>
+        private static void QueryAndPrintWirelessPeers(IpAddress address, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.Snmp)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache));
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -313,9 +321,10 @@ namespace SnmpAbstractionTests
         /// <param name="address">The address to test with.</param>
         /// <param name="snmpVersion">The SNMP protocol version to use.</param>
         /// <param name="useCache">Value indicating whether to use caching of non-volatile data.</param>
-        private static void QueryAndPrintInterfaces(IpAddress address, SnmpVersion snmpVersion, bool useCache = false)
+        /// <param name="allowedApis">The list of allowed APIs</param>
+        private static void QueryAndPrintInterfaces(IpAddress address, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.Snmp)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache));
+            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             Assert.NotNull(querier, "Create(...) returned null");
 

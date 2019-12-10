@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using SemVersion;
 using SnmpSharpNet;
 using tik4net;
 using tik4net.Objects;
+using tik4net.Objects.Interface;
+using tik4net.Objects.Interface.Wireless;
 using tik4net.Objects.System;
+using tik4net.Objects.User;
 
 namespace SnmpAbstraction
 {
@@ -29,8 +34,18 @@ namespace SnmpAbstraction
         private SemanticVersion osVersionBacking = null;
 
         private IDeviceSystemData systemDataBacking = null;
-        
+
         private string modelBacking = null;
+
+        private IInterfaceDetails networkInterfaceDetailsBacking = null;
+
+        private IWirelessPeerInfos wirelessPeerInfosBacking = null;
+
+        private readonly SystemIdentity sysIdent = null;
+
+        private readonly SystemResource sysResource = null;
+
+        private readonly SystemRouterboard sysRouterboard = null;
 
         /// <summary>
         /// Constructs for the given lower layer.
@@ -39,12 +54,19 @@ namespace SnmpAbstraction
         /// <param name="connectionType">The type of the connection in use (required in case we have to re-open).</param>
         /// <param name="tikConnection">The lower layer connection for talking to this device.</param>
         /// <param name="options">The options to use.</param>
-        public MikrotikApiDeviceHandler(IpAddress address, TikConnectionType connectionType, ITikConnection tikConnection, IQuerierOptions options)
+        /// <param name="sysIdent">The system ident (to create SystemData from).</param>
+        /// /// <param name="sysResource">The system resource info (to create SystemData from).</param>
+        /// <param name="sysRouterboard">The system routerboard info (to create SystemData from).</param>
+        public MikrotikApiDeviceHandler(IpAddress address, TikConnectionType connectionType, ITikConnection tikConnection, IQuerierOptions options, SystemIdentity sysIdent, SystemResource sysResource, SystemRouterboard sysRouterboard)
         {
             if ((options.AllowedApis & this.SupportedApi) == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(options), $"This device handler doesn't support any of the APIs allowed by the IQuerierOptions (allowed: {options.AllowedApis}, supported {this.SupportedApi}).");
             }
+
+            this.sysRouterboard = sysRouterboard ?? throw new ArgumentNullException(nameof(sysRouterboard), "sysRouterboard is null when creating a MikrotikApiDeviceHandler");
+            this.sysResource = sysResource ?? throw new ArgumentNullException(nameof(sysResource), "sysResource is null when creating a MikrotikApiDeviceHandler");
+            this.sysIdent = sysIdent ?? throw new ArgumentNullException(nameof(sysIdent), "sysIdent is null when creating a MikrotikApiDeviceHandler");
 
             this.Address = address ?? throw new ArgumentNullException(nameof(address), "address is null when creating a MikrotikApiDeviceHandler");
             this.TikConnection = tikConnection ?? throw new ArgumentNullException(nameof(tikConnection), "tikConnection is null when creating a MikrotikApiDeviceHandler");
@@ -99,11 +121,25 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public IInterfaceDetails NetworkInterfaceDetails => throw new NotSupportedException("Getting network interface details is not (yet) supported for a Mikrotik API-based device handler. Please use the SNMP-based device handler");
+        public IInterfaceDetails NetworkInterfaceDetails
+        {
+            get
+            {
+                this.FetchNetworkInterfaceData();
+                return this.networkInterfaceDetailsBacking;
+            }
+        }
 
         /// <inheritdoc />
-        public IWirelessPeerInfos WirelessPeerInfos => throw new NotSupportedException("Getting wireless peers is not (yet) supported for a Mikrotik API-based device handler. Please use the SNMP-based device handler");
-        
+        public IWirelessPeerInfos WirelessPeerInfos
+        {
+            get
+            {
+                this.FetchWirelessPeerInfo();
+                return this.wirelessPeerInfosBacking;
+            }
+        }
+
         /// <summary>
         /// Gets the connection type that has been used when checking whether this device support MTik API.
         /// </summary>
@@ -126,7 +162,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
         {
-            return new MikrotikApiTracerouteOperation(this.Address, this.TikConnection, remoteIp, count).Execute(); 
+            return new MikrotikApiTracerouteOperation(this.Address, this.TikConnection, remoteIp, count).Execute();
         }
 
         /// <summary>
@@ -151,11 +187,11 @@ namespace SnmpAbstraction
         }
 
         /// <summary>
-        /// Fetches the system data info.
+        /// Fetches wireless peer data.
         /// </summary>
-        private void FetchSystemData()
+        private void FetchWirelessPeerInfo()
         {
-            if (this.systemDataBacking != null)
+            if (this.wirelessPeerInfosBacking != null)
             {
                 return;
             }
@@ -164,11 +200,95 @@ namespace SnmpAbstraction
 
             this.EnsureOpenConnection();
 
-            var sysResource = this.TikConnection.LoadSingle<SystemResource>();
-            var sysRouterboard = this.TikConnection.LoadSingle<SystemRouterboard>();
-            var sysIdent = this.TikConnection.LoadSingle<SystemIdentity>();
+            var wirelessPeers = this.TikConnection.LoadList<WirelessRegistrationTable>();
 
             stopper.Stop();
+
+            this.wirelessPeerInfosBacking = new SerializableWirelessPeerInfos
+            {
+                DeviceAddress = this.Address,
+                DeviceModel = this.SystemData.DeviceModel,
+                Details = wirelessPeers.Select(d => this.MakeWirelessPeerInfo(d)).ToList(),
+                QueryDuration = stopper.Elapsed
+            };
+        }
+
+        private IWirelessPeerInfo MakeWirelessPeerInfo(WirelessRegistrationTable registrationTableEntry)
+        {
+            var returnDetail = new SerializableWirelessPeerInfo
+            {
+                DeviceAddress = this.Address,
+                DeviceModel = this.SystemData.DeviceModel,
+                InterfaceId = this.NetworkInterfaceDetails.Details.Single(i => i.InterfaceName == registrationTableEntry.Interface).InterfaceId,
+                RemoteMacString = registrationTableEntry.MacAddress,
+                IsAccessPoint = !registrationTableEntry.Ap,
+                LinkUptime = registrationTableEntry.Uptime,
+                Ccq = Convert.ToDouble(registrationTableEntry.TxCcq),
+                Oids = new Dictionary<CachableValueMeanings, ICachableOid>(),
+                RxSignalStrength = new string[] { registrationTableEntry.SignalStrengthCh0, registrationTableEntry.SignalStrengthCh1, registrationTableEntry.SignalStrengthCh2 }
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Select(s => Convert.ToDouble(s))
+                    .DecibelLogSum(),
+                TxSignalStrength = new string[] { registrationTableEntry.TxSignalStrengthCh0, registrationTableEntry.TxSignalStrengthCh1, registrationTableEntry.TxSignalStrengthCh2 }
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Select(s => Convert.ToDouble(s))
+                    .DecibelLogSum()
+            };
+
+            return returnDetail;
+        }
+
+        /// <summary>
+        /// Fetches network interface data.
+        /// </summary>
+        private void FetchNetworkInterfaceData()
+        {
+            if (this.networkInterfaceDetailsBacking != null)
+            {
+                return;
+            }
+
+            Stopwatch stopper = Stopwatch.StartNew();
+
+            this.EnsureOpenConnection();
+
+            var interfaceData = this.TikConnection.LoadList<Interface>();
+
+            stopper.Stop();
+
+            this.networkInterfaceDetailsBacking = new SerializableInterfaceDetails
+            {
+                DeviceAddress = this.Address,
+                DeviceModel = this.SystemData.DeviceModel,
+                Details = interfaceData.Select(d => this.MakeInterfaceDetail(d)).ToList(),
+                QueryDuration = stopper.Elapsed
+            };
+        }
+
+        private IInterfaceDetail MakeInterfaceDetail(Interface interfaceDetail)
+        {
+            var returnDetail = new SerializableInterfaceDetail
+            {
+                DeviceAddress = this.Address,
+                DeviceModel = this.SystemData.DeviceModel,
+                InterfaceId = Convert.ToInt32(interfaceDetail.Id.Trim('*')),
+                InterfaceName = interfaceDetail.Name,
+                MacAddressString = interfaceDetail.MacAddress,
+                InterfaceType = interfaceDetail.Type.ToIanaInterfaceType()
+            };
+
+            return returnDetail;
+        }
+
+        /// <summary>
+        /// Fetches the system data info.
+        /// </summary>
+        private void FetchSystemData()
+        {
+            if (this.systemDataBacking != null)
+            {
+                return;
+            }
 
             var versionMatch = OsVersionExtractionRegex.Match(sysResource.Version);
             if (versionMatch.Success)
@@ -180,7 +300,34 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"Cannot convert version string '{sysResource.Version}' to a valid SemanticVersion: It's not matching the version Regex '{OsVersionExtractionRegex.ToString()}'");
             }
 
-            this.modelBacking = sysRouterboard.Model.Replace("RouterBOARD", "RB").Replace(" ", string.Empty);
+            this.modelBacking = this.sysRouterboard.Model.Replace("RouterBOARD", "RB").Replace(" ", string.Empty);
+
+            var users = this.TikConnection.LoadList<User>();
+            var groups = this.TikConnection.LoadList<UserGroup>();
+
+            var detectedFeatures = DeviceSupportedFeatures.None;
+            var myUser = users.SingleOrDefault(u => u.Name == this.Options.LoginUser);
+            if (myUser != null)
+            {
+                var myGroup = groups.SingleOrDefault(g => g.Name == myUser.Group);
+                if (myGroup != null)
+                {
+                    string[] policies = myGroup.Policy.Split(',');
+                    if (policies.Contains("api"))
+                    {
+                        // only with API allowed we need to check further (well - since we connected to it, this should always be true)
+                        if (policies.Contains("read"))
+                        {
+                            detectedFeatures |= DeviceSupportedFeatures.BgpPeers | DeviceSupportedFeatures.Rssi;
+                        }
+
+                        if (policies.Contains("test"))
+                        {
+                            detectedFeatures |= DeviceSupportedFeatures.Traceroute;
+                        }
+                    }
+                }
+            }
 
             this.systemDataBacking = new SerializableSystemData
             {
@@ -188,14 +335,15 @@ namespace SnmpAbstraction
                 Description = $"RouterOS {this.modelBacking}",
                 DeviceAddress = this.Address,
                 DeviceModel = $"{this.modelBacking} v {this.osVersionBacking}",
-                EnterpriseObjectId = null,
+                EnterpriseObjectId = new Oid(),
                 Location = string.Empty,
                 MaximumSnmpVersion = SnmpVersion.Ver2, // we know that MTik supports SNMPv2c
                 Model = this.modelBacking,
-                Name = sysIdent.Name,
-                Uptime = sysResource.Uptime,
+                Name = this.sysIdent.Name,
+                Uptime = this.sysResource.Uptime,
                 Version = this.osVersionBacking,
-                QueryDuration = stopper.Elapsed
+                QueryDuration = TimeSpan.Zero,
+                SupportedFeatures = detectedFeatures
             };
         }
 

@@ -14,6 +14,16 @@ namespace SnmpAbstraction
         IpAddress Address { get; }
 
         /// <summary>
+        /// Gets the API(s) that this querier is using.
+        /// </summary>
+        QueryApis Api { get; }
+
+        /// <summary>
+        /// Gets the type of the device handler that is currently in use.
+        /// </summary>
+        Type HandlerType { get; }
+
+        /// <summary>
         /// Gets the device system data (i.e. the .1.3.6.1.2.1.1 subtree which is mainly device-agnostic).
         /// </summary>
         /// <remarks>This data will implicitly be queried when a instance of an SNMP Querier initialized.<br/>
@@ -48,6 +58,14 @@ namespace SnmpAbstraction
         /// <param name="remoteHostNamesOrIps">The list of remote device's host name or IP address to which the link details shall be fetched.</param>
         /// <returns>The link details for the link between this device and the listed remote devices.</returns>
         ILinkDetails FetchLinkDetails(params string[] remoteHostNamesOrIps);
+
+        /// <summary>
+        /// Fetches the detailed information for the link between the device that is associated
+        /// with this instance and the devices owning the listed remote host names or IP addresses.
+        /// </summary>
+        /// <param name="remoteQueriers">The list of queriers to the remote devices to which the link details shall be fetched.</param>
+        /// <returns>The link details for the link between this device and the listed remote devices.</returns>
+        ILinkDetails FetchLinkDetails(params IHamnetQuerier[] remoteQueriers);
 
         /// <summary>
         /// Performs a traceroute 

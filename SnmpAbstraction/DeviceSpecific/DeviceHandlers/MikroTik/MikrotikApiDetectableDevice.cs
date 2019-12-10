@@ -1,7 +1,10 @@
 using System;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using SnmpSharpNet;
 using tik4net;
+using tik4net.Objects;
+using tik4net.Objects.System;
 
 namespace SnmpAbstraction
 {
@@ -22,6 +25,12 @@ namespace SnmpAbstraction
         private ITikConnection tikConnection = null;
 
         private TikConnectionType apiInUse = TikConnectionType.Api_v2;
+
+        private SystemResource sysResource = null;
+
+        private SystemRouterboard sysRouterboard = null;
+
+        private SystemIdentity sysIdent = null;
 
         /// <summary>
         /// Default-construct
@@ -53,9 +62,12 @@ namespace SnmpAbstraction
                 this.tikConnection.ReceiveTimeout = Convert.ToInt32(options.Timeout.TotalMilliseconds);
 
                 this.tikConnection.Open(address.ToString(), options.LoginUser ?? string.Empty, options.LoginPassword ?? string.Empty);
+
+                this.QuerySystemData();
+
                 return true;
             }
-            catch(TikCommandException tikConnectionException)
+            catch (TikCommandException tikConnectionException)
             {
                 log.Info($"Device {address}: Mikrotik APIv2 connection failed: {tikConnectionException.Message}. Trying APIv1");
 
@@ -75,6 +87,18 @@ namespace SnmpAbstraction
                     this.tikConnection = null;
                 }
             }
+            catch(SocketException socketEx)
+            {
+                log.Info($"Device {address}: Socket Exception in Mikrotik API connection: {socketEx.Message}. Considering device as not applicable");
+
+                if (this.tikConnection != null)
+                {
+                    this.tikConnection.Dispose();
+                    this.tikConnection = null;
+                }
+
+                return false;
+            }
 
             this.apiInUse = TikConnectionType.Api;
             try
@@ -86,6 +110,9 @@ namespace SnmpAbstraction
                 this.tikConnection.ReceiveTimeout = Convert.ToInt32(options.Timeout.TotalMilliseconds);
 
                 this.tikConnection.Open(address.ToString(), options.LoginUser ?? string.Empty, options.LoginPassword ?? string.Empty);
+
+                this.QuerySystemData();
+
                 return true;
             }
             catch(TikCommandException tikConnectionException)
@@ -122,7 +149,18 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"Device {address}: No Mikrotik API connection available in CreateHandler. Did you call IsApplicableVendorSpecific and receive back true from that call?");
             }
 
-            return new MikrotikApiDeviceHandler(address, this.apiInUse, this.tikConnection, options);
+            return new MikrotikApiDeviceHandler(address, this.apiInUse, this.tikConnection, options, this.sysIdent, this.sysResource, this.sysRouterboard);
+        }
+
+        /// <summary>
+        /// Queries the system data via API.<br/>
+        /// This implicitly checks whether the connection is open and authentication was successful.
+        /// </summary>
+        private void QuerySystemData()
+        {
+            this.sysResource = this.tikConnection.LoadSingle<SystemResource>();
+            this.sysRouterboard = this.tikConnection.LoadSingle<SystemRouterboard>();
+            this.sysIdent = this.tikConnection.LoadSingle<SystemIdentity>();
         }
     }
 }

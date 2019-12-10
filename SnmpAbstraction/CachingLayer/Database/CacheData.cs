@@ -31,5 +31,13 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         [Column("LastModification")]
         public DateTime LastModification { get; set; }
+
+        /// <inheritdoc />
+        [Column("ApiUsed")]
+        public QueryApis ApiUsed { get; set; }
+        
+        /// <inheritdoc />
+        [Column("DeviceHandlerClass")]
+        public string DeviceHandlerClass { get; set; }
     }
 }

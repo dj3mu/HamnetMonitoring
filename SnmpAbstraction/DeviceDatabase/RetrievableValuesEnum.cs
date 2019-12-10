@@ -128,6 +128,12 @@
         /// OID to directly query RX signal strength from.<br/>
         /// Used by some P2P devices that only and exactly support one remote.
         /// </summary>
-        RxSignalStrengthImmediateOid = 17
+        RxSignalStrengthImmediateOid = 17,
+
+        /// <summary>
+        /// Root OID to get the overall CCQ value of the interface.<br/>
+        /// The Interface ID needs to be appended.
+        /// </summary>
+        OverallCcqAppendInterfaceId = 18
     }
 }

@@ -61,10 +61,8 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public string DeviceModel { get; set; }
 
-        private readonly TimeSpan queryDuration = TimeSpan.Zero;
-
         /// <inheritdoc />
-        public TimeSpan QueryDuration => queryDuration;
+        public TimeSpan QueryDuration { get; set; } = TimeSpan.Zero;
 
         /// <inheritdoc />
         public override string ToString()

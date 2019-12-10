@@ -23,6 +23,7 @@ namespace SnmpAbstraction
         /// <param name="loginUser">The user name for logins (if needed).</param>
         /// <param name="loginPassword">The password for logins (if needed).</param>
         /// <param name="allowedApis">The allowed APIs. By default, only SNMP is allowed.</param>
+        /// <param name="querierClassHint">If not null or empty, a full qualified class name of the handler class to use (if possible).</param>
         public QuerierOptions(
             int port,
             SnmpVersion protocolVersion,
@@ -34,7 +35,8 @@ namespace SnmpAbstraction
             bool enableCaching,
             string loginUser,
             string loginPassword,
-            QueryApis allowedApis)
+            QueryApis allowedApis,
+            string querierClassHint = null)
         {
             this.Port = port;
             this.ProtocolVersion = protocolVersion;
@@ -47,6 +49,7 @@ namespace SnmpAbstraction
             this.LoginUser = loginUser;
             this.LoginPassword = loginPassword;
             this.AllowedApis = allowedApis;
+            this.QuerierClassHint = querierClassHint;
         }
 
         /// <summary>
@@ -94,6 +97,11 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public QueryApis AllowedApis { get; } = QueryApis.Snmp;
+
+        /// <summary>
+        /// Gets a full qualified class name of the handler class to use (if possible). Use null or empty to not provide any handler class hint.
+        /// </summary>
+        public string QuerierClassHint { get; }
 
         /// <summary>
         /// Creates a new object that is a copy of this object with modified Ver2cMaximumRequests number.

@@ -64,6 +64,10 @@ namespace SnmpAbstraction
         public TimeSpan LinkUptime { get; set; } = TimeSpan.Zero;
 
         /// <inheritdoc />
+        [JsonIgnore]
+        public double? Ccq { get; set; } = null;
+
+        /// <inheritdoc />
         [JsonProperty(Required = Required.AllowNull)]
         public bool? IsAccessPoint { get; set; }
 
@@ -104,6 +108,7 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - Link Uptime    : not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.RxSignalStrength.ToString("0.0 dBm"));
             returnBuilder.Append("  - TX signal [dBm]: ").Append(this.TxSignalStrength.ToString("0.0 dBm"));
+            returnBuilder.Append("  - CCQ            : ").Append(this.Ccq?.ToString("0") ?? "not available");
 
             return returnBuilder.ToString();
         }
