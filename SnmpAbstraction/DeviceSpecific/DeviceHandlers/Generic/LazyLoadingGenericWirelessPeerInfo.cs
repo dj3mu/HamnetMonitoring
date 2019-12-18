@@ -115,6 +115,12 @@ namespace SnmpAbstraction
         }
 
         /// <summary>
+        /// Gets the number of clients that are connected to this AP when in AP mode.<br/>
+        /// null if not an AP or not available.
+        /// </summary>
+        public int? NumberOfClients { get; protected set; }
+
+        /// <summary>
         /// Gets or sets the backing property (accessible by inheriting classes) for TX signal strength.
         /// </summary>
         protected double TxSignalStrengthBacking { get; set; } = double.NaN;
@@ -152,6 +158,7 @@ namespace SnmpAbstraction
 
             returnBuilder.Append("Peer ").Append(this.PeerMac).AppendLine(":");
             returnBuilder.Append("  - Mode           : ").AppendLine(this.IsAccessPoint.HasValue ? (this.IsAccessPoint.Value ? "AP" : "Client") : "not available");
+            returnBuilder.Append("  - Num clients    : ").AppendLine(this.NumberOfClients.HasValue ? this.NumberOfClients.Value.ToString() : "not available");
             returnBuilder.Append("  - On interface ID: ").AppendLine(this.InterfaceId.HasValue ? this.InterfaceId.Value.ToString() : "not available");
             returnBuilder.Append("  - Link Uptime    : ").AppendLine(this.linkUptimePopulated ? this.LinkUptimeBacking.ToString() : "not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.rxSignalStrengthPopulated ? this.RxSignalStrengthBacking.ToString("0.0 dBm") : "not available");

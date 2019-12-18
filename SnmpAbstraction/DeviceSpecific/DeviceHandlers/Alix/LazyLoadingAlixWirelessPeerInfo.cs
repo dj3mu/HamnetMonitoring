@@ -24,14 +24,17 @@ namespace SnmpAbstraction
         /// <param name="macAddress">The MAC address of the peer (serves as index in OIDs for MikroTik devices).</param>
         /// <param name="interfaceId">The ID of the interface (i.e. the value to append to interface-specific OIDs).</param>
         /// <param name="isAccessPoint">Value indicating whether the device proving the peer info is an access point or a client.</param>
+        /// <param name="numberOfClients">The number of clients that are connected to this AP when in AP mode. null if not an AP or not available.</param>
         public LazyLoadingAlixWirelessPeerInfo(
             ISnmpLowerLayer lowerSnmpLayer,
             IDeviceSpecificOidLookup oidLookup,
             string macAddress,
             int? interfaceId,
-            bool? isAccessPoint)
+            bool? isAccessPoint,
+            int? numberOfClients)
             : base(lowerSnmpLayer, oidLookup, macAddress, interfaceId, isAccessPoint)
         {
+            this.NumberOfClients = numberOfClients;
         }
 
         /// <inheritdoc />

@@ -66,7 +66,7 @@ namespace SnmpAbstraction
                         this.OidLookup,
                         macOidFragments.ToHexString(),
                         interfaceId, // last element of OID contains the interface ID on which this peer is connected
-                        this.CheckIsAccessPoint(interfaceId)
+                        this.CheckIsAccessPoint(interfaceId, out int? numberOfClients) // ignoring numberOfClients as we know that we cannot retrieve it anyway and it will always be null
                     ));
             }
 
@@ -74,10 +74,11 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        protected override bool? CheckIsAccessPoint(int interfaceId)
+        protected override bool? CheckIsAccessPoint(int interfaceId, out int? numberOfClients)
         {
             var valueToQuery = RetrievableValuesEnum.WirelessMode;
             DeviceSpecificOid wirelessModeOid;
+            numberOfClients = null;
             if (this.OidLookup.TryGetValue(valueToQuery, out wirelessModeOid))
             {
                 // finally we need to get the count of registered clients
