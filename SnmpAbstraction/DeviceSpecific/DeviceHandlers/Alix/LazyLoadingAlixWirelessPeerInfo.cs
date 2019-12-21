@@ -32,9 +32,8 @@ namespace SnmpAbstraction
             int? interfaceId,
             bool? isAccessPoint,
             int? numberOfClients)
-            : base(lowerSnmpLayer, oidLookup, macAddress, interfaceId, isAccessPoint)
+            : base(lowerSnmpLayer, oidLookup, macAddress, interfaceId, isAccessPoint, numberOfClients)
         {
-            this.NumberOfClients = numberOfClients;
         }
 
         /// <inheritdoc />

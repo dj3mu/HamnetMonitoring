@@ -29,18 +29,21 @@ namespace SnmpAbstraction
         /// <param name="macAddress">The MAC address of the peer (serves as index in OIDs for MikroTik devices).</param>
         /// <param name="peerIndex">The peer's index (to use in SNMP get).</param>
         /// <param name="isAccessPoint">Value indicating whether the device proving the peer info is an access point or a client.</param>
+        /// <param name="numberOfClients">The number of clients that are connected to this AP when in AP mode. null if not an AP or not available.</param>
         public LazyLoadingUbiquitiAirOs6plusWirelessPeerInfo(
             ISnmpLowerLayer lowerSnmpLayer,
             IDeviceSpecificOidLookup oidLookup,
             string macAddress,
             int peerIndex,
-            bool? isAccessPoint)
+            bool? isAccessPoint,
+            int? numberOfClients)
             : base(
                 lowerSnmpLayer,
                 oidLookup,
                 macAddress,
                 null, // For UBNT there's no way to find which wireless interface this peer belongs to.
-                isAccessPoint)
+                isAccessPoint,
+                numberOfClients)
         {
             this.peerIndex = peerIndex;
         }

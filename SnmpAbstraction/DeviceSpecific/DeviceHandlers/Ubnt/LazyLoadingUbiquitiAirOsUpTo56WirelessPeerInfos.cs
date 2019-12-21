@@ -59,7 +59,8 @@ namespace SnmpAbstraction
                     this.LowerSnmpLayer,
                     this.OidLookup,
                     interfaceId, // last element of OID contains the interface ID on which this peer is connected
-                    interfaceVbs
+                    interfaceVbs,
+                    interfaceVbs.Count
                 ));
 
             return true;

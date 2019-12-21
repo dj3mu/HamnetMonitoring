@@ -43,5 +43,11 @@ namespace SnmpAbstraction
         /// Null if CCQ could not be obtained from this device.
         /// </summary>
         double? Ccq { get; }
+
+        /// <summary>
+        /// Gets the number of clients that are connected to this AP when in AP mode.<br/>
+        /// null if not an AP or not available.
+        /// </summary>
+        int? NumberOfClients { get; }
     }
 }
