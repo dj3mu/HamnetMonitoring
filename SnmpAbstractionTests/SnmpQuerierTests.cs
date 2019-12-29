@@ -99,10 +99,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQueryWirelessPeersTest()
         {
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver2, false); // Ver2 should cause a fallback to V1 for UBNT
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, false);
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1, false);
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirFiberSide1, SnmpVersion.Ver1, false);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver2, false); // Ver2 should cause a fallback to V1 for UBNT
+            QueryAndPrintWirelessPeers(new IpAddress("44.142.43.213"), SnmpVersion.Ver1, false);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1, false);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirFiberSide1, SnmpVersion.Ver1, false);
         }
 
         /// <summary>

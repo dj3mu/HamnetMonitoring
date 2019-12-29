@@ -59,18 +59,20 @@ namespace SnmpAbstraction
                     this.LowerSnmpLayer,
                     this.OidLookup,
                     interfaceId, // last element of OID contains the interface ID on which this peer is connected
-                    interfaceVbs
+                    interfaceVbs,
+                    interfaceVbs.Count
                 ));
 
             return true;
         }
 
         /// <inheritdoc />
-        protected override bool? CheckIsAccessPoint(int interfaceId)
+        protected override bool? CheckIsAccessPoint(int interfaceId, out int? numberOfClients)
         {
             // NOP:
             // Method CheckIsAccessPoint is not supported for LazyLoadingUbiquitiAirOs4WirelessPeerInfos.
             // Parameter is determined internally in single LazyLoadingUbiquitiAirOs4WirelessPeerInfo.
+            numberOfClients = null;
             return null;
         }
     }

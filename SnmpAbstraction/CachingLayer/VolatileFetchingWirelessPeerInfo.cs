@@ -127,6 +127,9 @@ namespace SnmpAbstraction
         public TimeSpan QueryDuration => this.queryDurationBacking;
 
         /// <inheritdoc />
+        public int? NumberOfClients => this.underlyingPeerInfo.NumberOfClients;
+
+        /// <inheritdoc />
         public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids => this.underlyingPeerInfo.Oids;
 
         /// <inheritdoc />
@@ -175,6 +178,7 @@ namespace SnmpAbstraction
 
             returnBuilder.Append("Peer ").Append(this.RemoteMacString).AppendLine(":");
             returnBuilder.Append("  - Mode           : ").AppendLine(this.IsAccessPoint.HasValue ? (this.IsAccessPoint.Value ? "AP" : "Client") : "not available");
+            returnBuilder.Append("  - Num clients    : ").AppendLine(this.NumberOfClients.HasValue ? this.NumberOfClients.Value.ToString() : "not available");
             returnBuilder.Append("  - On interface ID: ").AppendLine(this.InterfaceId.HasValue ? this.InterfaceId.Value.ToString() : "not available");
             returnBuilder.Append("  - Link Uptime    : not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.RxSignalStrength.ToString("0.0 dBm"));

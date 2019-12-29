@@ -142,7 +142,7 @@ namespace SnmpAbstraction
 
             if (deviceToUse == null)
             {
-                var snmpErrorInfo = $"Unsupported device at address '{this.lowerLayer.Address}': No applicable handler found (allowed APIs: {options.AllowedApis})";
+                var snmpErrorInfo = $"Unsupported device at address '{this.lowerLayer.Address}': No applicable handler found (allowed APIs: {options.AllowedApis}){Environment.NewLine}Device System Data:{Environment.NewLine}{this.lowerLayer.SystemData}";
                 log.Error(snmpErrorInfo);
 
                 // Re-throwing a different exception is not good practice.

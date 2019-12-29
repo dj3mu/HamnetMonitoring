@@ -63,7 +63,7 @@ namespace SnmpAbstractionTests
         /// The address of a Ubiquiti device with AirOS 8 to use for the tests.
         /// </summary>
         /// <remarks>Obviously this might not forever remain an UBNT device. Feel free to adjust if needed.</remarks>
-        public static IpAddress TestAddressUbntAirOs8side1 { get; } = new IpAddress("44.224.82.34"); // DB0KWE (Karftwerk Weisweiler), AirOS 8
+        public static IpAddress TestAddressUbntAirOs8side1 { get; } = new IpAddress("44.148.82.34"); // DB0KWE (Karftwerk Weisweiler), AirOS 8
 
         /// <summary>
         /// The address of a Ubiquiti device with AirOS 4 to use for the tests.
