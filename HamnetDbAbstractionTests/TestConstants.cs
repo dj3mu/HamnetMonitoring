@@ -13,5 +13,15 @@
         /// Path to a file containing the database connection string.
         /// </summary>
         public static readonly string ConnectionStringFilePath = @"~\connectionstring.hamnetdb";
+
+        /// <summary>
+        /// Path to a file containing the URL to obtain the hosts.
+        /// </summary>
+        public static readonly string HostsUrl = @"http://fhn.lspe.org/hamnetdb/codiad/workspace/hamnetdb/csv.cgi?tab=host&json=1";
+
+        /// <summary>
+        /// Path to a file containing the URL to obtain the subnets.
+        /// </summary>
+        public static readonly string SubnetsUrl = @"http://fhn.lspe.org/hamnetdb/codiad/workspace/hamnetdb/csv.cgi?tab=subnet&json=1";
     }
 }
