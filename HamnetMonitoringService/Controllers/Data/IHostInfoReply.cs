@@ -58,5 +58,10 @@ namespace HamnetDbRest.Controllers
         /// Gets the list of supported features.
         /// </summary>
         IEnumerable<string> SupportedFeatures { get; }
+
+        /// <summary>
+        /// Gets the API that is, by default, use for talking to this device.
+        /// </summary>
+        string DefaultApi { get; }
     }
 }

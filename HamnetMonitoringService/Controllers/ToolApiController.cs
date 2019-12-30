@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using RestService.Database;
 using SnmpAbstraction;
 
@@ -17,6 +20,8 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class ToolController : ControllerBase
     {
+        private static readonly char[] Separators = new[] { ' ', '\t', ',' };
+
         private readonly ILogger logger;
 
         private readonly IConfiguration configuration;
@@ -34,6 +39,48 @@ namespace HamnetDbRest.Controllers
             this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger), "The logger to use is null");
             this.configuration = configuration ?? throw new System.ArgumentNullException(nameof(configuration), "The configuration to use is null");
             this.dbContext = dbContext ?? throw new System.ArgumentNullException(nameof(dbContext), "The database context to take the data from is null");
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("hostsSupportingFeature/{featureList}")]
+        public async Task<ActionResult<IStatusReply>> HostsSupportingFeature(string featureList)
+        {
+            Program.RequestStatistics.ApiV1HostsSupportingFeature++;
+
+            if (string.IsNullOrWhiteSpace(featureList))
+            {
+                return new ErrorReply(new ArgumentException("Found null, empty or white-space only feature list."));
+            }
+
+            DeviceSupportedFeatures requestedFeatures = DeviceSupportedFeatures.None;
+            try
+            {
+                requestedFeatures = featureList.Split(Separators, StringSplitOptions.RemoveEmptyEntries).ToDeviceSupportedFeatures();
+            }
+            catch(ArgumentOutOfRangeException aoorex)
+            {
+                return new ErrorReply(aoorex);
+            }
+
+            if (requestedFeatures == DeviceSupportedFeatures.None)
+            {
+                return new ErrorReply(new ArgumentException("Invalid feature list."));
+            }
+
+            return await Task.Run(() => this.FetchCacheEntries(requestedFeatures));
+        }
+
+        /// <summary>
+        /// Fetches the cache data and converts to an array.
+        /// </summary>
+        /// <returns>The result list.</returns>
+        private ActionResult<IStatusReply> FetchCacheEntries(DeviceSupportedFeatures features)
+        {
+            var cacheMaintenance = new CacheMaintenance(true);
+            return new HostsSupportingFeatureResult(cacheMaintenance.FetchEntryList().Where(e => ((e.SystemData?.SupportedFeatures ?? DeviceSupportedFeatures.None) & features) == features).Select(cacheEntry => new HostInfoReply(cacheEntry.Address, cacheEntry.SystemData, cacheEntry.ApiUsed)));
         }
 
         /// <summary>
@@ -74,6 +121,44 @@ namespace HamnetDbRest.Controllers
             }
 
             return optionsInUse;
+        }
+
+        /// <summary>
+        /// Container for a Cache Data Result
+        /// </summary>
+        private class HostsSupportingFeatureResult : IStatusReply, IReadOnlyList<IHostInfoReply>
+        {
+            private List<IHostInfoReply> underlyingData;
+
+            /// <summary>
+            /// Construct
+            /// </summary>
+            /// <param name="enumerable">An enumeration of the data we hold.</param>
+            public HostsSupportingFeatureResult(IEnumerable<IHostInfoReply> enumerable)
+            {
+                this.underlyingData = enumerable.ToList();
+            }
+
+            /// <inheritdoc />
+            public IHostInfoReply this[int index] => this.underlyingData[index];
+
+            /// <inheritdoc />
+            public IEnumerable<string> ErrorDetails { get; } = Enumerable.Empty<string>();
+
+            /// <inheritdoc />
+            public int Count => this.underlyingData.Count;
+
+            /// <inheritdoc />
+            public IEnumerator<IHostInfoReply> GetEnumerator()
+            {
+                return this.underlyingData.GetEnumerator();
+            }
+
+            /// <inheritdoc />
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return this.underlyingData.GetEnumerator();
+            }
         }
     }
 }

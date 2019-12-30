@@ -58,6 +58,11 @@ namespace HamnetDbRest
         public int ApiV1TraceRouteRequests { get; internal set; } = 0;
 
         /// <summary>
+        /// Gets or sets the count of APIv1 hostsSupportingFeature requests.
+        /// </summary>
+        public int ApiV1HostsSupportingFeature { get; internal set; } = 0;
+
+        /// <summary>
         /// Gets or sets the count of APIv1 linktest/ping requests.
         /// </summary>
         public int ApiV1LinkTestPingRequests { get; internal set; } = 0;

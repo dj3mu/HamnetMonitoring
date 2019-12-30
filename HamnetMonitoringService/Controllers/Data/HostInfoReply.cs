@@ -20,12 +20,15 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <param name="address">The IP address that this host info reply is for.</param>
         /// <param name="systemData">The system data.</param>
-        public HostInfoReply(IpAddress address, IDeviceSystemData systemData)
+        /// <param name="defaultApi">The API that is, by default, used for talking to this device.</param>
+        public HostInfoReply(IpAddress address, IDeviceSystemData systemData, QueryApis defaultApi)
         {
             this.address = address ?? throw new ArgumentNullException(nameof(address), "The IP address to construct a HostInfoReply for is null");
             this.systemData = systemData ?? throw new ArgumentNullException(nameof(systemData), "The system data to construct a HostInfoReply from is null");
 
             this.systemData.ForceEvaluateAll();
+
+            this.DefaultApi = defaultApi.ToString();
 
             this.SupportedFeatures = this.systemData.SupportedFeatures
                 .ToString()
@@ -65,5 +68,8 @@ namespace HamnetDbRest.Controllers
 
         /// <inheritdoc />
         public IEnumerable<string> SupportedFeatures { get; }
+
+        /// <inheritdoc />
+        public string DefaultApi { get; }
     }
 }

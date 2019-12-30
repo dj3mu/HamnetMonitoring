@@ -207,6 +207,66 @@ All replies of this API will at least return a JSON structure with the element `
 }
 ```
 
+#### Supported Features
+URI path: `/api/v1/tools/hostsSupportingFeature/<comma-separated-feature-list>`
+
+Requests a list of hosts that are **currently** known to support **all of** the given features.
+
+Supported features currently are:
+| Feature    |  Description                                                                                           |
+|------------|--------------------------------------------------------------------------------------------------------|
+| Rssi       | Support for querying link RSSI values. Includes capability to provide interface and wireless peer list |
+| BgpPeers   | Support for querying BGP peers.                                                                        |
+| Traceroute | Support for network test operations like `traceroute` and `ping`                                       |
+
+**Important:** This request uses data of the device cache. Hence it only returns **known** hosts. This is, hosts that have already been queried.
+If you need to know if a very specific hosts supports a specific feature, please use the `/api/v1/linktest/info/<hostNameOrIp>` request and evaluate the
+`supportedFeatures` response element.
+
+Example result:
+```json
+[
+    {
+        "description": "RouterOS RB750Pr2",
+        "contact": "",
+        "location": "",
+        "name": "router.db0zm",
+        "uptime": null,
+        "model": "RB750Pr2",
+        "version": "6.45.1",
+        "maximumSnmpVersion": "Ver1",
+        "address": "44.225.20.193",
+        "errorDetails": [],
+        "supportedFeatures": [
+            "Rssi",
+            "BgpPeers",
+            "Traceroute"
+        ],
+        "defaultApi": "VendorSpecific"
+    },
+    {
+        "description": "RouterOS RB750Pr2",
+        "contact": "",
+        "location": "",
+        "name": "router.db0ebe",
+        "uptime": null,
+        "model": "RB750Pr2",
+        "version": "6.46.0",
+        "maximumSnmpVersion": "Ver1",
+        "address": "44.225.21.1",
+        "errorDetails": [],
+        "supportedFeatures": [
+            "Rssi",
+            "BgpPeers",
+            "Traceroute"
+        ],
+        "defaultApi": "VendorSpecific"
+    },
+...
+]
+```
+
+
 #### Traceroute
 URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>?<options>`
 

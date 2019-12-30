@@ -17,6 +17,27 @@ namespace SnmpAbstraction
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
+        /// Converts the given list of strings to a <see cref="DeviceSupportedFeatures" /> enum.
+        /// </summary>
+        /// <param name="featuresList">The list of feature strings</param>
+        /// <returns>The flags enum <see cref="DeviceSupportedFeatures" />.</returns>
+        public static DeviceSupportedFeatures ToDeviceSupportedFeatures(this string[] featuresList)
+        { 
+            DeviceSupportedFeatures dsf = featuresList.Select(x =>
+            { 
+                if (!Enum.TryParse(x, true, out DeviceSupportedFeatures outenum))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(featuresList), $"Feature '{x}' is not a known feature name. Supported names are {string.Join(", ", Enum.GetNames(typeof(DeviceSupportedFeatures)).Where(f => f != "None"))}");
+                }
+                
+                return outenum;
+
+            }).Aggregate((prev , next) => prev | next);
+
+            return dsf;
+        }
+
+        /// <summary>
         /// Converts the integer array to a hex string.
         /// </summary>
         /// <param name="unitList">The integer array to convert.</param>
