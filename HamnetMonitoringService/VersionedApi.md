@@ -213,6 +213,7 @@ URI path: `/api/v1/tools/hostsSupportingFeature/<comma-separated-feature-list>`
 Requests a list of hosts that are **currently** known to support **all of** the given features.
 
 Supported features currently are:
+
 | Feature    |  Description                                                                                           |
 |------------|--------------------------------------------------------------------------------------------------------|
 | Rssi       | Support for querying link RSSI values. Includes capability to provide interface and wireless peer list |
