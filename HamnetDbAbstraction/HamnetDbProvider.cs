@@ -72,12 +72,13 @@ namespace HamnetDbAbstraction
             {
                 return this.InstantiateMySqlAccessor(configurationSection.GetValue<string>(HamnetDbProvider.ConnectionStringKey));
             }
-            if (configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() == "JsonUrl")
+            
+            if (configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() == "JSONURL")
             {
                 return this.InstantiateJsonUrlAccessor(configurationSection.GetSection(HamnetDbProvider.DatabaseUrlsKey));
             }
 
-            throw new InvalidOperationException("Only MySQL or JsonUrl is currently supported for the HamentDB interface");
+            throw new InvalidOperationException($"Only MySQL or JsonUrl is currently supported for the HamentDB interface but found '{configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey)}'");
         }
 
         /// <summary>

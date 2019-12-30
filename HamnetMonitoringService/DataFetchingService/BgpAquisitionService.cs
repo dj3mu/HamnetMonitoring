@@ -120,10 +120,6 @@ namespace RestService.DataFetchingService
             this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(aquisisionServiceSection.GetValue<bool>("UseQueryCaching"));
 
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-            if (hamnetDbConfig.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() != "MYSQL")
-            {
-                throw new InvalidOperationException("Only MySQL / MariaDB is currently supported for the Hament database");
-            }
 
             // get filter regex
             var filterRegexConfig = aquisisionServiceSection.GetSection("WhitelistFilterRegex").GetChildren();
