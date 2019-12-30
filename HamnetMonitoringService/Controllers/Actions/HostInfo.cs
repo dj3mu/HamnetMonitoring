@@ -57,7 +57,7 @@ namespace HamnetDbRest.Controllers
                 {
                     var systemData = querier.SystemData;
 
-                    return new HostInfoReply(querier.Address, systemData, querier.Api);
+                    return new HostInfoReply(querier.Address, systemData, querier.Api, null);
                 }
             }
             catch(Exception ex)
