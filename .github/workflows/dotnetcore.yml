@@ -9,9 +9,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 2.2.401
+
     - name: dotnet publish
       run: dotnet publish --configuration Release -r linux-x64
+
+
+    - name: Archive Artifacts
+      run: tar -cvjf hamnetMonitoring.tar.bz2 HamnetMonitoringService/bin/Release/netcoreapp2.2/linux-x64/publish/*
+
+    - name: Upload Archive
+      uses: actions/upload-artifact@v1
+      with:
+        name: hamnetMonitoring.tar.bz2
