@@ -27,4 +27,4 @@ jobs:
       if: success()
       with:
         name: hamnetMonitoring
-        path: output/hamnetMonitoring.tar.bz2 HamnetMonitoringService/bin/Release/netcoreapp2.2/linux-x64/publish
+        path: HamnetMonitoringService/bin/Release/netcoreapp2.2/linux-x64/publish
