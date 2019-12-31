@@ -18,11 +18,13 @@ jobs:
     - name: dotnet publish
       run: dotnet publish --configuration Release -r linux-x64
 
-    - name: Archive Artifacts
-      run: tar -cvjf hamnetMonitoring.tar.bz2 HamnetMonitoringService/bin/Release/netcoreapp2.2/linux-x64/publish/*
+    - name: Prepare Artifacts
+      if: success()
+      run: cp HamnetMonitoringService/bin/Release/netcoreapp2.2/linux-x64/Config/* HamnetMonitoringService/bin/Release/netcoreapp2.2/linux-x64/publish/Config
 
     - name: Upload Archive
       uses: actions/upload-artifact@v1
+      if: success()
       with:
-        name: hamnetMonitoring.tar.bz2
-        path: .
+        name: hamnetMonitoring
+        path: output/hamnetMonitoring.tar.bz2 HamnetMonitoringService/bin/Release/netcoreapp2.2/linux-x64/publish
