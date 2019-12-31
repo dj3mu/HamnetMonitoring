@@ -123,7 +123,8 @@ namespace SnmpAbstraction
         /// Check if the interface of the given ID is an access point or a client.
         /// </summary>
         /// <param name="interfaceId">The interface ID to check.</param>
+        /// <param name="numberOfClients">Returns the number of clients that are connected to this AP when in AP mode. null if not an AP or not available.</param>
         /// <returns><c>true</c> if the interface is an access point.</returns>
-        protected abstract bool? CheckIsAccessPoint(int interfaceId);
+        protected abstract bool? CheckIsAccessPoint(int interfaceId, out int? numberOfClients);
     }
 }

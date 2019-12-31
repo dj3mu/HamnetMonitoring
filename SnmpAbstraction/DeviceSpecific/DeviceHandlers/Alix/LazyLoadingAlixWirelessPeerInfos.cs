@@ -60,13 +60,15 @@ namespace SnmpAbstraction
                 IEnumerable<uint> macOidFragments = item.Value.ToString().HexStringToByteArray(' ').Select(b => Convert.ToUInt32(b));
                 int interfaceId = Convert.ToInt32(item.Oid.Last());
 
+                var isAccessPoint = this.CheckIsAccessPoint(interfaceId, out int? numberOfClients);
                 this.PeerInfosBacking.Add(
                     new LazyLoadingAlixWirelessPeerInfo(
                         this.LowerSnmpLayer,
                         this.OidLookup,
                         macOidFragments.ToHexString(),
                         interfaceId, // last element of OID contains the interface ID on which this peer is connected
-                        this.CheckIsAccessPoint(interfaceId)
+                        isAccessPoint,
+                        numberOfClients
                     ));
             }
 
@@ -74,10 +76,11 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        protected override bool? CheckIsAccessPoint(int interfaceId)
+        protected override bool? CheckIsAccessPoint(int interfaceId, out int? numberOfClients)
         {
             var valueToQuery = RetrievableValuesEnum.WirelessClientCount;
             DeviceSpecificOid wirelessClientCountRootOid;
+            numberOfClients = null;
             if (this.OidLookup.TryGetValue(valueToQuery, out wirelessClientCountRootOid) && !wirelessClientCountRootOid.Oid.IsNull)
             {
                 // finally we need to get the count of registered clients
@@ -113,13 +116,15 @@ namespace SnmpAbstraction
                     return false;
                 }
 
-                int numberOfClients = 0;
-                if (!returnValue.Value.TryToInt(out numberOfClients))
+                int snmpNumberOfClients = 0;
+                if (!returnValue.Value.TryToInt(out snmpNumberOfClients))
                 {
                     return false;
                 }
                 
-                return numberOfClients > 0;
+                numberOfClients = snmpNumberOfClients;
+
+                return snmpNumberOfClients > 0;
             }
 
             valueToQuery = RetrievableValuesEnum.WirelessMode;

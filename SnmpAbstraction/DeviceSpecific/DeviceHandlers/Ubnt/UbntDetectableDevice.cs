@@ -45,7 +45,7 @@ namespace SnmpAbstraction
         /// Regex to extract version.<br/>
         /// Example: From &quot;XM.ar7240.v6.2.0.33033.190703.1147&quot; it will extract &quot;6.2.0&quot;.
         /// </summary>
-        private static readonly Regex OsVersionExtractionRegex = new Regex(".*v([0-9.]{1,3})");
+        private static readonly Regex OsVersionExtractionRegex = new Regex(".*v([0-9.]{1,})");
 
         /// <summary>
         /// An OID to obtain the string representing the device model (used for database lookup).<br/>

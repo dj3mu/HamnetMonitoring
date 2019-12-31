@@ -59,9 +59,9 @@ namespace SnmpAbstractionTests
         [Test]
         public void AlixQueryInterfaceDataTest()
         {
-            //QueryAndPrintInterfaces(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
+            QueryAndPrintInterfaces(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
             QueryAndPrintInterfaces(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
-            //QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
+            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
@@ -70,15 +70,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryInterfaceDataTest()
         {
-            //QueryAndPrintInterfaces(new IpAddress("44.225.21.1"), SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
-            //QueryAndPrintInterfaces(new IpAddress("44.225.21.1"), SnmpVersion.Ver2, false, QueryApis.Snmp);
-            //QueryAndPrintInterfaces(new IpAddress("44.224.10.109"), SnmpVersion.Ver2, true);
-            //QueryAndPrintInterfaces(new IpAddress("44.224.10.109"), SnmpVersion.Ver2, true);
-
             QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
             QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.Snmp);
-            //QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
-            //QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
+            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
+            QueryAndPrintInterfaces(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
@@ -111,9 +106,9 @@ namespace SnmpAbstractionTests
         [Test]
         public void AlixQueryWirelessPeersTest()
         {
-            //QueryAndPrintWirelessPeers(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, false);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
-            //QueryAndPrintWirelessPeers(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressAlix1, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
@@ -122,14 +117,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikQueryWirelessPeersTest()
         {
-            //QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, false);
-            //QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, true);
-            //QueryAndPrintWirelessPeers(new IpAddress("44.224.10.106"), SnmpVersion.Ver2, true);
-
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false, QueryApis.Snmp);
-            //QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
-            //QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.Snmp);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.VendorSpecific);
+            QueryAndPrintWirelessPeers(TestConstants.TestAddressMikrotik1, SnmpVersion.Ver2, false, QueryApis.Snmp);
         }
 
         /// <summary>
@@ -147,16 +138,13 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikFetchLinkDetailsTest()
         {
-            QueryAndPrintLinkDetails(new IpAddress("44.224.72.82"), new IpAddress("44.224.72.86"), SnmpVersion.Ver2, false);
-            //QueryAndPrintLinkDetails(new IpAddress("44.137.69.173"), new IpAddress("44.137.69.170"), SnmpVersion.Ver2, true);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
 
-//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, false);
-//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
-//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik1, TestConstants.TestAddressMikrotik2, SnmpVersion.Ver2, true);
-//
-//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, false);
-//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
-//            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, false);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
+            QueryAndPrintLinkDetails(TestConstants.TestAddressMikrotik4, TestConstants.TestAddressMikrotik3, SnmpVersion.Ver2, true);
         }
 
         /// <summary>
@@ -188,6 +176,26 @@ namespace SnmpAbstractionTests
         public void MtikTracerouteTest()
         {
             QueryAndPrintTraceroute(TestConstants.TestAddressMikrotikRouter1, TestConstants.TestAddressAlix1.ToString(), SnmpVersion.Ver2, false);
+        }
+
+        /// <summary>
+        /// Test for querying of wireless peers of Ubiquiti devices.
+        /// </summary>
+        [Test]
+        public void AllForSingleIpTest()
+        {
+            var ipUnderTest = new IpAddress("44.148.44.130");
+            var snmpVersion = SnmpVersion.Ver1;
+            var useCache = false;
+
+            Console.WriteLine($"{Environment.NewLine}{ipUnderTest} SYSTEM DATA:");
+            QueryAndPrintSystemData(ipUnderTest, snmpVersion, useCache);
+
+            Console.WriteLine($"{Environment.NewLine}{ipUnderTest} INTERFACES:");
+            QueryAndPrintInterfaces(ipUnderTest, snmpVersion, useCache);
+
+            Console.WriteLine($"{Environment.NewLine}{ipUnderTest} WIRELESS PEERS:");
+            QueryAndPrintWirelessPeers(ipUnderTest, snmpVersion, useCache);
         }
 
         /// <summary>

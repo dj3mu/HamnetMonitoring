@@ -26,7 +26,7 @@ namespace HamnetDbRest.Controllers
         public OctetString Community { get; set; } = new OctetString("public");
 
         /// <inheritdoc />
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
 
         /// <inheritdoc />
         public int Retries { get; set; } = 1;

@@ -38,18 +38,21 @@ namespace SnmpAbstraction
         /// <param name="macAddress">The MAC address of the peer (serves as index in OIDs for MikroTik devices).</param>
         /// <param name="interfaceId">The ID of the interface (i.e. the value to append to interface-specific OIDs).</param>
         /// <param name="isAccessPoint">Value indicating whether the device proving the peer info is an access point or a client.</param>
+        /// <param name="numberOfClients">The number of clients that are connected to this AP when in AP mode. null if not an AP or not available.</param>
         protected LazyLoadingGenericWirelessPeerInfo(
             ISnmpLowerLayer lowerSnmpLayer,
             IDeviceSpecificOidLookup oidLookup,
             string macAddress,
             int? interfaceId,
-            bool? isAccessPoint)
+            bool? isAccessPoint,
+            int? numberOfClients)
             : base(lowerSnmpLayer)
         {
             this.OidLookup = oidLookup;
             this.PeerMac = macAddress;
             this.InterfaceId = interfaceId;
             this.IsAccessPoint = isAccessPoint;
+            this.NumberOfClients = numberOfClients;
         }
 
         /// <inheritdoc />
@@ -114,6 +117,9 @@ namespace SnmpAbstraction
             this.PopulateCcq();
         }
 
+        /// <inheritdoc />
+        public int? NumberOfClients { get; }
+
         /// <summary>
         /// Gets or sets the backing property (accessible by inheriting classes) for TX signal strength.
         /// </summary>
@@ -152,12 +158,12 @@ namespace SnmpAbstraction
 
             returnBuilder.Append("Peer ").Append(this.PeerMac).AppendLine(":");
             returnBuilder.Append("  - Mode           : ").AppendLine(this.IsAccessPoint.HasValue ? (this.IsAccessPoint.Value ? "AP" : "Client") : "not available");
+            returnBuilder.Append("  - Num clients    : ").AppendLine(this.NumberOfClients.HasValue ? this.NumberOfClients.Value.ToString() : "not available");
             returnBuilder.Append("  - On interface ID: ").AppendLine(this.InterfaceId.HasValue ? this.InterfaceId.Value.ToString() : "not available");
             returnBuilder.Append("  - Link Uptime    : ").AppendLine(this.linkUptimePopulated ? this.LinkUptimeBacking.ToString() : "not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.rxSignalStrengthPopulated ? this.RxSignalStrengthBacking.ToString("0.0 dBm") : "not available");
             returnBuilder.Append("  - TX signal [dBm]: ").Append(this.txSignalStrengthPopulated ? this.TxSignalStrengthBacking.ToString("0.0 dBm") : "not available");
             returnBuilder.Append("  - CCQ            : ").Append(this.ccqPopulated ? this.Ccq?.ToString("0.0 dBm") ?? "not reported" : "not available");
-            //returnBuilder.Append("  - MAC : ").Append(this.macAddressStringQueried ? this.macAddressStringBacking?.ToString() : "not available");
 
             return returnBuilder.ToString();
         }
