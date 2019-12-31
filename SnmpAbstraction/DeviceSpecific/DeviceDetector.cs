@@ -188,16 +188,16 @@ namespace SnmpAbstraction
                     throw new HamnetSnmpException(snmpErrorInfo, ex, this.lowerLayer?.Address?.ToString());
                 }
 
-                log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation: {ex.Message}");
+                log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' ({this.lowerLayer?.SystemData?.DeviceModel}) during handler creation: {ex.Message}");
             }
             catch(HamnetSnmpException ex)
             {
-                log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' during handler creation", ex);
+                log.Error($"Trying next device: Exception talking to device '{this.lowerLayer.Address}' ({this.lowerLayer?.SystemData?.DeviceModel}) during handler creation", ex);
             }
 
             detectionDuration.Stop();
 
-            var errorInfo = $"Device '{this.lowerLayer.Address}' cannot be identified as a supported/known device after {detectionDuration.ElapsedMilliseconds} ms and trying {detectableDevices.Count()} devices.{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
+            var errorInfo = $"Device '{this.lowerLayer.Address}' ({this.lowerLayer?.SystemData?.DeviceModel}) cannot be identified as a supported/known device after {detectionDuration.ElapsedMilliseconds} ms and trying {detectableDevices.Count()} devices.{Environment.NewLine}{string.Join("\n", collectedErrors)}{Environment.NewLine}Collected Exceptions:{Environment.NewLine}{string.Join("\n", collectedExceptions.Select(e => e.Message))}";
             log.Error(errorInfo);
             throw new HamnetSnmpException(errorInfo, this.lowerLayer?.Address?.ToString());
         }
