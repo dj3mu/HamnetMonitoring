@@ -1,0 +1,17 @@
+name: Build-Linux
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: linux
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.2.401
+    - name: dotnet publish
+      run: dotnet publish --configuration Release -r linux-x64
