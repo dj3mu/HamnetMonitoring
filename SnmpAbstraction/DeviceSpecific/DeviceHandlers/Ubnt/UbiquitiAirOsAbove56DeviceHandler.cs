@@ -43,7 +43,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops)
         {
             throw new System.NotSupportedException("Traceroute is currently not supported for Ubiquiti AirOs >= 5.6 devices");
         }

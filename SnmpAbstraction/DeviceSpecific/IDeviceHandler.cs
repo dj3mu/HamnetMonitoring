@@ -65,7 +65,9 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="remoteIp">The remote device's IP address to which the traceroute shall be done.</param>
         /// <param name="count">The number of packets to send for tracing the route.</param>
+        /// <param name="timeout">The timeout of a single ping.</param>
+        /// <param name="maxHops">The maximum number of hops.</param>
         /// <returns>The result of the traceroute.</returns>
-        ITracerouteResult Traceroute(IpAddress remoteIp, uint count);
+        ITracerouteResult Traceroute(IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops);
     }
 }

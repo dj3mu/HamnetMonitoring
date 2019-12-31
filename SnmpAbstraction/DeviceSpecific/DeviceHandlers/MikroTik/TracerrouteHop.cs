@@ -61,9 +61,53 @@ namespace SnmpAbstraction
                 }
             }
 
-            this.AverageRtt = string.IsNullOrWhiteSpace(tik4netTracerouteHop.Avg) ? double.NaN : double.Parse(tik4netTracerouteHop.Avg);
-            this.BestRtt = string.IsNullOrWhiteSpace(tik4netTracerouteHop.Best) ? double.NaN : double.Parse(tik4netTracerouteHop.Best);
-            this.WorstRtt = string.IsNullOrWhiteSpace(tik4netTracerouteHop.Worst) ? double.NaN : double.Parse(tik4netTracerouteHop.Worst);
+            if (string.IsNullOrWhiteSpace(tik4netTracerouteHop.Avg))
+            {
+                this.AverageRtt = double.NaN;
+            }
+            else
+            {
+                if (double.TryParse(tik4netTracerouteHop.Avg, out double value))
+                {
+                    this.AverageRtt = value;
+                }
+                else
+                {
+                    this.AverageRtt = double.NaN;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(tik4netTracerouteHop.Best))
+            {
+                this.BestRtt = double.NaN;
+            }
+            else
+            {
+                if (double.TryParse(tik4netTracerouteHop.Best, out double value))
+                {
+                    this.BestRtt = value;
+                }
+                else
+                {
+                    this.BestRtt = double.NaN;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(tik4netTracerouteHop.Worst))
+            {
+                this.WorstRtt = double.NaN;
+            }
+            else
+            {
+                if (double.TryParse(tik4netTracerouteHop.Worst, out double value))
+                {
+                    this.WorstRtt = value;
+                }
+                else
+                {
+                    this.WorstRtt = double.NaN;
+                }
+            }
         }
 
         /// <inheritdoc />

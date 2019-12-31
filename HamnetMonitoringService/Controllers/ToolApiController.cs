@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using RestService.Database;
 using SnmpAbstraction;
 
@@ -24,6 +23,26 @@ namespace HamnetDbRest.Controllers
         /// The maximum number of packets that we allow for traceroute.
         /// </summary>
         private const int MaxTracerouteSendCount = 100;
+
+        /// <summary>
+        /// The minimum timeout for a single hop during traceroute.
+        /// </summary>
+        private const double MinTracerouteTimeoutSeconds = 0.1;
+
+        /// <summary>
+        /// The maximum timeout for a single hop during traceroute.
+        /// </summary>
+        private const double MaxTracerouteTimeoutSeconds = 60.0;
+
+        /// <summary>
+        /// The minimum maximum hops during traceroute.
+        /// </summary>
+        private const int MinTracerouteMaxHops = 10;
+
+        /// <summary>
+        /// The maximum maximum hops during traceroute.
+        /// </summary>
+        private const int MaxTracerouteMaxHops = 255;
 
         private static readonly char[] Separators = new[] { ' ', '\t', ',' };
 
@@ -92,8 +111,8 @@ namespace HamnetDbRest.Controllers
         /// Implementation of GET request.
         /// </summary>
         /// <returns>The results of the get request.</returns>
-        [HttpGet("traceroute/{fromHost}/{toHost}/{count?}")]
-        public async Task<ActionResult<IStatusReply>> TracerouteHost(string fromHost, string toHost, int count, [FromQuery]FromUrlQueryQuerierOptions options)
+        [HttpGet("traceroute/{fromHost}/{toHost}/{count?}/{timeoutSeconds?}/{maxHops?}")]
+        public async Task<ActionResult<IStatusReply>> TracerouteHost(string fromHost, string toHost, [FromQuery]FromUrlQueryQuerierOptions options, int count = 1, double timeoutSeconds = 1.0, int maxHops = MaxTracerouteMaxHops / 2)
         {
             Program.RequestStatistics.ApiV1TraceRouteRequests++;
 
@@ -101,10 +120,20 @@ namespace HamnetDbRest.Controllers
 
             if ((count < 1) || (count > MaxTracerouteSendCount))
             {
-                return new ErrorReply(new ArgumentOutOfRangeException(nameof(count), $"count must be in range [1; {MaxTracerouteSendCount}]"));
+                return new ErrorReply(new ArgumentOutOfRangeException(nameof(count), $"count must be in range [1; {MaxTracerouteSendCount}] but was found as {count}"));
             }
 
-            return await new TracerouteAction(WebUtility.UrlDecode(fromHost), WebUtility.UrlDecode(toHost), count, optionsInUse as FromUrlQueryQuerierOptions).Execute();
+            if ((timeoutSeconds < MinTracerouteTimeoutSeconds) || (timeoutSeconds > MaxTracerouteTimeoutSeconds))
+            {
+                return new ErrorReply(new ArgumentOutOfRangeException(nameof(timeoutSeconds), $"timeoutSeconds must be in range [{MinTracerouteTimeoutSeconds}; {MaxTracerouteTimeoutSeconds}] but was found as {timeoutSeconds}"));
+            }
+
+            if ((maxHops < MinTracerouteMaxHops) || (maxHops > MaxTracerouteMaxHops))
+            {
+                return new ErrorReply(new ArgumentOutOfRangeException(nameof(maxHops), $"maxHops must be in range [{MinTracerouteMaxHops}; {MaxTracerouteMaxHops}] but was found as {maxHops}"));
+            }
+
+            return await new TracerouteAction(WebUtility.UrlDecode(fromHost), WebUtility.UrlDecode(toHost), count, TimeSpan.FromSeconds(timeoutSeconds), maxHops, optionsInUse as FromUrlQueryQuerierOptions).Execute();
         }
 
         /// <summary>

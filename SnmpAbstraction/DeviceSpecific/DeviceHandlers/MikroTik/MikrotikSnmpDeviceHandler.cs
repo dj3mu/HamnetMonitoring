@@ -83,9 +83,9 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops)
         {
-            return new MikrotikApiTracerouteOperation(this.LowerLayer.Address, this.TikConnection, remoteIp, count).Execute(); 
+            return new MikrotikApiTracerouteOperation(this.LowerLayer.Address, this.TikConnection, remoteIp, count, timeout, maxHops).Execute(); 
         }
 
         /// <inheritdoc />

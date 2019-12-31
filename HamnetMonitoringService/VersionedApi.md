@@ -275,11 +275,25 @@ or
 
 URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>/<count>?<options>`
 
-Performs a traceroute operation from `start host or IP` to `destination IP`. Optionally a `count` can be added to specify how many packets shall be sent for the traceroute operation. If not specified, `count` defaults to 1.
+or
+
+URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>/<count>/<timeout-in-seconds>?<options>`
+
+or
+
+URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>/<count>/<timeout-in-seconds>/<max-hop-count>?<options>`
+
+Performs a traceroute operation from `start host or IP` to `destination IP`.
+
+Optionally a `count` can be added to specify how many packets shall be sent for the traceroute operation. If not specified, `count` defaults to 1. Minimum is 1, maximum 100.
+
+Optionally a `timeout-in-seconds` can be added after `count`. Unit is seconds and, if not specified, defaults to 1.0 seconds. Minimum is 0.1 seconds, maximum is 60.0 seconds.
+
+Optionally a `max-hop-count` can be added after `count` and `timeout-in-seconds`. This allows the set the maximum number of hops that a packet will survive. If not specified, defaults to 128. Minimum is 10, maximum is 255.
 
 Example result:
 ```json
-{
+ {
     "errorDetails": [],
     "fromAddress": "44.225.21.1",
     "toAddress": "44.224.90.86",
@@ -287,9 +301,9 @@ Example result:
     "hops": [
         {
             "address": "44.224.10.73",
-            "lossPercent": 0.0,
+            "lossPercent": 0,
             "sentCount": 1,
-            "status": "",
+            "status": "ok",
             "lastRttMs": 1.1,
             "averageRttMs": 1.1,
             "bestRttMs": 1.1,
@@ -297,9 +311,9 @@ Example result:
         },
         {
             "address": "44.224.10.105",
-            "lossPercent": 0.0,
+            "lossPercent": 0,
             "sentCount": 1,
-            "status": "",
+            "status": "ok",
             "lastRttMs": 5.4,
             "averageRttMs": 5.4,
             "bestRttMs": 5.4,

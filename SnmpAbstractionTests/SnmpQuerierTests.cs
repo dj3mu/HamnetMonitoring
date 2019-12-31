@@ -245,7 +245,7 @@ namespace SnmpAbstractionTests
 
             Assert.NotNull(querier, "Create(...) returned null");
 
-            var traceroute = querier.Traceroute(target);
+            var traceroute = querier.Traceroute(target, 1, TimeSpan.FromSeconds(1), 500);
 
             Assert.NotNull(traceroute, "querier.BgpPeers returned null");
 

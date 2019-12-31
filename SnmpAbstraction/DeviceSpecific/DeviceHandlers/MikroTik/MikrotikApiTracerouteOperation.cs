@@ -17,6 +17,8 @@ namespace SnmpAbstraction
         private readonly uint count;
         private IpAddress address;
         private ITikConnection tikConnection;
+        private readonly TimeSpan timeout;
+        private readonly int maxHops;
 
         /// <summary>
         /// Construct from all parameters.
@@ -25,8 +27,12 @@ namespace SnmpAbstraction
         /// <param name="tikConnection">The Mikrotik API connection.</param>
         /// <param name="remoteIp">The target of the traceroute operation.</param>
         /// <param name="count">The number of packets to send for tracing the route.</param>
-        public MikrotikApiTracerouteOperation(IpAddress address, ITikConnection tikConnection, IpAddress remoteIp, uint count)
+        /// <param name="timeout">The timeout of a single ping.</param>
+        /// <param name="maxHops">The maximum number of hops.</param>
+        public MikrotikApiTracerouteOperation(IpAddress address, ITikConnection tikConnection, IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops)
         {
+            this.maxHops = maxHops;
+            this.timeout = timeout;
             this.address = address ?? throw new System.ArgumentNullException(nameof(address), "address of executing device is null when creating a MikrotikApiTracerouteOperation");
             this.tikConnection = tikConnection ?? throw new System.ArgumentNullException(nameof(tikConnection), "tikConnection is null when creating a MikrotikApiTracerouteOperation");
             this.remoteIp = remoteIp ?? throw new System.ArgumentNullException(nameof(remoteIp), "address of the traceroute destination is null when creating a MikrotikApiTracerouteOperation");
@@ -40,17 +46,19 @@ namespace SnmpAbstraction
         internal ITracerouteResult Execute()
         {
             Stopwatch stopper = Stopwatch.StartNew();
-            
+
             var countToUse = (this.count <= 0) ? 1 : this.count;
             var result = this.tikConnection.LoadList<ToolTraceroute>(
                             this.tikConnection.CreateParameter("address", this.remoteIp.ToString(), TikCommandParameterFormat.NameValue),
-                            this.tikConnection.CreateParameter("count", countToUse.ToString(), TikCommandParameterFormat.NameValue));
+                            this.tikConnection.CreateParameter("count", countToUse.ToString(), TikCommandParameterFormat.NameValue),
+                            this.tikConnection.CreateParameter("timeout", this.timeout.TotalSeconds.ToString(), TikCommandParameterFormat.NameValue),
+                            this.tikConnection.CreateParameter("max-hops", this.maxHops.ToString(), TikCommandParameterFormat.NameValue));
 
             stopper.Stop();
 
             if (countToUse > 1)
             {
-                result = result.Where(h => h.Sent ==  countToUse);
+                result = result.Where(h => h.Sent == countToUse);
             }
 
             var hops = result.Select(h => new TracerrouteHop(h));

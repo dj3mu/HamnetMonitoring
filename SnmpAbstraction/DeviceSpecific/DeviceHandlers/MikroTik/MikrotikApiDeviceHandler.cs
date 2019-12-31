@@ -160,9 +160,9 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        public ITracerouteResult Traceroute(IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops)
         {
-            return new MikrotikApiTracerouteOperation(this.Address, this.TikConnection, remoteIp, count).Execute();
+            return new MikrotikApiTracerouteOperation(this.Address, this.TikConnection, remoteIp, count, timeout, maxHops).Execute();
         }
 
         /// <summary>
