@@ -184,7 +184,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AllForSingleIpTest()
         {
-            var ipUnderTest = new IpAddress("44.148.44.130");
+            var ipUnderTest = new IpAddress("44.224.20.29");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
@@ -196,6 +196,36 @@ namespace SnmpAbstractionTests
 
             Console.WriteLine($"{Environment.NewLine}{ipUnderTest} WIRELESS PEERS:");
             QueryAndPrintWirelessPeers(ipUnderTest, snmpVersion, useCache);
+        }
+
+        /// <summary>
+        /// Test for querying of wireless peers of Ubiquiti devices.
+        /// </summary>
+        [Test]
+        public void IpLinkTestTest()
+        {
+            var ip1UnderTest = new IpAddress("44.224.20.29");
+            var ip2UnderTest = new IpAddress("44.224.20.26");
+            var snmpVersion = SnmpVersion.Ver1;
+            var useCache = false;
+
+            Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) SYSTEM DATA:");
+            QueryAndPrintSystemData(ip1UnderTest, snmpVersion, useCache);
+            Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) SYSTEM DATA:");
+            QueryAndPrintSystemData(ip2UnderTest, snmpVersion, useCache);
+
+            Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) INTERFACES:");
+            QueryAndPrintInterfaces(ip1UnderTest, snmpVersion, useCache);
+            Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) INTERFACES:");
+            QueryAndPrintInterfaces(ip2UnderTest, snmpVersion, useCache);
+
+            Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) WIRELESS PEERS:");
+            QueryAndPrintWirelessPeers(ip1UnderTest, snmpVersion, useCache);
+            Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) WIRELESS PEERS:");
+            QueryAndPrintWirelessPeers(ip2UnderTest, snmpVersion, useCache);
+
+            Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) <-> {ip2UnderTest} (side #2) LINK DETAILS:");
+            QueryAndPrintLinkDetails(ip1UnderTest, ip2UnderTest, snmpVersion, useCache);
         }
 
         /// <summary>

@@ -20,6 +20,11 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class ToolController : ControllerBase
     {
+        /// <summary>
+        /// The maximum number of packets that we allow for traceroute.
+        /// </summary>
+        private const int MaxTracerouteSendCount = 100;
+
         private static readonly char[] Separators = new[] { ' ', '\t', ',' };
 
         private readonly ILogger logger;
@@ -27,7 +32,7 @@ namespace HamnetDbRest.Controllers
         private readonly IConfiguration configuration;
 
         private readonly QueryResultDatabaseContext dbContext;
-
+        
         /// <summary>
         /// Instantiates the controller taking a logger.
         /// </summary>
@@ -93,6 +98,11 @@ namespace HamnetDbRest.Controllers
             Program.RequestStatistics.ApiV1TraceRouteRequests++;
 
             IQuerierOptions optionsInUse = this.CreateOptions(options);
+
+            if ((count < 1) || (count > MaxTracerouteSendCount))
+            {
+                return new ErrorReply(new ArgumentOutOfRangeException(nameof(count), $"count must be in range [1; {MaxTracerouteSendCount}]"));
+            }
 
             return await new TracerouteAction(WebUtility.UrlDecode(fromHost), WebUtility.UrlDecode(toHost), count, optionsInUse as FromUrlQueryQuerierOptions).Execute();
         }
