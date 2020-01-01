@@ -48,7 +48,7 @@ namespace SnmpAbstraction
             Stopwatch stopper = Stopwatch.StartNew();
 
             var countToUse = (this.count <= 0) ? 1 : this.count;
-            var result = this.tikConnection.LoadList<ToolTraceroute>(
+            var result = this.tikConnection.LoadList<HamnetToolTraceroute>(
                             this.tikConnection.CreateParameter("address", this.remoteIp.ToString(), TikCommandParameterFormat.NameValue),
                             this.tikConnection.CreateParameter("count", countToUse.ToString(), TikCommandParameterFormat.NameValue),
                             this.tikConnection.CreateParameter("timeout", this.timeout.TotalSeconds.ToString(), TikCommandParameterFormat.NameValue),

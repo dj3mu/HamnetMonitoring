@@ -9,15 +9,45 @@ namespace SnmpAbstraction
     /// </summary>
     internal class TracerrouteHop : ITracerouteHop
     {
-        public TracerrouteHop(ToolTraceroute tik4netTracerouteHop)
+        public TracerrouteHop(HamnetToolTraceroute tik4netTracerouteHop)
         {
             if (tik4netTracerouteHop == null)
             {
                 throw new ArgumentNullException(nameof(tik4netTracerouteHop), "The tik4net traceroute hop is null when constructing a TracerouteHop");
             }
 
-            this.Address = string.IsNullOrWhiteSpace(tik4netTracerouteHop.Address) ? null : IPAddress.Parse(tik4netTracerouteHop.Address);
-            this.LossPercent = Convert.ToDouble(tik4netTracerouteHop.Loss);
+            if (string.IsNullOrWhiteSpace(tik4netTracerouteHop.Address))
+            {
+                this.Address = null;
+            }
+            else
+            {
+                if (IPAddress.TryParse(tik4netTracerouteHop.Address, out IPAddress parsed))
+                {
+                    this.Address = parsed;
+                }
+                else
+                {
+                    this.Address = null;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(tik4netTracerouteHop.Loss))
+            {
+                this.LossPercent = double.NaN;
+            }
+            else
+            {
+                if (double.TryParse(tik4netTracerouteHop.Loss, out double parsed))
+                {
+                    this.LossPercent = parsed;
+                }
+                else
+                {
+                    this.LossPercent = double.NaN;
+                }
+            }
+
             this.SentCount = tik4netTracerouteHop.Sent;
 
             // some micro-expert-system filling the (almost always) empty status field with something useful derived from other values
