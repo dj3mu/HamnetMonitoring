@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using SnmpSharpNet;
 using tik4net;
 using tik4net.Objects;
@@ -48,7 +50,7 @@ namespace SnmpAbstraction
             Stopwatch stopper = Stopwatch.StartNew();
 
             var countToUse = (this.count <= 0) ? 1 : this.count;
-            var result = this.tikConnection.LoadList<HamnetToolTraceroute>(
+            var results = this.tikConnection.LoadList<HamnetToolTraceroute>(
                             this.tikConnection.CreateParameter("address", this.remoteIp.ToString(), TikCommandParameterFormat.NameValue),
                             this.tikConnection.CreateParameter("count", countToUse.ToString(), TikCommandParameterFormat.NameValue),
                             this.tikConnection.CreateParameter("timeout", this.timeout.TotalSeconds.ToString(), TikCommandParameterFormat.NameValue),
@@ -56,13 +58,46 @@ namespace SnmpAbstraction
 
             stopper.Stop();
 
-            if (countToUse > 1)
+            List<TracerrouteHop> hopsToSend = new List<TracerrouteHop>();
+
+            int currentHopListIndex = 0;
+            TracerrouteHop firstHop = null;
+            foreach(var result in results)
             {
-                result = result.Where(h => h.Sent == countToUse);
+                var currentHop = new TracerrouteHop(result);
+
+                if (currentHop.Address == null)
+                {
+                    if (currentHop.LossPercent <= 0.001)
+                    {
+                        // After sending an empty address and loss of 0 the complete hop sequence
+                        // restarts from scratch.
+                        currentHopListIndex = 0;
+                    }
+
+                    // but we always ignore "null" addresses even if we don't reset the sequence
+                    continue;
+                }
+
+                if (firstHop == null)
+                {
+                    firstHop = currentHop;
+                }
+                else if (currentHop.Address.Equals(firstHop.Address))
+                {
+                    // first IP found (again?)
+                    if (currentHop.SentCount >= firstHop.SentCount)
+                    {
+                        // hop count for first IP same or higher --> new sequence starting
+                        firstHop = currentHop;
+                        currentHopListIndex = 0;
+                    }
+                }
+
+                hopsToSend.PutAt(currentHopListIndex++, currentHop);
             }
 
-            var hops = result.Select(h => new TracerrouteHop(h));
-            var returnResult = new TracerouteResult(this.address, this.remoteIp, string.Empty, stopper.Elapsed, hops.ToList());
+            var returnResult = new TracerouteResult(this.address, this.remoteIp, string.Empty, stopper.Elapsed, hopsToSend);
 
             return returnResult;
         }

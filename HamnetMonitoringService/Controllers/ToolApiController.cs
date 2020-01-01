@@ -112,7 +112,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet("traceroute/{fromHost}/{toHost}/{count?}/{timeoutSeconds?}/{maxHops?}")]
-        public async Task<ActionResult<IStatusReply>> TracerouteHost(string fromHost, string toHost, [FromQuery]FromUrlQueryQuerierOptions options, int count = 1, double timeoutSeconds = 1.0, int maxHops = MaxTracerouteMaxHops / 2)
+        public async Task<ActionResult<IStatusReply>> TracerouteHost(string fromHost, string toHost, [FromQuery]FromUrlQueryQuerierOptions options, int count = 1, double timeoutSeconds = 1.0, int maxHops = MaxTracerouteMaxHops / 4)
         {
             Program.RequestStatistics.ApiV1TraceRouteRequests++;
 

@@ -17,6 +17,42 @@ namespace SnmpAbstraction
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
+        /// Puts the given element at the given index of the <see cref="IList{T}" />.
+        /// </summary>
+        /// <param name="list">The list to work on.</param>
+        /// <param name="index">The index to put the element on.</param>
+        /// <param name="newElement">The elment to put.</param>
+        /// <typeparam name="T">The type of elements in the list.</typeparam>
+        /// <returns>The element that was previously at given index or default(T) if the list didn't yet contain sufficient elements.</returns>
+        public static T PutAt<T>(this IList<T> list, int index, T newElement)
+        {
+            if (list == null)
+            {
+                throw new ArgumentNullException(nameof(list), "The list to PutAt is null");
+            }
+
+            int missingElements = index - list.Count;
+            if (missingElements >= 0)
+            {
+                // add the missing elements as "default"
+                for (int i = 0; i < missingElements; i++)
+                {
+                    list.Add(default(T));
+                }
+
+                list.Add(newElement);
+
+                return default(T);
+            }
+            else
+            {
+                T returnElement = list[index];
+                list[index] = newElement;
+                return returnElement;
+            }
+        }
+
+        /// <summary>
         /// Converts the given list of strings to a <see cref="DeviceSupportedFeatures" /> enum.
         /// </summary>
         /// <param name="featuresList">The list of feature strings</param>
