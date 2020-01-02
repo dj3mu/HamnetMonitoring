@@ -437,12 +437,14 @@ For the `<options>` URL query string the following values are supported to confi
 | Option name | Default | Description                                                          |
 |-------------|---------|----------------------------------------------------------------------|
 | Port        | 161     | The UDP port number to use for the SNMP requests.                    |
-| SnmpVersion | 1       | The SNMP version to use. Supported values: 0 -> SNMPv1, 1 -> SNMPv2c |
+| ProtocolVersion | 1       | The SNMP version to use. Supported values: 0 -> SNMPv1, 1 -> SNMPv2c |
 | Community   | public  | The SNMP community string                                            |
-| Timeout     | 0:0:10  | The timeout per SNMP request packet. After this amount if time without reply, a retry will be done.
-| Retries     | 3       | The number of retries to send the SNMP request (e.g. in case of timeout) |
+| Timeout     | 0:0:30  | The timeout per SNMP request packet. After this amount if time without reply, a retry will be done.
+| Retries     | 1       | The number of retries to send the SNMP request (e.g. in case of timeout) |
 | Ver2cMaximumValuesPerRequest | 0 | The maximum number of values per SNMPv2c request. Ignored in case of SNMPv1 |
 | Ver2cMaximumRequests | 5 | The maximum number of SNMPv2c requests. Ignored in case of SNMPv1 |
 | EnableCaching | true | If **true**, the cache database will be used to reduce network traffic (if details of the device are already available in cache). If **false** all required data will be re-queried from the devices including identification of the device and SW version. |
 | LoginUser | "" | A user name to use when login / authentication is required to access a specific set of data. |
 | LoginPassword | "" | A password to use when login / authentication is required to access a specific set of data. |
+| AllowedApis | VendorSpecific,Snmp | The APIs to allow for talking to the device. Defaults to both, vendor-specific and SNMP. If available, vendor-specific is preferred. |
+| QuerierClassHint | "" | For development purposes only. The name of the class implementing the querier for this device. |

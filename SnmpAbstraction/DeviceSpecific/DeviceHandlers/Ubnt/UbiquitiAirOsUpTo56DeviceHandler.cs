@@ -28,8 +28,11 @@ namespace SnmpAbstraction
             LazyLoadingDeviceSystemData llsd = lowerLayer.SystemData as LazyLoadingDeviceSystemData;
             if (llsd != null)
             {
-                // for AirOs < 5.6 devices we currently only support RSSI querying
-                llsd.SupportedFeatures = DeviceSupportedFeatures.Rssi;
+                if (oidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthApAppendMacAndInterfaceId, out DeviceSpecificOid oid0) && !oid0.Oid.IsNull)
+                {
+                    // for AirOs < 5.6 devices we currently only support RSSI querying
+                    llsd.SupportedFeatures = DeviceSupportedFeatures.Rssi;
+                }
             }
         }
 
