@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using SnmpAbstraction;
 using SnmpSharpNet;
 
@@ -52,6 +53,10 @@ namespace HamnetDbRest.Controllers
 
         /// <inheritdoc />
         public TimeSpan? Uptime => this.systemData.Uptime;
+
+        /// <inheritdoc />
+        [JsonConverter(typeof(TimeSpanAsTotalSecondsConverter))]
+        public TimeSpan? UptimeSeconds => this.Uptime;
 
         /// <inheritdoc />
         public string Model => this.systemData.Model;

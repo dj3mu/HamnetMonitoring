@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using SnmpAbstraction;
 
 namespace HamnetDbRest.Controllers
@@ -129,6 +130,10 @@ namespace HamnetDbRest.Controllers
 
             /// <inheritdoc />
             public TimeSpan LinkUptime { get; }
+
+            /// <inheritdoc />
+            [JsonConverter(typeof(TimeSpanAsTotalSecondsConverter))]
+            public TimeSpan LinkUptimeSeconds => this.LinkUptime;
 
             /// <inheritdoc />
             public int? SideOfAccessPoint { get; }
