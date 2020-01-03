@@ -71,16 +71,16 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet("monitoredRouters/{host?}")]
-        public async Task<ActionResult<IEnumerable<BgpPeerData>>> GetMonitoredRouters(string host)
+        public async Task<ActionResult<IEnumerable<IBgpPeerData>>> GetMonitoredRouters(string host)
         {
             Program.RequestStatistics.ApiV1BgpMonitoredRoutersRequests++;
 
             if (!string.IsNullOrWhiteSpace(host))
             {
-                return await this.dbContext.BgpPeers.Where(p => p.LocalAddress == host).ToListAsync();
+                return await this.dbContext.BgpPeers.Where(p => p.LocalAddress == host).Select(p => new BgpPeerResponseData(p)).ToListAsync();
             }
 
-            return await this.dbContext.BgpPeers.ToListAsync();
+            return await this.dbContext.BgpPeers.Select(p => new BgpPeerResponseData(p)).ToListAsync();
         }
 
         /// <summary>
