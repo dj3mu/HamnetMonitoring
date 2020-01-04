@@ -30,7 +30,8 @@ namespace RestService.DataFetchingService
 
         private readonly IConfiguration configuration;
 
-        private readonly Mutex mutex = new Mutex(false, Program.ProgramWideMutexName);
+        private readonly Mutex rssiMutex = new Mutex(false, Program.RssiRunningMutexName);
+        private readonly Mutex bgpMutex = new Mutex(false, Program.BgpRunningMutexName);
 
         private bool disposedValue = false;
 
@@ -180,7 +181,9 @@ namespace RestService.DataFetchingService
             {
                 try
                 {
-                    this.mutex.WaitOne();
+                    // for maintenance we lock down any aquisition
+                    this.rssiMutex.WaitOne();
+                    this.bgpMutex.WaitOne();
                     
                     // make sure to change back the due time of the timer
                     if (this.timerReAdjustmentNeeded)
@@ -198,7 +201,8 @@ namespace RestService.DataFetchingService
                 }
                 finally
                 {
-                    this.mutex.ReleaseMutex();
+                    this.rssiMutex.ReleaseMutex();
+                    this.bgpMutex.ReleaseMutex();
 
                     Monitor.Exit(this.lockObject);
 
