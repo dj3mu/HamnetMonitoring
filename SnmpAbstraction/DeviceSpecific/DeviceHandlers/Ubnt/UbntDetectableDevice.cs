@@ -90,27 +90,35 @@ namespace SnmpAbstraction
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
             {
-                log.Warn($"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a Ubiquiti device");
+                var info = $"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a Ubiquiti device";
+                log.Warn(info);
+                this.CollectException("UbntSnmp: No device description", new HamnetSnmpException(info));
                 return false;
             }
 
             if (!description.Contains(PossiblyUbiquitiDetectionDescriptionString))
             {
-                log.Info($"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain string '{PossiblyUbiquitiDetectionDescriptionString}': Assuming the device is not a Ubiquiti device");
+                var info = $"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain string '{PossiblyUbiquitiDetectionDescriptionString}': Assuming the device is not a Ubiquiti device";
+                log.Info(info);
+                this.CollectException("UbntSnmp: No UBNT-like string in device description", new HamnetSnmpException(info));
                 return false;
             }
 
             var ubntManufacturer = snmpLowerLayer?.DoWalk(UbntManufacturerDetectionOid);
             if ((ubntManufacturer == null) || (ubntManufacturer.Count == 0))
             {
-                log.Warn($"UBNT Manufacturer ID string of device '{snmpLowerLayer.Address}' is null or empty: The device could still be AirFiber");
+                var info = $"UBNT Manufacturer ID string of device '{snmpLowerLayer.Address}' is null or empty: The device could still be AirFiber";
+                log.Warn(info);
+                this.CollectException("UbntSnmp: No UBNT manufacturer detection OID", new HamnetSnmpException(info));
                 return this.DetectAirFiber(snmpLowerLayer);
             }
 
             var manufacturer = ubntManufacturer.FirstOrDefault(m => m.Value.ToString().Contains(UbiquitiManufactorerDetectionString));
             if (manufacturer == null)
             {
-                log.Info($"UBNT Manufacturer ID string of device '{snmpLowerLayer.Address}' doesn't contain string '{UbiquitiManufactorerDetectionString}': Assuming the device is not a Ubiquiti device");
+                var info = $"UBNT Manufacturer ID string of device '{snmpLowerLayer.Address}' doesn't contain string '{UbiquitiManufactorerDetectionString}': Assuming the device is not a Ubiquiti device";
+                log.Info(info);
+                this.CollectException("UbntSnmp: No UBNT manufacturer", new HamnetSnmpException(info));
                 return false;
             }
 
@@ -126,7 +134,9 @@ namespace SnmpAbstraction
         {
             if (!this.detectionId.HasValue)
             {
-                throw new InvalidOperationException("Cannot perform CreateHandler() without previous and successful call to IsApplicable");
+                var ex = new InvalidOperationException("Cannot perform CreateHandler() without previous and successful call to IsApplicable");
+                this.CollectException("UbntSnmp: CreateHandler(ISnmpLowerLayer, IQuerierOptions)", ex);
+                throw ex;
             }
 
             try
@@ -168,7 +178,9 @@ namespace SnmpAbstraction
                 {
                     var info = $"Model (retrieved using OID '{modelOid}') is null, empty or white-space-only";
                     log.Warn(info);
-                    throw new HamnetSnmpException(info, lowerLayer?.Address?.ToString());
+                    var ex = new HamnetSnmpException(info, lowerLayer?.Address?.ToString());
+                    this.CollectException("UbntSnmp: No model", ex);
+                    throw ex;
                 }
 
                 log.Info($"Detected device '{lowerLayer.Address}' as Ubiquiti '{model}' v '{osVersion}'");
@@ -189,6 +201,8 @@ namespace SnmpAbstraction
             }
             catch(Exception ex)
             {
+                this.CollectException("UbntSnmp: Model detection and OID lookup", ex);
+                
                 // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                 // device (i.e. IP address) the exception is for
                 throw new HamnetSnmpException($"Failed to create handler for Ubiquiti device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer?.Address?.ToString());

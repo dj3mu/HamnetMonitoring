@@ -47,13 +47,17 @@ namespace SnmpAbstraction
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
             {
-                log.Warn($"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a MikroTik device");
+                var info = $"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a MikroTik device";
+                log.Warn(info);
+                this.CollectException("MtikSnmp: No device description", new HamnetSnmpException(info));
                 return false;
             }
 
             if (!description.Contains(RouterOsDetectionString))
             {
-                log.Info($"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain string '{RouterOsDetectionString}': Assuming the device is not a MikroTik device");
+                var info = $"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain string '{RouterOsDetectionString}': Assuming the device is not a MikroTik device";
+                log.Info(info);
+                this.CollectException("MtikSnmp: No Router-OS-like string in device description", new HamnetSnmpException(info));
                 return false;
             }
 
@@ -72,12 +76,14 @@ namespace SnmpAbstraction
             {
                 osVersionString = lowerLayer.QueryAsString(OsVersionOid, "MikroTik RouterOS Version String #1");
             }
-            catch(SnmpException)
+            catch(SnmpException ex)
             {
+                this.CollectException("MtikSnmp: Getting version string", ex);
                 osVersionString = null;
             }
-            catch(HamnetSnmpException)
+            catch(HamnetSnmpException ex)
             {
+                this.CollectException("MtikSnmp: Getting version string", ex);
                 osVersionString = null;
             }
 
@@ -106,6 +112,8 @@ namespace SnmpAbstraction
                 }
                 catch(Exception ex)
                 {
+                    this.CollectException("MtikSnmp: OID table lookup", ex);
+                    
                     // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                     // device (i.e. IP address) the exception is for
                     throw new HamnetSnmpException($"Failed to create MikroTik handler for device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer.Address?.ToString());

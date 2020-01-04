@@ -14,6 +14,8 @@ namespace SnmpAbstraction
         
         private int circularCreateHandler = 0;
 
+        private List<InfoAndException> collectedExceptions = new List<InfoAndException>();
+
         /// <inheritdoc />
         public abstract QueryApis SupportedApi { get; }
 
@@ -21,11 +23,16 @@ namespace SnmpAbstraction
         public int Priority { get; protected set; } = 100;
 
         /// <inheritdoc />
+        public IReadOnlyCollection<IInfoAndException> CollectedExceptions => this.collectedExceptions;
+
+        /// <inheritdoc />
         public virtual IDeviceHandler CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
         {
             if(this.circularCreateHandler++ > 1)
             {
-                throw new InvalidOperationException($"Internal Error: DetectableDevice {this.GetType().Name} seems to neither implement CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options) nor CreateHandler(IpAddress address, IQuerierOptions options)");
+                var ex = new InvalidOperationException($"Internal Error: DetectableDevice {this.GetType().Name} seems to neither implement CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options) nor CreateHandler(IpAddress address, IQuerierOptions options)");
+                this.CollectException("CreateHandler(ISnmpLowerLayer, IQuerierOptions) circular call", ex);
+                throw ex;
             }
             
             return this.CreateHandler(lowerLayer.Address, options);
@@ -36,7 +43,9 @@ namespace SnmpAbstraction
         {
             if(this.circularCreateHandler++ > 1)
             {
-                throw new InvalidOperationException($"Internal Error: DetectableDevice {this.GetType().Name} seems to neither implement CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options) nor CreateHandler(IpAddress address, IQuerierOptions options)");
+                var ex = new InvalidOperationException($"Internal Error: DetectableDevice {this.GetType().Name} seems to neither implement CreateHandler(ISnmpLowerLayer lowerLayer, IQuerierOptions options) nor CreateHandler(IpAddress address, IQuerierOptions options)");
+                this.CollectException("CreateHandler(IpAddress, IQuerierOptions) circular call", ex);
+                throw ex;
             }
             
             var lowerLayer = new SnmpLowerLayer(address, options);
@@ -48,6 +57,16 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public abstract bool IsApplicableVendorSpecific(IpAddress address, IQuerierOptions options);
+
+        /// <summary>
+        /// Collectes the given exception.
+        /// </summary>
+        /// <param name="info">The addtional information.</param>
+        /// <param name="ex">The exception to collect.</param>
+        protected void CollectException(string info, Exception ex)
+        {
+            this.collectedExceptions.Add(new InfoAndException { Info = string.IsNullOrWhiteSpace(info) ? string.Empty : info, Exception = ex });
+        }
 
         /// <summary>
         /// Gets the device handler of the given handler class name via reflection.
@@ -64,7 +83,9 @@ namespace SnmpAbstraction
             var type = Type.GetType($"SnmpAbstraction.{handlerClassName}");
             if (type == null)
             {
-                throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Cannot find a DeviceHandler implementation of name '{handlerClassName}'", lowerLayer.Address?.ToString());
+                var ex = new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Cannot find a DeviceHandler implementation of name '{handlerClassName}'", lowerLayer.Address?.ToString());
+                this.CollectException("Missing handler class name", ex);
+                throw ex;
             }
 
             object myObject = null;
@@ -74,13 +95,17 @@ namespace SnmpAbstraction
             }
             catch(Exception ex)
             {
+                this.CollectException($"Instantiate handler class '{type.FullName}'", ex);
+
                 throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Exception while instantiating DeviceHandler of name '{handlerClassName}': {ex.Message}", ex, lowerLayer.Address?.ToString());
             }
 
             IDeviceHandler castedHandler = myObject as IDeviceHandler;
             if (castedHandler == null)
             {
-                throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Instantiating DeviceHandler of name '{handlerClassName}' is NOT an IDeviceHandler", lowerLayer.Address?.ToString());
+                var ex = new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Instantiating DeviceHandler of name '{handlerClassName}' is NOT an IDeviceHandler", lowerLayer.Address?.ToString());
+                this.CollectException($"Cast handler class '{type.FullName}' to IDeviceHandler", ex);
+                throw ex;
             }
 
             return castedHandler;
@@ -103,6 +128,7 @@ namespace SnmpAbstraction
                 {
                     var exception = new HamnetSnmpException($"Device name '{deviceName}' cannot be found in device database", deviceAddress?.ToString());
                     log.Error(exception.Message);
+                    this.CollectException("No OID lookup for device name", exception);
                     throw exception;
                 }
 
@@ -111,6 +137,7 @@ namespace SnmpAbstraction
                 {
                     var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}) cannot be matched to any version range of device database", deviceAddress?.ToString());
                     log.Error(exception.Message);
+                    this.CollectException("No OID lookup for device version", exception);
                     throw exception;
                 }
 
@@ -119,6 +146,7 @@ namespace SnmpAbstraction
                 {
                     var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}, version ID {deviceVersion.Id}) cannot be matched to any OID mapping ID of device database", deviceAddress?.ToString());
                     log.Error(exception.Message);
+                    this.CollectException("No OID mapping for device version", exception);
                     throw exception;
                 }
 
@@ -141,6 +169,7 @@ namespace SnmpAbstraction
                     {
                         var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}': Cannot find OID mapping ID table of ID {intId} in device database", deviceAddress?.ToString());
                         log.Error(exception.Message);
+                        this.CollectException("No OID mapping for mapping ID", exception);
                         throw exception;
                     }
 

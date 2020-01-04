@@ -1,7 +1,25 @@
+using System;
+using System.Collections.Generic;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
+    /// <summary>
+    /// Interface to a tuple of an exception and an additional info.
+    /// </summary>
+    public interface IInfoAndException
+    {
+        /// <summary>
+        /// Gets the additional info to the exception.
+        /// </summary>
+        string Info { get; }
+
+        /// <summary>
+        /// Gets the exception.
+        /// </summary>
+        Exception Exception { get; }
+    }
+
     /// <summary>
     /// Interface for a class that allows detection of devices.
     /// </summary>
@@ -17,6 +35,12 @@ namespace SnmpAbstraction
         /// Gets the API that is supported by this handler.
         /// </summary>
         QueryApis SupportedApi { get; }
+
+
+        /// <summary>
+        /// Gets the collection of exceptions that has been collected during detection.
+        /// </summary>
+        IReadOnlyCollection<IInfoAndException> CollectedExceptions { get; }
         
         /// <summary>
         /// Checks if the device is applicable (i.e. detected) to the device that
