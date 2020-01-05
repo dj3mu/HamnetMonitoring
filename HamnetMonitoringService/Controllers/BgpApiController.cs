@@ -104,7 +104,7 @@ namespace HamnetDbRest.Controllers
         {
             Program.RequestStatistics.ApiV1BgpFailingRequests++;
 
-            return await this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
+            return await this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("timed out")).ToListAsync();
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace HamnetDbRest.Controllers
         {
             Program.RequestStatistics.ApiV1BgpFailingRequests++;
 
-            return await this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
+            return await this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("timed out")).ToListAsync();
         }
 
         /// <summary>
