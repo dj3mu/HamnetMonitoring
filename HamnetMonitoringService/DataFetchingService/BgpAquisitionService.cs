@@ -72,6 +72,7 @@ namespace RestService.DataFetchingService
             this.configuration = configuration;
 
             this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
+            this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration));
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.

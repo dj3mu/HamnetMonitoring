@@ -6,6 +6,47 @@ using System.Net.Sockets;
 namespace SnmpAbstraction
 {
     /// <summary>
+    /// Enumeration of peering state.
+    /// </summary>
+    public enum PeeringState
+    {
+        /// <summary>
+        /// The peering state is currently unknown.
+        /// </summary>
+        Unknown = 0x0,
+
+        /// <summary>
+        /// The peering is idle (e.g. configured but administratively disabled).
+        /// </summary>
+        Idle = 0x1,
+        
+        /// <summary>
+        /// The peering is trying to connect to remote.
+        /// </summary>
+        Connect = 0x2,
+        
+        /// <summary>
+        /// The peering is active.
+        /// </summary>
+        Active = 0x4,
+        
+        /// <summary>
+        /// The peering has an open sent.
+        /// </summary>
+        Opensent = 0x8,
+        
+        /// <summary>
+        /// The peering has an open confirmation.
+        /// </summary>
+        Openconfirm = 0x9,
+        
+        /// <summary>
+        /// The peering is established and all data has been exchanged successfully.
+        /// </summary>
+        Established = 0xF
+    }
+
+    /// <summary>
     /// Interface to the data of a single BGP peer.
     /// </summary>
     public interface IBgpPeer : ILazyEvaluated
@@ -160,6 +201,11 @@ namespace SnmpAbstraction
         /// Gets the state of this peer.
         /// </summary>
         string State { get; }
+
+        /// <summary>
+        /// Gets the peering state from <see cref="State" /> as enumeration.
+        /// </summary>
+        PeeringState StateEnumeration { get; }
 
         /// <summary>
         /// Gets a value indicating whether the connection to this peer is currently established.

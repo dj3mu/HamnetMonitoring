@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace HamnetDbAbstraction
 {
@@ -56,6 +57,48 @@ namespace HamnetDbAbstraction
             }
 
             return returnDict;
+        }
+
+        /// <summary>
+        /// Associates the given list of hosts with the subnets operated on.
+        /// </summary>
+        /// <param name="nets">The subnets to group the hosts to.</param>
+        /// <param name="address">The address to search.</param>
+        /// <param name="subnet">Returns the subnet that the given address belongs to.</param>
+        /// <returns><c>true</c> if a subnet was found for the given host; otherwise <c>false</c>.</returns>
+        public static bool TryFindDirectSubnetOfAddress(this IHamnetDbSubnets nets, IPAddress address, out IHamnetDbSubnet subnet)
+        {
+            if (nets == null)
+            {
+                throw new ArgumentNullException(nameof(nets), "Network list is null");
+            }
+
+            if (address == null)
+            {
+                throw new ArgumentNullException(nameof(address), "Address to search subnet for is null");
+            }
+
+            IHamnetDbSubnet foundSubnet = null;
+            foreach (IHamnetDbSubnet net in nets)
+            {
+                if (net.Subnet.Contains(address)
+                    && ((foundSubnet == null) || (net.Subnet.Total < foundSubnet.Subnet.Total)))
+                {
+                    // found a new, smaller subnet that this host belongs to
+                    foundSubnet = net;
+                }
+            }
+
+            if (foundSubnet == null)
+            {
+                subnet = null;
+                return false;
+            }
+            else
+            {
+                subnet = foundSubnet;
+                return true;
+            }
         }
     }
 
