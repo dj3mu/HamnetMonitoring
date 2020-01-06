@@ -89,11 +89,12 @@ namespace SnmpAbstraction
             this.RefreshCapability = bgpPeer.RefreshCapability;
             this.As4Capability = bgpPeer.As4Capability;
             this.State = bgpPeer.State;
+            this.StateEnumeration = bgpPeer.State.ToBgpStateEnumeration();
             this.Established = bgpPeer.Established;
             this.Disabled = bgpPeer.Disabled;
         }
 
-        /// <inheritdoc />
+        
         public string Id { get; private set; }
 
         /// <inheritdoc />
@@ -188,6 +189,9 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public bool Disabled { get; private set; }
+
+        /// <inheritdoc />
+        public PeeringState StateEnumeration { get; private set; }
 
         /// <inheritdoc />
         public override void ForceEvaluateAll()

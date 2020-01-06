@@ -17,6 +17,27 @@ namespace SnmpAbstraction
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
+        /// Converts the string into a <see cref="PeeringState" /> enumeration value.
+        /// </summary>
+        /// <param name="stateString">The string to convert.</param>
+        /// <returns>The enum mathcing the string or <see cref="PeeringState.Unknown" /> if the string cannot be converted.</returns>
+        public static PeeringState ToBgpStateEnumeration(this string stateString)
+        {
+            if (string.IsNullOrWhiteSpace(stateString))
+            {
+                return PeeringState.Unknown;
+            }
+
+            if (!Enum.TryParse<PeeringState>(stateString, true, out PeeringState parsedState))
+            {
+                log.Warn($"Cannot parse string '{stateString}' as PeeringState enum. Returning '{PeeringState.Unknown}'");
+                parsedState = PeeringState.Unknown;
+            }
+
+            return parsedState;
+        }
+
+        /// <summary>
         /// Puts the given element at the given index of the <see cref="IList{T}" />.
         /// </summary>
         /// <param name="list">The list to work on.</param>

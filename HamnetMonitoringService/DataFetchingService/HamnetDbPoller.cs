@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using HamnetDbAbstraction;
 using HamnetDbRest;
 using log4net;
@@ -14,7 +16,15 @@ namespace RestService.DataFetchingService
     {
         private static readonly ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        private static readonly TimeSpan SubnetRefreshInterval = TimeSpan.FromMinutes(57);
+
         private IConfiguration configuration;
+
+        private DateTime lastSubnetRefresh = DateTime.MinValue;
+
+        private Dictionary<IPAddress, IHamnetDbSubnet> subnetCache = new Dictionary<IPAddress, IHamnetDbSubnet>();
+
+        private IHamnetDbSubnets subnets = null;
 
         /// <summary>
         /// Constructs a poller that uses the given configuration.
@@ -87,6 +97,52 @@ namespace RestService.DataFetchingService
 
                 return pairsSlicedForOptions;
             }
+        }
+
+        /// <summary>
+        /// Gets the HamnetDB subnet of the given host.
+        /// </summary>
+        /// <param name="host">The IP address of the host.</param>
+        /// <param name="subnet">The subnet of the host.</param>
+        /// <returns><c>true</c> if a subnet was found for the given host; otherwise <c>false</c>.</returns>
+        public bool TryGetSubnetOfHost(IPAddress host, out IHamnetDbSubnet subnet)
+        {
+            this.RefreshSubnetsIfNeeded();
+
+            if (this.subnetCache.TryGetValue(host, out subnet))
+            {
+                return true;
+            }
+
+            if (!this.subnets.TryFindDirectSubnetOfAddress(host, out subnet))
+            {
+                log.Warn($"Subnet for host {host} not found");
+                return false;
+            }
+
+            this.subnetCache.Add(host, subnet);
+            
+            return true;
+        }
+
+        private void RefreshSubnetsIfNeeded()
+        {
+            if ((this.subnets != null) && (DateTime.UtcNow - this.lastSubnetRefresh) <= SubnetRefreshInterval)
+            {
+                return;
+            }
+
+            log.Debug($"Refreshing subnets from HamnetDB. Please stand by ...");
+
+            var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
+
+            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
+            {
+                this.subnets = accessor.QuerySubnets();
+            }
+
+            this.subnetCache.Clear();
+            this.lastSubnetRefresh = DateTime.UtcNow;
         }
     }
 }
