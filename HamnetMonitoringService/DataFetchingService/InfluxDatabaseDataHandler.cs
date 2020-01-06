@@ -126,7 +126,7 @@ namespace RestService.DataFetchingService
                             { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                             { InfluxCallTagName, host1call },
                             { InfluxCall2TagName, host2call },
-                            { InfluxDescriptionTagName, $"{host1call} and {host2call}" }
+                            { InfluxDescriptionTagName, $"RF Link {host1call} and {host2call}" }
                         },
                         queryUniversalTime));
 
