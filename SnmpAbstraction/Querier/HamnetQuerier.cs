@@ -121,14 +121,14 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public ITracerouteResult Traceroute(string remoteHostNameOrIp, uint count)
+        public ITracerouteResult Traceroute(string remoteHostNameOrIp, uint count, TimeSpan timeout, int maxHops)
         {
             if (!remoteHostNameOrIp.TryGetResolvedConnecionIPAddress(out IPAddress outAddress))
             {
                 throw new HamnetSnmpException($"Cannot resolve host name or IP string '{remoteHostNameOrIp}' to a valid IPAddress.");
             }
 
-            return this.handler.Traceroute(new IpAddress(outAddress), count);
+            return this.handler.Traceroute(new IpAddress(outAddress), count, timeout, maxHops);
         }
 
         /// <inheritdoc />

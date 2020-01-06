@@ -71,16 +71,16 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet("monitoredRouters/{host?}")]
-        public async Task<ActionResult<IEnumerable<BgpPeerData>>> GetMonitoredRouters(string host)
+        public async Task<ActionResult<IEnumerable<IBgpPeerData>>> GetMonitoredRouters(string host)
         {
             Program.RequestStatistics.ApiV1BgpMonitoredRoutersRequests++;
 
             if (!string.IsNullOrWhiteSpace(host))
             {
-                return await this.dbContext.BgpPeers.Where(p => p.LocalAddress == host).ToListAsync();
+                return await this.dbContext.BgpPeers.Where(p => p.LocalAddress == host).Select(p => new BgpPeerResponseData(p)).ToListAsync();
             }
 
-            return await this.dbContext.BgpPeers.ToListAsync();
+            return await this.dbContext.BgpPeers.Select(p => new BgpPeerResponseData(p)).ToListAsync();
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace HamnetDbRest.Controllers
         {
             Program.RequestStatistics.ApiV1BgpFailingRequests++;
 
-            return await this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
+            return await this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("timed out")).ToListAsync();
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace HamnetDbRest.Controllers
         {
             Program.RequestStatistics.ApiV1BgpFailingRequests++;
 
-            return await this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
+            return await this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("timed out")).ToListAsync();
         }
 
         /// <summary>

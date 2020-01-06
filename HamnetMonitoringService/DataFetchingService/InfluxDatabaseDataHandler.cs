@@ -21,6 +21,8 @@ namespace RestService.DataFetchingService
     {
         private const string InfluxValueKey = "value";
 
+        private const string InfluxStringValueKey = "valueString";
+
         private const string InfluxRssiDatapointName = "RSSI";
 
         private const string InfluxCcqDatapointName = "CCQ";
@@ -28,6 +30,12 @@ namespace RestService.DataFetchingService
         private const string InfluxCcqHostDatapointName = "CCQPerHost";
 
         private const string InfluxLinkUptimeDatapointName = "LinkUptime";
+
+        private const string InfluxBgpLinkUptimeDatapointName = "BgpLinkUptime";
+
+        private const string InfluxBgpLinkStateDatapointName = "BgpLinkState";
+
+        private const string InfluxBgpPrefixCountDatapointName = "BgpLinkPrefixCount";
 
         private const string InfluxDeviceUptimeDatapointName = "DeviceUptime";
 
@@ -37,11 +45,17 @@ namespace RestService.DataFetchingService
 
         private const string InfluxCallTagName = "call";
         
+        private const string InfluxRemoteAsTagName = "remoteAs";
+        
+        private const string InfluxPeeringNameTagName = "peering";
+        
         private const string InfluxCall2TagName = "call2";
 
         private const string InfluxDescriptionTagName = "desc";
 
         private static readonly log4net.ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        private readonly HamnetDbPoller hamnetDbPoller;
 
         private IConfiguration configuration;
 
@@ -64,6 +78,7 @@ namespace RestService.DataFetchingService
             this.configuration = configuration;
             this.influxConfiguration = configuration.GetSection(Program.InfluxSectionKey);
             this.CreateInfluxClient();
+            this.hamnetDbPoller = new HamnetDbPoller(configuration);
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -97,6 +112,7 @@ namespace RestService.DataFetchingService
 
                 string host1call = inputData.Value.First().Callsign?.ToUpperInvariant();
                 string host2call = inputData.Value.Last().Callsign?.ToUpperInvariant();
+                var queryUniversalTime = queryTime.ToUniversalTime();
 
                 this.currentPayload.Add(
                     new LineProtocolPoint(
@@ -112,7 +128,7 @@ namespace RestService.DataFetchingService
                             { InfluxCall2TagName, host2call },
                             { InfluxDescriptionTagName, $"{host1call} and {host2call}" }
                         },
-                        queryTime.ToUniversalTime()));
+                        queryUniversalTime));
 
                 foreach (var item in linkDetails.Details)
                 {
@@ -128,9 +144,9 @@ namespace RestService.DataFetchingService
                                 { InfluxHostTagName, item.Address1.ToString() },
                                 { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                                 { InfluxCallTagName, host1call },
-                                { InfluxDescriptionTagName, $"{host1call} at {host2call}" }
+                                { InfluxDescriptionTagName, $"RSSI {host1call} at {host2call}" }
                             },
-                            queryTime.ToUniversalTime()));
+                            queryUniversalTime));
 
                     this.currentPayload.Add(
                             new LineProtocolPoint(
@@ -144,9 +160,9 @@ namespace RestService.DataFetchingService
                                 { InfluxHostTagName, item.Address2.ToString() },
                                 { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                                 { InfluxCallTagName, host2call },
-                                { InfluxDescriptionTagName, $"{host2call} at {host1call}" }
+                                { InfluxDescriptionTagName, $"RSSI {host2call} at {host1call}" }
                             },
-                            queryTime.ToUniversalTime()));
+                            queryUniversalTime));
 
                     if (item.Ccq1.HasValue)
                     {
@@ -161,9 +177,9 @@ namespace RestService.DataFetchingService
                                 {
                                     { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                                     { InfluxCallTagName, host1call },
-                                    { InfluxDescriptionTagName, $"{host1call} CCQ" }
+                                    { InfluxDescriptionTagName, $"CCQ {host1call}" }
                                 },
-                                queryTime.ToUniversalTime()));
+                                queryUniversalTime));
                     }
 
                     if (item.Ccq2.HasValue)
@@ -179,9 +195,9 @@ namespace RestService.DataFetchingService
                                 {
                                     { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                                     { InfluxCallTagName, host2call },
-                                    { InfluxDescriptionTagName, $"{host2call} CCQ" }
+                                    { InfluxDescriptionTagName, $"CCQ {host2call}" }
                                 },
-                                queryTime.ToUniversalTime()));
+                                queryUniversalTime));
                     }
 
                     if (item.Ccq.HasValue)
@@ -198,9 +214,9 @@ namespace RestService.DataFetchingService
                                     { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                                     { InfluxCallTagName, host1call },
                                     { InfluxCall2TagName, host2call },
-                                    { InfluxDescriptionTagName, $"{host1call} and {host2call} CCQ" }
+                                    { InfluxDescriptionTagName, $"CCQ {host1call} and {host2call}" }
                                 },
-                                queryTime.ToUniversalTime()));
+                                queryUniversalTime));
                     }
                 }
 
@@ -220,7 +236,7 @@ namespace RestService.DataFetchingService
                 catch(Exception ex)
                 {
                     // we don not want to throw from an async task
-                    log.Error($"Caught and ignored exception in async recording of details for {inputData.Key} @ {queryTime}: {ex.Message}", ex);
+                    log.Error($"Caught and ignored exception in async recording of RSSI details for {inputData.Key} @ {queryTime}: {ex.Message}", ex);
                 }
             });
         }
@@ -254,14 +270,98 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordDetailsInDatabase(IHamnetDbHost host, IBgpPeers peers, DateTime queryTime)
         {
-            // NOP here - as of now, no failing queries recorded in InfluxDB
+            lock(this.recordingLock)
+            {
+                this.CreateNewPayload();
+
+                var localHostCall = host.Callsign.ToUpperInvariant();
+                var localHostAddress = host.Address.ToString();
+                var queryUniversalTime = queryTime.ToUniversalTime();
+
+                foreach (var item in peers)
+                {
+                    var remoteAs = item.RemoteAs.ToString();
+                    string remoteSubnet = null;
+                    if (this.hamnetDbPoller.TryGetSubnetOfHost(item.RemoteAddress, out IHamnetDbSubnet hamentDbSubnet))
+                    {
+                        remoteSubnet = hamentDbSubnet.Subnet.ToString();
+                    }
+
+                    this.currentPayload.Add(
+                        new LineProtocolPoint(
+                            InfluxBgpLinkUptimeDatapointName,
+                            new Dictionary<string, object>
+                            {
+                                { InfluxValueKey, item.Uptime }
+                            },
+                            new Dictionary<string, string>
+                            {
+                                { InfluxPeeringNameTagName, item.Name },
+                                { InfluxSubnetTagName, remoteSubnet },
+                                { InfluxHostTagName, localHostAddress },
+                                { InfluxCallTagName, localHostCall },
+                                { InfluxRemoteAsTagName, remoteAs },
+                                { InfluxDescriptionTagName, $"BGP Link Uptime {item.LocalAddress} <-> {item.RemoteAddress}" }
+                            },
+                            queryUniversalTime));
+
+                    this.currentPayload.Add(
+                        new LineProtocolPoint(
+                            InfluxBgpLinkStateDatapointName,
+                            new Dictionary<string, object>
+                            {
+                                { InfluxValueKey, (int)item.StateEnumeration },
+                                { InfluxStringValueKey, item.StateEnumeration }
+                            },
+                            new Dictionary<string, string>
+                            {
+                                { InfluxPeeringNameTagName, item.Name },
+                                { InfluxSubnetTagName, remoteSubnet },
+                                { InfluxHostTagName, localHostAddress },
+                                { InfluxCallTagName, localHostCall },
+                                { InfluxRemoteAsTagName, remoteAs },
+                                { InfluxDescriptionTagName, $"BGP State {item.LocalAddress} <-> {item.RemoteAddress}" }
+                            },
+                            queryUniversalTime));
+
+                    this.currentPayload.Add(
+                        new LineProtocolPoint(
+                            InfluxBgpPrefixCountDatapointName,
+                            new Dictionary<string, object>
+                            {
+                                { InfluxValueKey, item.PrefixCount }
+                            },
+                            new Dictionary<string, string>
+                            {
+                                { InfluxPeeringNameTagName, item.Name },
+                                { InfluxSubnetTagName, remoteSubnet },
+                                { InfluxHostTagName, localHostAddress },
+                                { InfluxCallTagName, localHostCall },
+                                { InfluxRemoteAsTagName, remoteAs },
+                                { InfluxDescriptionTagName, $"BGP Prefixes from {item.LocalAddress} to {item.RemoteAddress}" }
+                            },
+                            queryUniversalTime));
+                }
+
+                this.SendCurrentPayload();
+            }
         }
 
         /// <inheritdoc />
         public Task RecordDetailsInDatabaseAsync(IHamnetDbHost host, IBgpPeers peers, DateTime queryTime)
         {
-            // NOP here - as of now, no failing queries recorded in InfluxDB
-            return Task.CompletedTask;
+            return Task.Run(() =>
+            {
+                try
+                {
+                    this.RecordDetailsInDatabase(host, peers, queryTime);
+                }
+                catch(Exception ex)
+                {
+                    // we don not want to throw from an async task
+                    log.Error($"Caught and ignored exception in async recording of BGP details for {host.Address} @ {queryTime}: {ex.Message}", ex);
+                }
+            });
         }
 
         /// <inheritdoc />
@@ -273,6 +373,7 @@ namespace RestService.DataFetchingService
 
                 string host1call = inputData.Value.First().Callsign?.ToUpperInvariant();
                 string host2call = inputData.Value.Last().Callsign?.ToUpperInvariant();
+                var queryUniversalTime = queryTime.ToUniversalTime();
 
                 this.currentPayload.Add(
                     new LineProtocolPoint(
@@ -288,11 +389,7 @@ namespace RestService.DataFetchingService
                             { InfluxCall2TagName, host2call },
                             { InfluxDescriptionTagName, $"{host1call} and {host2call}" }
                         },
-                        queryTime.ToUniversalTime()));
-
-#if DEBUG
-                log.Info($"Recording LINK uptime {linkDetails.Details.First().LinkUptime} for subnet {inputData.Key.Subnet}, (calls '{host1call}' and '{host2call}') in InfluxDB");
-#endif
+                        queryUniversalTime));
 
                 foreach (var item in systemDatas)
                 {
@@ -310,10 +407,6 @@ namespace RestService.DataFetchingService
         
                     string hostCall = itemDbHost.Callsign.ToUpperInvariant();
 
-#if DEBUG
-                    log.Info($"Recording DEVICE uptime {item.Uptime.Value} for {item.DeviceAddress} (subnet {inputData.Key.Subnet}, call '{hostCall}') in InfluxDB");
-#endif
-
                     this.currentPayload.Add(
                         new LineProtocolPoint(
                             InfluxDeviceUptimeDatapointName,
@@ -328,7 +421,7 @@ namespace RestService.DataFetchingService
                                 { InfluxCallTagName, hostCall },
                                 { InfluxDescriptionTagName, $"System Uptime {hostCall}" }
                             },
-                            queryTime.ToUniversalTime()));
+                            queryUniversalTime));
                 }
 
                 this.SendCurrentPayload();

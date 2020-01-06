@@ -46,6 +46,7 @@ namespace RestService.DataFetchingService
             this.State = bgpPeer.State;
             this.Established = bgpPeer.Established;
             this.Disabled = bgpPeer.Disabled;
+            this.StateEnumeration = bgpPeer.StateEnumeration;
         }
 
         /// <inheritdoc />
@@ -143,6 +144,9 @@ namespace RestService.DataFetchingService
 
         /// <inheritdoc />
         public bool Disabled { get; }
+
+        /// <inheritdoc />
+        public PeeringState StateEnumeration { get; }
 
         /// <inheritdoc />
         public void ForceEvaluateAll()

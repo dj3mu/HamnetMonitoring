@@ -1,11 +1,7 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using NUnit.Framework;
 using SnmpAbstraction;
 using tik4net;
-using tik4net.Objects;
-using tik4net.Objects.Ip;
-using tik4net.Objects.Routing.Bgp;
 using tik4net.Objects.Tool;
 
 namespace SnmpAbstractionTests
@@ -13,7 +9,7 @@ namespace SnmpAbstractionTests
     /// <summary>
     /// Tests for all kinds of extension methods (I don't want to scatter the tests too much).
     /// </summary>
-    public partial class Tik4netManualINtegration
+    public partial class Tik4netManualIntegration
     {
         /// <summary>
         /// The test setup method.
@@ -56,7 +52,7 @@ namespace SnmpAbstractionTests
             using (ITikConnection connection = ConnectionFactory.CreateConnection(TikConnectionType.Api))
             {
                 connection.Open("44.224.10.78", "monitoring", "");
-                var traceroute = connection.Traceroute("44.137.62.114");
+                var traceroute = connection.HamnetTraceroute("44.137.62.114");
                 //var advertisements = connection.LoadAll<BgpAdvertisement>();
                 //var instances = connection.LoadAll<BgpInstance>();
                 //var peers = connection.LoadAll<BgpPeer>();

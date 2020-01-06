@@ -112,9 +112,19 @@ namespace HamnetDbRest
         }
 
         /// <summary>
-        /// Gets a constant string to identify a process-wide monitor (e.g. lock during maitenance).
+        /// Gets a constant string to identify a process-wide BGP running monitor.
         /// </summary>
-        public static string ProgramWideMutexName { get; } = "HamnetMonitoringService-ProcessWideMonitor";
+        public static string BgpRunningMutexName { get; } = "HamnetMonitoringService-BgpRunningMonitor";
+
+        /// <summary>
+        /// Gets a constant string to identify a process-wide BGP running monitor.
+        /// </summary>
+        public static string RssiRunningMutexName { get; } = "HamnetMonitoringService-RssiRunningMonitor";
+
+        /// <summary>
+        /// Gets a system semaphore that is used to limit the the number of concurrent aquisitions.
+        /// </summary>
+        public static Semaphore ProgramWideAquisitionSemaphore { get; } = new Semaphore(2, 2);
 
         internal static RequestStatisticsContainer RequestStatistics { get; } = new RequestStatisticsContainer();
 

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using RestService.Model;
 using SnmpAbstraction;
 using SnmpSharpNet;
 
@@ -20,12 +22,17 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <param name="address">The IP address that this host info reply is for.</param>
         /// <param name="systemData">The system data.</param>
-        public HostInfoReply(IpAddress address, IDeviceSystemData systemData)
+        /// <param name="defaultApi">The API that is, by default, used for talking to this device.</param>
+        /// <param name="lastDataUpdate">The date and time when the data has last been updated.</param>
+        public HostInfoReply(IpAddress address, IDeviceSystemData systemData, QueryApis defaultApi, DateTime? lastDataUpdate)
         {
             this.address = address ?? throw new ArgumentNullException(nameof(address), "The IP address to construct a HostInfoReply for is null");
             this.systemData = systemData ?? throw new ArgumentNullException(nameof(systemData), "The system data to construct a HostInfoReply from is null");
 
             this.systemData.ForceEvaluateAll();
+
+            this.DefaultApi = defaultApi.ToString();
+            this.LastDataUpdate = lastDataUpdate;
 
             this.SupportedFeatures = this.systemData.SupportedFeatures
                 .ToString()
@@ -49,6 +56,10 @@ namespace HamnetDbRest.Controllers
         public TimeSpan? Uptime => this.systemData.Uptime;
 
         /// <inheritdoc />
+        [JsonConverter(typeof(TimeSpanAsTotalSecondsConverter))]
+        public TimeSpan? UptimeSeconds => this.Uptime;
+
+        /// <inheritdoc />
         public string Model => this.systemData.Model;
 
         /// <inheritdoc />
@@ -65,5 +76,11 @@ namespace HamnetDbRest.Controllers
 
         /// <inheritdoc />
         public IEnumerable<string> SupportedFeatures { get; }
+
+        /// <inheritdoc />
+        public string DefaultApi { get; }
+
+        /// <inheritdoc />
+        public DateTime? LastDataUpdate { get; }
     }
 }

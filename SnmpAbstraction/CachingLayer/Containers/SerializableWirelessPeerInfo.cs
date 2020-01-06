@@ -39,6 +39,7 @@ namespace SnmpAbstraction
             this.DeviceAddress = peerInfo.DeviceAddress;
             this.DeviceModel = peerInfo.DeviceModel;
             this.Oids = peerInfo.Oids;
+            this.NumberOfClients = peerInfo.NumberOfClients;
 
             // we're intentionally not setting signal levels, uptime, OIDs and query duration
             // those would change continuously and require re-querying or wouldn't make sense at all
@@ -83,6 +84,10 @@ namespace SnmpAbstraction
         public TimeSpan QueryDuration => queryDuration;
 
         /// <inheritdoc />
+        [JsonProperty("NumberOfClients", Required = Required.Default)]
+        public int? NumberOfClients { get; set; }
+
+        /// <inheritdoc />
         public void SetQueryDuration(TimeSpan value)
         {
             queryDuration = value;
@@ -104,6 +109,7 @@ namespace SnmpAbstraction
 
             returnBuilder.Append("Peer ").Append(this.RemoteMacString).AppendLine(":");
             returnBuilder.Append("  - Mode           : ").AppendLine(this.IsAccessPoint.HasValue ? (this.IsAccessPoint.Value ? "AP" : "Client") : "not available");
+            returnBuilder.Append("  - Num clients    : ").AppendLine(this.NumberOfClients.HasValue ? this.NumberOfClients.Value.ToString() : "not available");
             returnBuilder.Append("  - On interface ID: ").AppendLine(this.InterfaceId.HasValue ? this.InterfaceId.Value.ToString() : "not available");
             returnBuilder.Append("  - Link Uptime    : not available");
             returnBuilder.Append("  - RX signal [dBm]: ").AppendLine(this.RxSignalStrength.ToString("0.0 dBm"));

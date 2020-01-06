@@ -77,7 +77,7 @@ namespace HamnetDbAbstraction
         public IHamnetDbHosts QueryBgpRouters()
         {
             var connection = this.GetConnection();
-            List<IHamnetDbHost> hosts = this.ReadHostsForSqlCommand("SELECT ip,site,name,typ FROM hamnet_host WHERE name LIKE '%router%'");
+            List<IHamnetDbHost> hosts = this.ReadHostsForSqlCommand("SELECT ip,site,name,typ FROM hamnet_host WHERE routing=1");
 
             return new HamnetDbHosts(hosts);
         }

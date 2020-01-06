@@ -20,13 +20,13 @@ namespace HamnetDbRest.Controllers
         public int Port { get; set; } = 161;
 
         /// <inheritdoc />
-        public SnmpVersion ProtocolVersion { get; set; } = SnmpVersion.Ver2;
+        public SnmpVersion ProtocolVersion { get; set; } = SnmpVersion.Ver1;
 
         /// <inheritdoc />
         public OctetString Community { get; set; } = new OctetString("public");
 
         /// <inheritdoc />
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
 
         /// <inheritdoc />
         public int Retries { get; set; } = 1;

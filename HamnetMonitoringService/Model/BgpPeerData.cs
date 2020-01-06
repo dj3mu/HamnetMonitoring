@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 
 namespace RestService.Model
 {
-    
     /// <summary>
     /// Container for a single BGP peer result.
     /// </summary>
@@ -69,6 +68,5 @@ namespace RestService.Model
         /// </summary>
         [Required, JsonProperty(PropertyName = "stamp")]
         public string TimeStampString { get; set; }
-
     }
 }

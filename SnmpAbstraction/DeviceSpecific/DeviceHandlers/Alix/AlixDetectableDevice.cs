@@ -48,13 +48,17 @@ namespace SnmpAbstraction
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
             {
-                log.Warn($"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a MikroTik device");
+                var info = $"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a MikroTik device";
+                this.CollectException("AlixSnmp: No device description", new HamnetSnmpException(info));
+                log.Warn(info);
                 return false;
             }
 
             if (!AlixDetectionStrings.Any(ds => description.Contains(ds, StringComparison.InvariantCultureIgnoreCase)))
             {
-                log.Info($"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain any of the strings string '{string.Join(", ", AlixDetectionStrings)}': Assuming the device is not an ALIX device");
+                var info = $"Description in system data of device '{snmpLowerLayer.Address}' doesn't contain any of the strings string '{string.Join(", ", AlixDetectionStrings)}': Assuming the device is not an ALIX device";
+                this.CollectException("AlixSnmp: No ALIX-like string in device description", new HamnetSnmpException(info));
+                log.Info(info);
                 return false;
             }
 
@@ -87,6 +91,8 @@ namespace SnmpAbstraction
                 }
                 catch(Exception ex)
                 {
+                    this.CollectException("AlixSnmp: OID table lookup", ex);
+                    
                     // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                     // device (i.e. IP address) the exception is for
                     throw new HamnetSnmpException($"Failed to create ALIX handler for device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer?.Address?.ToString());

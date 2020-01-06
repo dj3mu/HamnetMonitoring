@@ -25,13 +25,15 @@ namespace SnmpAbstraction
         /// <param name="macAddress">The MAC address of the peer (serves as index in OIDs for MikroTik devices).</param>
         /// <param name="interfaceId">The ID of the interface (i.e. the value to append to interface-specific OIDs).</param>
         /// <param name="isAccessPoint">Value indicating whether the device proving the peer info is an access point or a client.</param>
+        /// <param name="numberOfClients">The number of clients that are connected to this AP when in AP mode. null if not an AP or not available.</param>
         public LazyLoadingMikroTikWirelessPeerInfo(
             ISnmpLowerLayer lowerSnmpLayer,
             IDeviceSpecificOidLookup oidLookup,
             string macAddress,
             int? interfaceId,
-            bool? isAccessPoint)
-            : base(lowerSnmpLayer, oidLookup, macAddress, interfaceId, isAccessPoint)
+            bool? isAccessPoint,
+            int? numberOfClients)
+            : base(lowerSnmpLayer, oidLookup, macAddress, interfaceId, isAccessPoint, numberOfClients)
         {
         }
 
@@ -146,11 +148,23 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override bool RetrieveCcq()
         {
+            if (this.NumberOfClients.HasValue && (this.NumberOfClients.Value > 1))
+            {
+                // MTik special behaviour: If we have a valid number of clients but it is more than one,
+                // we know that we cannot retrieve any meaningful CCQ value.
+                // Hence we behave as if CCQ is not available at all.
+                log.Info($"MiktoTik Device has {this.DeviceAddress} has {this.NumberOfClients.Value} clients and hence does not provide any meaningful CCQ");
+                this.RecordCachableOid(CachableValueMeanings.Ccq, new Oid("0"));
+                this.CcqBacking = null;
+                return true;
+            }
+
             var valueToQuery = RetrievableValuesEnum.OverallCcqAppendInterfaceId;
             DeviceSpecificOid interfaceIdRootOid;
             if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
+                this.RecordCachableOid(CachableValueMeanings.Ccq, new Oid("0"));
                 this.CcqBacking = null;
                 return true;
             }

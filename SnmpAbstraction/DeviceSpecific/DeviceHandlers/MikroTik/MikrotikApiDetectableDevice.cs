@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using SnmpSharpNet;
@@ -69,6 +70,8 @@ namespace SnmpAbstraction
             }
             catch (TikCommandException tikConnectionException)
             {
+                this.CollectException("MTik APIv2", tikConnectionException);
+
                 log.Info($"Device {address}: Mikrotik APIv2 connection failed: {tikConnectionException.Message}. Trying APIv1");
 
                 if (this.tikConnection != null)
@@ -79,6 +82,8 @@ namespace SnmpAbstraction
             }
             catch(TikConnectionException tikConnectionException)
             {
+                this.CollectException("MTik APIv2", tikConnectionException);
+
                 log.Info($"Device {address}: Mikrotik APIv2 connection failed: {tikConnectionException.Message}. Trying APIv1");
 
                 if (this.tikConnection != null)
@@ -87,8 +92,24 @@ namespace SnmpAbstraction
                     this.tikConnection = null;
                 }
             }
+            catch(IOException ioEx)
+            {
+                this.CollectException("MTik APIv2 (not falling back to v1 due to IOException being api-version-independent)", ioEx);
+
+                log.Info($"Device {address}: I/O Exception in Mikrotik API connection: {ioEx.Message}. Considering device as not applicable");
+
+                if (this.tikConnection != null)
+                {
+                    this.tikConnection.Dispose();
+                    this.tikConnection = null;
+                }
+
+                return false;
+            }
             catch(SocketException socketEx)
             {
+                this.CollectException("MTik APIv2 (not falling back to v1 due to SocketException being api-version-independent)", socketEx);
+
                 log.Info($"Device {address}: Socket Exception in Mikrotik API connection: {socketEx.Message}. Considering device as not applicable");
 
                 if (this.tikConnection != null)
@@ -117,6 +138,8 @@ namespace SnmpAbstraction
             }
             catch(TikCommandException tikConnectionException)
             {
+                this.CollectException("MTik APIv1", tikConnectionException);
+
                 log.Info($"Device {address}: Mikrotik APIv1 connection failed: {tikConnectionException.Message}. Assuming Mikrotik API NOT AVAILABLE");
 
                 if (this.tikConnection != null)
@@ -129,6 +152,8 @@ namespace SnmpAbstraction
             }
             catch(TikConnectionException tikConnectionException)
             {
+                this.CollectException("MTik APIv1", tikConnectionException);
+
                 log.Info($"Device {address}: Mikrotik APIv1 connection failed: {tikConnectionException.Message}. Assuming Mikrotik API NOT AVAILABLE");
 
                 if (this.tikConnection != null)
@@ -146,7 +171,9 @@ namespace SnmpAbstraction
         {
             if (this.tikConnection == null)
             {
-                throw new InvalidOperationException($"Device {address}: No Mikrotik API connection available in CreateHandler. Did you call IsApplicableVendorSpecific and receive back true from that call?");
+                var ex = new InvalidOperationException($"Device {address}: No Mikrotik API connection available in CreateHandler. Did you call IsApplicableVendorSpecific and receive back true from that call?");
+                this.CollectException("MtikApi: MTik connection in CreateHandler(IpAddress, IQuerierOptions)", ex);
+                throw ex;
             }
 
             return new MikrotikApiDeviceHandler(address, this.apiInUse, this.tikConnection, options, this.sysIdent, this.sysResource, this.sysRouterboard);

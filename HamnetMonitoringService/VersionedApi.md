@@ -207,6 +207,67 @@ All replies of this API will at least return a JSON structure with the element `
 }
 ```
 
+#### Supported Features
+URI path: `/api/v1/tools/hostsSupportingFeature/<comma-separated-feature-list>`
+
+Requests a list of hosts that are **currently** known to support **all of** the given features.
+
+Supported features currently are:
+
+| Feature    |  Description                                                                                           |
+|------------|--------------------------------------------------------------------------------------------------------|
+| Rssi       | Support for querying link RSSI values. Includes capability to provide interface and wireless peer list |
+| BgpPeers   | Support for querying BGP peers.                                                                        |
+| Traceroute | Support for network test operations like `traceroute` and `ping`                                       |
+
+**Important:** This request uses data of the device cache. Hence it only returns **known** hosts. This is, hosts that have already been queried.
+If you need to know if a very specific hosts supports a specific feature, please use the `/api/v1/linktest/info/<hostNameOrIp>` request and evaluate the
+`supportedFeatures` response element.
+
+Example result:
+```json
+[
+    {
+        "description": "RouterOS RB750Pr2",
+        "contact": "",
+        "location": "",
+        "name": "router.db0zm",
+        "uptime": null,
+        "model": "RB750Pr2",
+        "version": "6.45.1",
+        "maximumSnmpVersion": "Ver1",
+        "address": "44.225.20.193",
+        "errorDetails": [],
+        "supportedFeatures": [
+            "Rssi",
+            "BgpPeers",
+            "Traceroute"
+        ],
+        "defaultApi": "VendorSpecific"
+    },
+    {
+        "description": "RouterOS RB750Pr2",
+        "contact": "",
+        "location": "",
+        "name": "router.db0ebe",
+        "uptime": null,
+        "model": "RB750Pr2",
+        "version": "6.46.0",
+        "maximumSnmpVersion": "Ver1",
+        "address": "44.225.21.1",
+        "errorDetails": [],
+        "supportedFeatures": [
+            "Rssi",
+            "BgpPeers",
+            "Traceroute"
+        ],
+        "defaultApi": "VendorSpecific"
+    },
+...
+]
+```
+
+
 #### Traceroute
 URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>?<options>`
 
@@ -214,11 +275,25 @@ or
 
 URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>/<count>?<options>`
 
-Performs a traceroute operation from `start host or IP` to `destination IP`. Optionally a `count` can be added to specify how many packets shall be sent for the traceroute operation. If not specified, `count` defaults to 1.
+or
+
+URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>/<count>/<timeout-in-seconds>?<options>`
+
+or
+
+URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>/<count>/<timeout-in-seconds>/<max-hop-count>?<options>`
+
+Performs a traceroute operation from `start host or IP` to `destination IP`.
+
+Optionally a `count` can be added to specify how many packets shall be sent for the traceroute operation. If not specified, `count` defaults to 1. Minimum is 1, maximum 100.
+
+Optionally a `timeout-in-seconds` can be added after `count`. Unit is seconds and, if not specified, defaults to 1.0 seconds. Minimum is 0.1 seconds, maximum is 60.0 seconds.
+
+Optionally a `max-hop-count` can be added after `count` and `timeout-in-seconds`. This allows the set the maximum number of hops that a packet will survive. If not specified, defaults to 128. Minimum is 10, maximum is 255.
 
 Example result:
 ```json
-{
+ {
     "errorDetails": [],
     "fromAddress": "44.225.21.1",
     "toAddress": "44.224.90.86",
@@ -226,9 +301,9 @@ Example result:
     "hops": [
         {
             "address": "44.224.10.73",
-            "lossPercent": 0.0,
+            "lossPercent": 0,
             "sentCount": 1,
-            "status": "",
+            "status": "ok",
             "lastRttMs": 1.1,
             "averageRttMs": 1.1,
             "bestRttMs": 1.1,
@@ -236,9 +311,9 @@ Example result:
         },
         {
             "address": "44.224.10.105",
-            "lossPercent": 0.0,
+            "lossPercent": 0,
             "sentCount": 1,
-            "status": "",
+            "status": "ok",
             "lastRttMs": 5.4,
             "averageRttMs": 5.4,
             "bestRttMs": 5.4,
@@ -362,12 +437,14 @@ For the `<options>` URL query string the following values are supported to confi
 | Option name | Default | Description                                                          |
 |-------------|---------|----------------------------------------------------------------------|
 | Port        | 161     | The UDP port number to use for the SNMP requests.                    |
-| SnmpVersion | 1       | The SNMP version to use. Supported values: 0 -> SNMPv1, 1 -> SNMPv2c |
+| ProtocolVersion | 1       | The SNMP version to use. Supported values: 0 -> SNMPv1, 1 -> SNMPv2c |
 | Community   | public  | The SNMP community string                                            |
-| Timeout     | 0:0:10  | The timeout per SNMP request packet. After this amount if time without reply, a retry will be done.
-| Retries     | 3       | The number of retries to send the SNMP request (e.g. in case of timeout) |
+| Timeout     | 0:0:30  | The timeout per SNMP request packet. After this amount if time without reply, a retry will be done.
+| Retries     | 1       | The number of retries to send the SNMP request (e.g. in case of timeout) |
 | Ver2cMaximumValuesPerRequest | 0 | The maximum number of values per SNMPv2c request. Ignored in case of SNMPv1 |
 | Ver2cMaximumRequests | 5 | The maximum number of SNMPv2c requests. Ignored in case of SNMPv1 |
 | EnableCaching | true | If **true**, the cache database will be used to reduce network traffic (if details of the device are already available in cache). If **false** all required data will be re-queried from the devices including identification of the device and SW version. |
 | LoginUser | "" | A user name to use when login / authentication is required to access a specific set of data. |
 | LoginPassword | "" | A password to use when login / authentication is required to access a specific set of data. |
+| AllowedApis | VendorSpecific,Snmp | The APIs to allow for talking to the device. Defaults to both, vendor-specific and SNMP. If available, vendor-specific is preferred. |
+| QuerierClassHint | "" | For development purposes only. The name of the class implementing the querier for this device. |

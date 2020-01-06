@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SnmpAbstraction;
@@ -18,6 +17,8 @@ namespace HamnetDbRest.Controllers
         private string remotePeerAddress;
         private readonly int count;
         private readonly FromUrlQueryQuerierOptions querierOptions;
+        private readonly TimeSpan timeout;
+        private readonly int maxHops;
 
         /// <summary>
         /// Construct for a specific host.
@@ -25,9 +26,13 @@ namespace HamnetDbRest.Controllers
         /// <param name="host">The host or IP address to ping.</param>
         /// <param name="remotePeerAddress">The address of the remote peer to get the data for. If null or empty, all peer's data.</param>
         /// <param name="count">The number of packets to send.</param>
+        /// <param name="timeout">The timeout of a single ping.</param>
+        /// <param name="maxHops">The maximum number of hops.</param>
         /// <param name="querierOptions">The querier options to use.</param>
-        public TracerouteAction(string host, string remotePeerAddress, int count, FromUrlQueryQuerierOptions querierOptions)
+        public TracerouteAction(string host, string remotePeerAddress, int count, TimeSpan timeout, int maxHops, FromUrlQueryQuerierOptions querierOptions)
         {
+            this.maxHops = maxHops;
+            this.timeout = timeout;
             if (string.IsNullOrWhiteSpace(host))
             {
                 throw new ArgumentNullException(nameof(host), "Host is null, empty or white-space-only");
@@ -54,14 +59,14 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                using(var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions))
+                using (var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions))
                 {
-                    ITracerouteResult tracerouteResult = querier.Traceroute(this.remotePeerAddress, Convert.ToUInt32(this.count));
+                    ITracerouteResult tracerouteResult = querier.Traceroute(this.remotePeerAddress, Convert.ToUInt32(this.count), this.timeout, this.maxHops);
 
                     return new TracerouteWebResult(tracerouteResult);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new ErrorReply(ex);
             }

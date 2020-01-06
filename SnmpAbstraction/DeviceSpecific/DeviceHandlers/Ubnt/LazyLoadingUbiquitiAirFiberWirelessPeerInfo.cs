@@ -48,16 +48,19 @@ namespace SnmpAbstraction
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
         /// <param name="oidLookup">The OID lookup table for the device.</param>
         /// <param name="peerIndex">The peer's index (to use in SNMP get).</param>
+        /// <param name="numberOfClients">The number of clients that are connected to this AP when in AP mode. null if not an AP or not available.</param>
         public LazyLoadingUbiquitiAirFiberWirelessPeerInfo(
             ISnmpLowerLayer lowerSnmpLayer,
             IDeviceSpecificOidLookup oidLookup,
-            int peerIndex)
+            int peerIndex,
+            int? numberOfClients)
             : base(
                 lowerSnmpLayer,
                 oidLookup,
                 null,
                 null, // For UBNT there's no way to find which wireless interface this peer belongs to.
-                null)
+                null,
+                numberOfClients)
         {
             this.peerIndex = peerIndex;
         }

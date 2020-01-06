@@ -41,8 +41,14 @@ namespace SnmpAbstraction
             LazyLoadingDeviceSystemData llsd = lowerLayer.SystemData as LazyLoadingDeviceSystemData;
             if (llsd != null)
             {
-                // for SNMP-based MikroTik devices we currently only support RSSI querying
-                llsd.SupportedFeatures = DeviceSupportedFeatures.Rssi;
+                if ((oidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthImmediateOid, out DeviceSpecificOid oid) && !oid.Oid.IsNull)
+                   || ((oidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId, out DeviceSpecificOid oid0) && !oid0.Oid.IsNull)
+                   || (oidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh1AppendMacAndInterfaceId, out DeviceSpecificOid oid1) && !oid1.Oid.IsNull)
+                   || (oidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh2AppendMacAndInterfaceId, out DeviceSpecificOid oid2) && !oid2.Oid.IsNull)))
+                {
+                    // for SNMP-based MikroTik devices we currently only support RSSI querying
+                    llsd.SupportedFeatures = DeviceSupportedFeatures.Rssi;
+                }
             }
         }
 
@@ -83,9 +89,9 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops)
         {
-            return new MikrotikApiTracerouteOperation(this.LowerLayer.Address, this.TikConnection, remoteIp, count).Execute(); 
+            return new MikrotikApiTracerouteOperation(this.LowerLayer.Address, this.TikConnection, remoteIp, count, timeout, maxHops).Execute(); 
         }
 
         /// <inheritdoc />

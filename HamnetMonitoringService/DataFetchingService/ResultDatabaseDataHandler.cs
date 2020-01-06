@@ -410,7 +410,11 @@ namespace RestService.DataFetchingService
 
             failEntry.TimeStamp = DateTime.UtcNow;
 
-            failEntry.ErrorInfo = ex.ToString();
+#if DEBUG
+            failEntry.ErrorInfo = ex?.ToString() ?? string.Empty;
+#else
+            failEntry.ErrorInfo = ex?.Message ?? string.Empty;
+#endif
         }
 
         /// <summary>
@@ -437,7 +441,11 @@ namespace RestService.DataFetchingService
 
             failEntry.TimeStamp = DateTime.UtcNow;
 
-            failEntry.ErrorInfo = ex.ToString();
+#if DEBUG
+            failEntry.ErrorInfo = ex?.ToString() ?? string.Empty;
+#else
+            failEntry.ErrorInfo = ex?.Message ?? string.Empty;
+#endif
         }
     }
 }

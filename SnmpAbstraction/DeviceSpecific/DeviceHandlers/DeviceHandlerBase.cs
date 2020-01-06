@@ -103,7 +103,7 @@ namespace SnmpAbstraction
         public abstract IBgpPeers FetchBgpPeers(string remotePeerIp);
 
         /// <inheritdoc />
-        public abstract ITracerouteResult Traceroute(IpAddress remoteIp, uint count);
+        public abstract ITracerouteResult Traceroute(IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops);
 
         /// <inheritdoc />
         public override string ToString()

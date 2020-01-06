@@ -31,7 +31,7 @@ namespace RestService.DataFetchingService
 
         private readonly IConfiguration configuration;
         
-        private readonly Mutex mutex = new Mutex(false, Program.ProgramWideMutexName);
+        private readonly Mutex bgpMutex = new Mutex(false, Program.BgpRunningMutexName);
 
         private bool disposedValue = false;
 
@@ -72,6 +72,7 @@ namespace RestService.DataFetchingService
             this.configuration = configuration;
 
             this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
+            this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration));
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -120,10 +121,6 @@ namespace RestService.DataFetchingService
             this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(aquisisionServiceSection.GetValue<bool>("UseQueryCaching"));
 
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-            if (hamnetDbConfig.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() != "MYSQL")
-            {
-                throw new InvalidOperationException("Only MySQL / MariaDB is currently supported for the Hament database");
-            }
 
             // get filter regex
             var filterRegexConfig = aquisisionServiceSection.GetSection("WhitelistFilterRegex").GetChildren();
@@ -222,7 +219,8 @@ namespace RestService.DataFetchingService
             {
                 try
                 {
-                    this.mutex.WaitOne();
+                    this.bgpMutex.WaitOne();
+                    Program.ProgramWideAquisitionSemaphore.WaitOne();
 
                     this.PerformDataAquisition();
                 }
@@ -232,7 +230,8 @@ namespace RestService.DataFetchingService
                 }
                 finally
                 {
-                    this.mutex.ReleaseMutex();
+                    Program.ProgramWideAquisitionSemaphore.Release();
+                    this.bgpMutex.ReleaseMutex();
 
                     Monitor.Exit(this.multiTimerLockingObject);
 

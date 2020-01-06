@@ -28,8 +28,11 @@ namespace SnmpAbstraction
             LazyLoadingDeviceSystemData llsd = lowerLayer.SystemData as LazyLoadingDeviceSystemData;
             if (llsd != null)
             {
-                // for ALIX/H4L devices we currently only support RSSI querying
-                llsd.SupportedFeatures = DeviceSupportedFeatures.Rssi;
+                if (oidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId, out DeviceSpecificOid oid0) && !oid0.Oid.IsNull)
+                {
+                    // for ALIX/H4L devices we currently only support RSSI querying
+                    llsd.SupportedFeatures = DeviceSupportedFeatures.Rssi;
+                }
             }
         }
 
@@ -43,7 +46,7 @@ namespace SnmpAbstraction
         }
 
         /// <inheritdoc />
-        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count)
+        public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops)
         {
             throw new System.NotSupportedException("Traceroute is currently not supported for ALIX devices");
         }

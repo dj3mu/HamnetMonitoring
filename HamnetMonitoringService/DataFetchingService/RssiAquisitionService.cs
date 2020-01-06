@@ -31,7 +31,7 @@ namespace RestService.DataFetchingService
 
         private readonly IConfiguration configuration;
         
-        private readonly Mutex mutex = new Mutex(false, Program.ProgramWideMutexName);
+        private readonly Mutex rssiMutex = new Mutex(false, Program.RssiRunningMutexName);
 
         private bool disposedValue = false;
 
@@ -132,10 +132,6 @@ namespace RestService.DataFetchingService
             this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(aquisisionServiceSection.GetValue<bool>("UseQueryCaching"));
 
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-            if (hamnetDbConfig.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() != "MYSQL")
-            {
-                throw new InvalidOperationException("Only MySQL / MariaDB is currently supported for the Hament database");
-            }
 
             // by default waiting a couple of secs before first Hamnet scan
             TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(11);
@@ -226,7 +222,8 @@ namespace RestService.DataFetchingService
             {
                 try
                 {
-                    this.mutex.WaitOne();
+                    this.rssiMutex.WaitOne();
+                    Program.ProgramWideAquisitionSemaphore.WaitOne();
 
                     this.PerformDataAquisition();
                 }
@@ -236,7 +233,8 @@ namespace RestService.DataFetchingService
                 }
                 finally
                 {
-                    this.mutex.ReleaseMutex();
+                    Program.ProgramWideAquisitionSemaphore.Release();
+                    this.rssiMutex.ReleaseMutex();
 
                     Monitor.Exit(this.multiTimerLockingObject);
 
