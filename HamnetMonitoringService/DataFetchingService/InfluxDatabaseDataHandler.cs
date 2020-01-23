@@ -177,7 +177,7 @@ namespace RestService.DataFetchingService
                                 {
                                     { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                                     { InfluxCallTagName, host1call },
-                                    { InfluxDescriptionTagName, $"CCQ {host1call}" }
+                                    { InfluxDescriptionTagName, $"CCQ at {host1call} to {host2call}" }
                                 },
                                 queryUniversalTime));
                     }
@@ -195,7 +195,7 @@ namespace RestService.DataFetchingService
                                 {
                                     { InfluxSubnetTagName, inputData.Key.Subnet.ToString() },
                                     { InfluxCallTagName, host2call },
-                                    { InfluxDescriptionTagName, $"CCQ {host2call}" }
+                                    { InfluxDescriptionTagName, $"CCQ at {host2call} to {host1call}" }
                                 },
                                 queryUniversalTime));
                     }
