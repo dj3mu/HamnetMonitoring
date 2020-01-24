@@ -33,6 +33,8 @@ namespace RestService.DataFetchingService
         
         private readonly Mutex rssiMutex = new Mutex(false, Program.RssiRunningMutexName);
 
+        private readonly HamnetDbPoller hamnetDbPoller;
+
         private bool disposedValue = false;
 
         private Timer timer;
@@ -48,7 +50,6 @@ namespace RestService.DataFetchingService
         private QueryResultDatabaseContext resultDatabaseContext;
 
         private int maxParallelQueries;
-
         /// <summary>
         /// Constructs taking the logger.
         /// </summary>
@@ -80,6 +81,8 @@ namespace RestService.DataFetchingService
             {
                 this.logger.LogInformation($"Influx database disabled: No or empty '{Program.InfluxSectionKey}' section in configuration");
             }
+
+            this.hamnetDbPoller = new HamnetDbPoller(this.configuration);
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -279,8 +282,7 @@ namespace RestService.DataFetchingService
 
             Program.RequestStatistics.RssiPollings++;
 
-            HamnetDbPoller hamnetDbPoller = new HamnetDbPoller(this.configuration);
-            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration = hamnetDbPoller.FetchSubnetsWithHostsFromHamnetDb();
+            Dictionary<IHamnetDbSubnet, IHamnetDbHosts> pairsSlicedAccordingToConfiguration = this.hamnetDbPoller.FetchSubnetsWithHostsFromHamnetDb();
 
             this.logger.LogDebug($"SNMP querying {pairsSlicedAccordingToConfiguration.Count} entries");
 

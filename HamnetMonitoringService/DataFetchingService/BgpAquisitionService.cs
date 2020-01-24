@@ -33,6 +33,8 @@ namespace RestService.DataFetchingService
         
         private readonly Mutex bgpMutex = new Mutex(false, Program.BgpRunningMutexName);
 
+        private readonly HamnetDbPoller hamnetDbPoller;
+
         private bool disposedValue = false;
 
         private Timer timer;
@@ -73,6 +75,8 @@ namespace RestService.DataFetchingService
 
             this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
             this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration));
+
+            this.hamnetDbPoller = new HamnetDbPoller(this.configuration);
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -276,10 +280,9 @@ namespace RestService.DataFetchingService
 
             Program.RequestStatistics.BgpPollings++;
 
-            HamnetDbPoller hamnetDbPoller = new HamnetDbPoller(this.configuration);
-            List<IHamnetDbHost> hostsSlicedAccordingToConfiguration = hamnetDbPoller.FetchBgpRoutersFromHamnetDb();
+            List<IHamnetDbHost> hostsSlicedAccordingToConfiguration = this.hamnetDbPoller.FetchBgpRoutersFromHamnetDb();
 
-            this.logger.LogDebug($"SNMP querying {hostsSlicedAccordingToConfiguration.Count} entries");
+            this.logger.LogDebug($"API querying {hostsSlicedAccordingToConfiguration.Count} entries");
 
             this.SendPrepareToDataHandlers();
 

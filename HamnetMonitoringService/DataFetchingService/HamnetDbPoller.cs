@@ -16,15 +16,29 @@ namespace RestService.DataFetchingService
     {
         private static readonly ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static readonly TimeSpan SubnetRefreshInterval = TimeSpan.FromMinutes(57);
+        private readonly int maximumSubnetCount = int.MaxValue;
 
-        private IConfiguration configuration;
+        private readonly int subnetStartOffset = 0;
+        
+        private readonly int maximumHostCount = int.MaxValue;
 
-        private DateTime lastSubnetRefresh = DateTime.MinValue;
+        private readonly int hostStartOffset = 0;
+
+        private readonly TimeSpan cacheRefreshInterval = TimeSpan.Zero;
+
+        private readonly IConfiguration configuration;
+        
+        private readonly IConfigurationSection hamnetDbConfig;
 
         private Dictionary<IPAddress, IHamnetDbSubnet> subnetCache = new Dictionary<IPAddress, IHamnetDbSubnet>();
 
         private IHamnetDbSubnets subnets = null;
+
+        private DateTime lastRefresh = DateTime.MinValue;
+
+        private IHamnetDbHosts hamnetDbHostsCache = null;
+
+        private IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> uniquePairsCache = null;
 
         /// <summary>
         /// Constructs a poller that uses the given configuration.
@@ -33,6 +47,29 @@ namespace RestService.DataFetchingService
         public HamnetDbPoller(IConfiguration configuration)
         {
             this.configuration = configuration;
+
+            this.hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
+            var aquisitionConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+
+            this.maximumSubnetCount = aquisitionConfig.GetValue<int>("MaximumSubnetCount");
+            if (this.maximumSubnetCount == 0)
+            {
+                // config returns 0 if not defined --> turn it to the reasonable "maximum" value
+                this.maximumSubnetCount = int.MaxValue;
+            }
+
+            this.subnetStartOffset = aquisitionConfig.GetValue<int>("SubnetStartOffset"); // will implicitly return 0 if not defined
+
+            this.maximumHostCount = aquisitionConfig.GetValue<int>("MaximumHostCount");
+            if (this.maximumHostCount == 0)
+            {
+                // config returns 0 if not defined --> turn it to the reasonable "maximum" value
+                this.maximumHostCount = int.MaxValue;
+            }
+            
+            this.hostStartOffset = aquisitionConfig.GetValue<int>("HostStartOffset"); // will implicitly return 0 if not defined
+
+            this.cacheRefreshInterval = this.hamnetDbConfig.GetValue<TimeSpan>("CacheRefreshInterval");
         }
 
         /// <summary>
@@ -43,28 +80,23 @@ namespace RestService.DataFetchingService
         {
             log.Debug($"Getting BGP routers from HamnetDB. Please stand by ...");
 
-            var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-            var aquisitionConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+            this.InvalidateCacheIfNeeded();
 
-            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
+            if (this.hamnetDbHostsCache == null)
             {
-                var routers = accessor.QueryBgpRouters();
+                log.Info($"Fetching hosts from HamnetDb");
 
-                log.Debug($"... found {routers.Count} routers");
-
-                int maximumHostCount = aquisitionConfig.GetValue<int>("MaximumHostCount");
-                if (maximumHostCount == 0)
+                using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
                 {
-                    // config returns 0 if not defined --> turn it to the reasonable "maximum" value
-                    maximumHostCount = int.MaxValue;
+                    this.hamnetDbHostsCache = accessor.QueryBgpRouters();
+
+                    log.Debug($"... found {this.hamnetDbHostsCache.Count} routers");
                 }
-
-                int startOffset = aquisitionConfig.GetValue<int>("HostStartOffset"); // will implicitly return 0 if not defined
-
-                var hostsSlicedForOptions = routers.Skip(startOffset).Take(maximumHostCount).ToList();
-
-                return hostsSlicedForOptions;
             }
+
+            var hostsSlicedForOptions = this.hamnetDbHostsCache.Skip(this.subnetStartOffset).Take(this.maximumHostCount).ToList();
+
+            return hostsSlicedForOptions;
         }
 
         /// <summary>
@@ -75,28 +107,23 @@ namespace RestService.DataFetchingService
         {
             log.Debug($"Getting unique host pairs to be monitored from HamnetDB. Please stand by ...");
 
-            var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-            var aquisitionConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+            this.InvalidateCacheIfNeeded();
 
-            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
+            if (this.uniquePairsCache == null)
             {
-                var uniquePairs = accessor.UniqueMonitoredHostPairsInSameSubnet();
+                log.Info($"Fetching unique pairs from HamnetDb");
 
-                log.Debug($"... found {uniquePairs.Count} unique pairs");
-
-                int maximumSubnetCount = aquisitionConfig.GetValue<int>("MaximumSubnetCount");
-                if (maximumSubnetCount == 0)
+                using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
                 {
-                    // config returns 0 if not defined --> turn it to the reasonable "maximum" value
-                    maximumSubnetCount = int.MaxValue;
+                    this.uniquePairsCache = accessor.UniqueMonitoredHostPairsInSameSubnet();
+
+                    log.Debug($"... found {uniquePairsCache.Count} unique pairs");
                 }
-
-                int startOffset = aquisitionConfig.GetValue<int>("SubnetStartOffset"); // will implicitly return 0 if not defined
-
-                var pairsSlicedForOptions = uniquePairs.Skip(startOffset).Take(maximumSubnetCount).ToDictionary(k => k.Key, v => v.Value);
-
-                return pairsSlicedForOptions;
             }
+
+            var pairsSlicedForOptions = this.uniquePairsCache.Skip(this.subnetStartOffset).Take(this.maximumSubnetCount).ToDictionary(k => k.Key, v => v.Value);
+
+            return pairsSlicedForOptions;
         }
 
         /// <summary>
@@ -107,6 +134,8 @@ namespace RestService.DataFetchingService
         /// <returns><c>true</c> if a subnet was found for the given host; otherwise <c>false</c>.</returns>
         public bool TryGetSubnetOfHost(IPAddress host, out IHamnetDbSubnet subnet)
         {
+            this.InvalidateCacheIfNeeded(false);
+
             this.RefreshSubnetsIfNeeded();
 
             if (this.subnetCache.TryGetValue(host, out subnet))
@@ -127,12 +156,12 @@ namespace RestService.DataFetchingService
 
         private void RefreshSubnetsIfNeeded()
         {
-            if ((this.subnets != null) && (DateTime.UtcNow - this.lastSubnetRefresh) <= SubnetRefreshInterval)
+            if (this.subnets != null)
             {
                 return;
             }
 
-            log.Debug($"Refreshing subnets from HamnetDB. Please stand by ...");
+            log.Info($"Fetching subnets from HamnetDB");
 
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
 
@@ -140,9 +169,32 @@ namespace RestService.DataFetchingService
             {
                 this.subnets = accessor.QuerySubnets();
             }
+        }
+ 
+        private void InvalidateCacheIfNeeded(bool logInfo = true)
+        {
+            var sinceLastRefresh = (DateTime.UtcNow - this.lastRefresh);
+            if (sinceLastRefresh <= this.cacheRefreshInterval)
+            {
+                if (logInfo)
+                {
+                    log.Info($"Cache still valid: {sinceLastRefresh} passed since last refresh <= configured interval {this.cacheRefreshInterval}");
+                }
 
-            this.subnetCache.Clear();
-            this.lastSubnetRefresh = DateTime.UtcNow;
+                return;
+            }
+
+            if (logInfo)
+            {
+                log.Info($"Cache outdated: {sinceLastRefresh} passed since last refresh > configured interval {this.cacheRefreshInterval}");
+            }
+
+            this.subnetCache?.Clear();
+
+            this.hamnetDbHostsCache = null;
+            this.uniquePairsCache = null;
+
+            this.lastRefresh = DateTime.UtcNow;
         }
     }
 }
