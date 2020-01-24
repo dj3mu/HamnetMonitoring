@@ -68,5 +68,10 @@ namespace HamnetDbRest.Controllers
         /// Gets the date and time when this data has last been updated.
         /// </summary>
         DateTime? LastDataUpdate { get; }
+
+        /// <summary>
+        /// Gets the date and time when this data has last been updated as Unix timestamp.
+        /// </summary>
+        ulong? UnixTimeStamp { get; }
     }
 }

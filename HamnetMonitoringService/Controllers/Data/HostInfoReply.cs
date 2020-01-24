@@ -33,6 +33,7 @@ namespace HamnetDbRest.Controllers
 
             this.DefaultApi = defaultApi.ToString();
             this.LastDataUpdate = lastDataUpdate;
+            this.UnixTimeStamp = (ulong?)((this.LastDataUpdate - DateTime.UnixEpoch)?.TotalSeconds);
 
             this.SupportedFeatures = this.systemData.SupportedFeatures
                 .ToString()
@@ -82,5 +83,8 @@ namespace HamnetDbRest.Controllers
 
         /// <inheritdoc />
         public DateTime? LastDataUpdate { get; }
+
+        /// <inheritdoc />
+        public ulong? UnixTimeStamp { get; }
     }
 }
