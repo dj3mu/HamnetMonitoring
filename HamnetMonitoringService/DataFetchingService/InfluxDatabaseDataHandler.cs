@@ -73,12 +73,13 @@ namespace RestService.DataFetchingService
         /// Construct for the given configuration.
         /// </summary>
         /// <param name="configuration">The configuration to construct for.</param>
-        public InfluxDatabaseDataHandler(IConfiguration configuration)
+        /// <param name="hamnetDbPoller">The HamnetDB poller to use for lookups.</param>
+        public InfluxDatabaseDataHandler(IConfiguration configuration, HamnetDbPoller hamnetDbPoller)
         {
-            this.configuration = configuration;
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "configuration is null");
             this.influxConfiguration = configuration.GetSection(Program.InfluxSectionKey);
             this.CreateInfluxClient();
-            this.hamnetDbPoller = new HamnetDbPoller(configuration);
+            this.hamnetDbPoller = hamnetDbPoller ?? throw new ArgumentNullException(nameof(hamnetDbPoller), "hamnetDbPoller is null");
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.

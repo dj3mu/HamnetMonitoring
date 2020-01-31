@@ -1,4 +1,5 @@
 ﻿using System;
+using HamnetDbAbstraction;
 using HamnetDbRest.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -64,7 +65,10 @@ namespace HamnetDbRest
             services.AddTransient<CacheInfoApiController>();
             services.AddTransient<BgpController>();
             services.AddTransient<ToolController>();
-            
+
+            var hamnetDbAccess = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(this.Configuration.GetSection(HamnetDbProvider.HamnetDbSectionName));
+            services.AddSingleton(hamnetDbAccess);
+
             QueryResultDatabaseProvider.Instance.SetConfiguration(this.Configuration);
             CacheMaintenance.SetDatabaseConfiguration(this.Configuration);
 

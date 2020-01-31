@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
+using HamnetDbAbstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -17,13 +18,17 @@ namespace HamnetDbRest.Controllers
 
         private readonly IConfiguration configuration;
 
+        private readonly IHamnetDbAccess hamnetDbAccess;
+
         /// <summary>
         /// Instantiates the controller taking a logger.
         /// </summary>
         /// <param name="logger">The logger to use for logging.</param>
         /// <param name="configuration">The configuration settings.</param>
-        public LinkTestController(ILogger<RestController> logger, IConfiguration configuration)
+        /// <param name="hamnetDbAccess">The handle to the HamnetDB accessor singleton.</param>
+        public LinkTestController(ILogger<RestController> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess)
         {
+            this.hamnetDbAccess = hamnetDbAccess ?? throw new System.ArgumentNullException(nameof(hamnetDbAccess), "The hamnetDbAccess to use is null");;
             this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger), "The logger to use is null");
             this.configuration = configuration ?? throw new System.ArgumentNullException(nameof(configuration), "The configuration to use is null");
         }
@@ -73,7 +78,7 @@ namespace HamnetDbRest.Controllers
         {
             Program.RequestStatistics.ApiV1LinkTestNetworkRequests++;
 
-            return await new NetworkTest(WebUtility.UrlDecode(net), this.logger, this.configuration, null).Execute();
+            return await new NetworkTest(WebUtility.UrlDecode(net), this.logger, this.hamnetDbAccess, null).Execute();
         }
     }
 }

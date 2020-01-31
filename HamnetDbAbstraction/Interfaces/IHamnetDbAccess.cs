@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Net;
 
 namespace HamnetDbAbstraction
 {
@@ -24,5 +26,26 @@ namespace HamnetDbAbstraction
         /// </summary>
         /// <returns>The list of hosts which are BGP routers.</returns>
         IHamnetDbHosts QueryBgpRouters();
+    }
+
+    /// <summary>
+    /// Interface for IHamnetDbAccess that support (more performant) query of interface usually provide by Extension methods in HamnetDbAccessExtensions.
+    /// </summary>
+    public interface IDirectSupportOfHamnetDbAccessExtensions : IHamnetDbAccess
+    {
+        /// <summary>
+        /// Gets all unique <c>pairs</c> of hosts with monitoring flag set and which share the same subnet.<br/>
+        /// Subnets with less than or more than two hosts will be discarded.
+        /// </summary>
+        /// <param name="subnet">The subnet to return data for.</param>
+        /// <returns>The dictionary mapping a subnet to its unique monitored host pair.</returns>
+        IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> UniqueMonitoredHostPairsInSubnet(IPNetwork subnet);
+
+        /// <summary>
+        /// Gets all unique <c>pairs</c> of hosts with monitoring flag set and which share the same subnet.<br/>
+        /// Subnets with less than or more than two hosts will be discarded.
+        /// </summary>
+        /// <returns>The dictionary mapping a subnet to its unique monitored host pair.</returns>
+        IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> UniqueMonitoredHostPairsInSameSubnet();
     }
 }

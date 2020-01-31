@@ -11,7 +11,7 @@ namespace HamnetDbAbstraction
     /// <summary>
     /// Implementation of <see cref="IHamnetDbAccess" /> retrieving data via REST / JSON interface of HamnetDB.
     /// </summary>
-    internal partial class JsonHamnetDbAccessor : IHamnetDbAccess
+    internal class JsonHamnetDbAccessor : IHamnetDbAccess
     {
         private static readonly log4net.ILog log = HamnetDbAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 

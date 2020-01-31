@@ -33,17 +33,17 @@ namespace RestService.DataFetchingService
         
         private readonly Mutex rssiMutex = new Mutex(false, Program.RssiRunningMutexName);
 
-        private readonly HamnetDbPoller hamnetDbPoller;
+        private readonly object multiTimerLockingObject = new object();
+
+        private readonly object databaseLockingObject = new object();
+
+        private HamnetDbPoller hamnetDbPoller;
 
         private bool disposedValue = false;
 
         private Timer timer;
 
         private QuerierOptions snmpQuerierOptions = QuerierOptions.Default;
-
-        private object multiTimerLockingObject = new object();
-
-        private object databaseLockingObject = new object();
 
         private TimeSpan refreshInterval;
 
@@ -55,7 +55,8 @@ namespace RestService.DataFetchingService
         /// </summary>
         /// <param name="logger">The logger to use.</param>
         /// <param name="configuration">The service configuration.</param>
-        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration)
+        /// <param name="hamnetDbAccess">The singleton instance of the HamnetDB access handler.</param>
+        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess)
         {
             if (logger == null)
             {
@@ -72,17 +73,17 @@ namespace RestService.DataFetchingService
 
             this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
 
+            this.hamnetDbPoller = new HamnetDbPoller(this.configuration, hamnetDbAccess);
+
             IConfigurationSection influxSection = configuration.GetSection(Program.InfluxSectionKey);
             if ((influxSection != null) && influxSection.GetChildren().Any())
             {
-                this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration));
+                this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration, this.hamnetDbPoller));
             }
             else
             {
                 this.logger.LogInformation($"Influx database disabled: No or empty '{Program.InfluxSectionKey}' section in configuration");
             }
-
-            this.hamnetDbPoller = new HamnetDbPoller(this.configuration);
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -196,15 +197,15 @@ namespace RestService.DataFetchingService
 
                     foreach (var item in this.dataHandlers)
                     {
-                        if (item != null)
-                        {
-                            item.Dispose();
-                        }
+                        item?.Dispose();
                     }
 
                     this.dataHandlers.Clear();
 
                     this.DisposeDatabaseContext();
+
+                    this.hamnetDbPoller?.Dispose();
+                    this.hamnetDbPoller = null;
                 }
 
                 // TODO: nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer weiter unten überschreiben.

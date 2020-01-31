@@ -12,7 +12,7 @@ namespace RestService.DataFetchingService
     /// <summary>
     /// Helper class for polling the data from HamnetDB.
     /// </summary>
-    internal class HamnetDbPoller
+    internal class HamnetDbPoller : IDisposable
     {
         private static readonly ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -30,21 +30,20 @@ namespace RestService.DataFetchingService
         
         private readonly IConfigurationSection hamnetDbConfig;
 
-        private Dictionary<IPAddress, IHamnetDbSubnet> subnetCache = new Dictionary<IPAddress, IHamnetDbSubnet>();
+        private bool disposedValue = false;
 
-        private IHamnetDbSubnets subnets = null;
+        private Dictionary<IPAddress, IHamnetDbSubnet> subnetCache = new Dictionary<IPAddress, IHamnetDbSubnet>();
 
         private DateTime lastRefresh = DateTime.MinValue;
 
-        private IHamnetDbHosts hamnetDbHostsCache = null;
-
-        private IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> uniquePairsCache = null;
+        private IHamnetDbAccess hamnetDbAccess;
 
         /// <summary>
         /// Constructs a poller that uses the given configuration.
         /// </summary>
         /// <param name="configuration">The configuration to use.</param>
-        public HamnetDbPoller(IConfiguration configuration)
+        /// <param name="hamnetDbAccess">The HamnetDB access object to use. If null, a new instance will be requested from HamnetDB provider.</param>
+        public HamnetDbPoller(IConfiguration configuration, IHamnetDbAccess hamnetDbAccess)
         {
             this.configuration = configuration;
 
@@ -70,6 +69,23 @@ namespace RestService.DataFetchingService
             this.hostStartOffset = aquisitionConfig.GetValue<int>("HostStartOffset"); // will implicitly return 0 if not defined
 
             this.cacheRefreshInterval = this.hamnetDbConfig.GetValue<TimeSpan>("CacheRefreshInterval");
+
+            this.hamnetDbAccess = hamnetDbAccess ?? HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(this.hamnetDbConfig);
+        }
+
+        // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
+        // ~HamnetDbPoller()
+        // {
+        //   // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in Dispose(bool disposing) weiter oben ein.
+        //   this.Dispose(false);
+        // }
+
+        public void Dispose()
+        {
+            // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in Dispose(bool disposing) weiter oben ein.
+            this.Dispose(true);
+            // TODO: Auskommentierung der folgenden Zeile aufheben, wenn der Finalizer weiter oben überschrieben wird.
+            // GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -78,25 +94,22 @@ namespace RestService.DataFetchingService
         /// <returns>The list of hosts/IPs which are considered to be BGP routers from HamnetDB.</returns>
         public List<IHamnetDbHost> FetchBgpRoutersFromHamnetDb()
         {
-            log.Debug($"Getting BGP routers from HamnetDB. Please stand by ...");
-
-            this.InvalidateCacheIfNeeded();
-
-            if (this.hamnetDbHostsCache == null)
+            if (this.disposedValue)
             {
-                log.Info($"Fetching hosts from HamnetDb");
-
-                using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
-                {
-                    this.hamnetDbHostsCache = accessor.QueryBgpRouters();
-
-                    log.Debug($"... found {this.hamnetDbHostsCache.Count} routers");
-                }
+                throw new ObjectDisposedException(nameof(HamnetDbPoller));
             }
 
-            var hostsSlicedForOptions = this.hamnetDbHostsCache.Skip(this.subnetStartOffset).Take(this.maximumHostCount).ToList();
+            log.Debug($"Getting BGP routers from HamnetDB. Please stand by ...");
 
-            return hostsSlicedForOptions;
+            log.Debug($"Fetching BGP routers from HamnetDb");
+
+            var bgpRouters = this.hamnetDbAccess.QueryBgpRouters();
+
+            log.Debug($"... found {bgpRouters.Count} routers");
+
+            var bpgRoutersSlicedForOptions = bgpRouters.Skip(this.subnetStartOffset).Take(this.maximumHostCount).ToList();
+
+            return bpgRoutersSlicedForOptions;
         }
 
         /// <summary>
@@ -105,23 +118,22 @@ namespace RestService.DataFetchingService
         /// <returns>The list of subnets with their hosts to monitor from HamnetDB.</returns>
         public Dictionary<IHamnetDbSubnet, IHamnetDbHosts> FetchSubnetsWithHostsFromHamnetDb()
         {
+            if (this.disposedValue)
+            {
+                throw new ObjectDisposedException(nameof(HamnetDbPoller));
+            }
+
             log.Debug($"Getting unique host pairs to be monitored from HamnetDB. Please stand by ...");
 
             this.InvalidateCacheIfNeeded();
 
-            if (this.uniquePairsCache == null)
-            {
-                log.Info($"Fetching unique pairs from HamnetDb");
+            log.Debug($"Fetching unique pairs from HamnetDb");
 
-                using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
-                {
-                    this.uniquePairsCache = accessor.UniqueMonitoredHostPairsInSameSubnet();
+            var uniquePairsCache = this.hamnetDbAccess.UniqueMonitoredHostPairsInSameSubnet();
 
-                    log.Debug($"... found {uniquePairsCache.Count} unique pairs");
-                }
-            }
+            log.Debug($"... found {uniquePairsCache.Count} unique pairs");
 
-            var pairsSlicedForOptions = this.uniquePairsCache.Skip(this.subnetStartOffset).Take(this.maximumSubnetCount).ToDictionary(k => k.Key, v => v.Value);
+            var pairsSlicedForOptions = uniquePairsCache.Skip(this.subnetStartOffset).Take(this.maximumSubnetCount).ToDictionary(k => k.Key, v => v.Value);
 
             return pairsSlicedForOptions;
         }
@@ -134,16 +146,19 @@ namespace RestService.DataFetchingService
         /// <returns><c>true</c> if a subnet was found for the given host; otherwise <c>false</c>.</returns>
         public bool TryGetSubnetOfHost(IPAddress host, out IHamnetDbSubnet subnet)
         {
-            this.InvalidateCacheIfNeeded(false);
+            if (this.disposedValue)
+            {
+                throw new ObjectDisposedException(nameof(HamnetDbPoller));
+            }
 
-            this.RefreshSubnetsIfNeeded();
+            this.InvalidateCacheIfNeeded(false);
 
             if (this.subnetCache.TryGetValue(host, out subnet))
             {
                 return true;
             }
 
-            if (!this.subnets.TryFindDirectSubnetOfAddress(host, out subnet))
+            if (!this.hamnetDbAccess.QuerySubnets().TryFindDirectSubnetOfAddress(host, out subnet))
             {
                 log.Warn($"Subnet for host {host} not found");
                 return false;
@@ -154,23 +169,24 @@ namespace RestService.DataFetchingService
             return true;
         }
 
-        private void RefreshSubnetsIfNeeded()
+        protected virtual void Dispose(bool disposing)
         {
-            if (this.subnets != null)
+            if (!this.disposedValue)
             {
-                return;
-            }
+                if (disposing)
+                {
+                    // TODO: verwalteten Zustand (verwaltete Objekte) entsorgen.
+                    this.hamnetDbAccess?.Dispose();
+                    this.hamnetDbAccess = null;
+                }
 
-            log.Info($"Fetching subnets from HamnetDB");
+                // TODO: nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer weiter unten überschreiben.
+                // TODO: große Felder auf Null setzen.
 
-            var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-
-            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
-            {
-                this.subnets = accessor.QuerySubnets();
+                this.disposedValue = true;
             }
         }
- 
+
         private void InvalidateCacheIfNeeded(bool logInfo = true)
         {
             var sinceLastRefresh = (DateTime.UtcNow - this.lastRefresh);
@@ -190,9 +206,6 @@ namespace RestService.DataFetchingService
             }
 
             this.subnetCache?.Clear();
-
-            this.hamnetDbHostsCache = null;
-            this.uniquePairsCache = null;
 
             this.lastRefresh = DateTime.UtcNow;
         }
