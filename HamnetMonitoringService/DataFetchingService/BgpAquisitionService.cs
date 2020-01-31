@@ -125,7 +125,7 @@ namespace RestService.DataFetchingService
 
             this.snmpQuerierOptions = this.snmpQuerierOptions
                 .WithCaching(aquisisionServiceSection.GetValue<bool>("UseQueryCaching"))
-                .WithTimeout(TimeSpan.FromSeconds(5));
+                .WithTimeout(TimeSpan.FromSeconds(2));
 
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
 
