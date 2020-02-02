@@ -53,22 +53,39 @@ namespace SnmpAbstraction
             // some micro-expert-system filling the (almost always) empty status field with something useful derived from other values
             if (!string.IsNullOrWhiteSpace(tik4netTracerouteHop.Status))
             {
-                this.Status = tik4netTracerouteHop.Status;
+                this.Info = tik4netTracerouteHop.Status;
             }
             else
             {
                 if (this.Address == null)
                 {
-                    this.Status = "lost";
+                    this.Info = "lost";
                 }
                 else if (string.IsNullOrWhiteSpace(tik4netTracerouteHop.Last))
                 {
-                    this.Status = "timeout";
+                    this.Info = "timeout";
                 }
                 else
                 {
-                    this.Status = this.LossPercent > 0 ? "unstable" : "ok";
+                    this.Info = this.LossPercent > 0 ? "unstable" : "ok";
                 }
+            }
+
+            if (this.Address == null)
+            {
+                this.Status = HopStatus.Lost;
+            }
+            else if (tik4netTracerouteHop.Status?.ToUpperInvariant()?.Contains("UNREACHABLE") ?? false)
+            {
+                this.Status = HopStatus.Unreachable;
+            }
+            else if (string.IsNullOrWhiteSpace(tik4netTracerouteHop.Last))
+            {
+                this.Status = HopStatus.Timeout;
+            }
+            else
+            {
+                this.Status = this.LossPercent > 0 ? HopStatus.Unstable : HopStatus.Ok;
             }
 
             if (string.IsNullOrWhiteSpace(tik4netTracerouteHop.Last))
@@ -150,9 +167,6 @@ namespace SnmpAbstraction
         public int SentCount { get; }
 
         /// <inheritdoc />
-        public string Status { get; }
-
-        /// <inheritdoc />
         public double LastRtt { get; }
 
         /// <inheritdoc />
@@ -163,5 +177,11 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public double WorstRtt { get; }
+
+        /// <inheritdoc />
+        public string Info { get; }
+
+        /// <inheritdoc />
+        public HopStatus Status { get; }
     }
 }
