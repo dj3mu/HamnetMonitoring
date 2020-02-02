@@ -31,6 +31,8 @@ namespace RestService.DataFetchingService
 
         private readonly IConfiguration configuration;
         
+        private readonly FailureRetryFilteringDataHandler retryFeasibleHandler;
+
         private readonly Mutex rssiMutex = new Mutex(false, Program.RssiRunningMutexName);
 
         private readonly object multiTimerLockingObject = new object();
@@ -49,6 +51,8 @@ namespace RestService.DataFetchingService
 
         private QueryResultDatabaseContext resultDatabaseContext;
 
+        private bool usePenaltySystem = false;
+
         private int maxParallelQueries;
         /// <summary>
         /// Constructs taking the logger.
@@ -56,24 +60,16 @@ namespace RestService.DataFetchingService
         /// <param name="logger">The logger to use.</param>
         /// <param name="configuration">The service configuration.</param>
         /// <param name="hamnetDbAccess">The singleton instance of the HamnetDB access handler.</param>
-        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess)
+        /// <param name="retryFeasibleHandler">The handler to check whether retry is feasible.</param>
+        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess, FailureRetryFilteringDataHandler retryFeasibleHandler)
         {
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger), "The logger is null when creating a RssiAquisitionService");
-            }
-
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration), "The configuration is null when creating a RssiAquisitionService");
-            }
-
-            this.logger = logger;
-            this.configuration = configuration;
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger), "The logger has not been provided by DI engine");
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "The configuration has not been provided by DI engine");
+            this.retryFeasibleHandler = retryFeasibleHandler ?? throw new ArgumentNullException(nameof(retryFeasibleHandler), "The retry feasible handler singleton has not been provided by DI engine");
 
             this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
 
-            this.hamnetDbPoller = new HamnetDbPoller(this.configuration, hamnetDbAccess);
+            this.hamnetDbPoller = new HamnetDbPoller(this.configuration, hamnetDbAccess ?? throw new ArgumentNullException(nameof(hamnetDbAccess), "The HamnetDB accessor singleton has not been provided by DI engine"));
 
             IConfigurationSection influxSection = configuration.GetSection(Program.InfluxSectionKey);
             if ((influxSection != null) && influxSection.GetChildren().Any())
@@ -84,6 +80,8 @@ namespace RestService.DataFetchingService
             {
                 this.logger.LogInformation($"Influx database disabled: No or empty '{Program.InfluxSectionKey}' section in configuration");
             }
+
+            this.dataHandlers.Add(this.retryFeasibleHandler);
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -97,6 +95,10 @@ namespace RestService.DataFetchingService
         public Task StartAsync(CancellationToken cancellationToken)
         {
             IConfigurationSection aquisisionServiceSection = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+
+            this.usePenaltySystem = aquisisionServiceSection.GetValue<bool>(Program.PenaltySystemEnablingKey);
+
+            this.logger.LogInformation($"Penality system for RSSI aquisition: {(this.usePenaltySystem ? "enabled" : "disabled")}");
 
             // configure thread pool for number of parallel queries
             this.maxParallelQueries = aquisisionServiceSection.GetValue<int>("MaximumParallelQueries");
@@ -359,6 +361,12 @@ namespace RestService.DataFetchingService
         {
             IPAddress address1 = pair.Value.First().Address;
             IPAddress address2 = pair.Value.Last().Address;
+
+            if (this.usePenaltySystem && !this.retryFeasibleHandler.IsRetryFeasible(QueryType.RssiQuery, pair.Value.Select(h => h.Address), pair.Key.Subnet).GetValueOrDefault(true))
+            {
+                this.logger.LogInformation($"Skipping link details for pair {address1} <-> {address2} of subnet {pair.Key.Subnet}: Retry not yet due.");
+                return;
+            }
 
             this.logger.LogInformation($"Querying link details for pair {address1} <-> {address2} of subnet {pair.Key.Subnet}");
 

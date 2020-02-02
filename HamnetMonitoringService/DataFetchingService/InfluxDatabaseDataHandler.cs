@@ -133,6 +133,11 @@ namespace RestService.DataFetchingService
 
                 foreach (var item in linkDetails.Details)
                 {
+                    if (this.currentPayload == null)
+                    {
+                        this.CreateNewPayload();
+                    }
+
                     this.currentPayload.Add(
                         new LineProtocolPoint(
                             InfluxRssiDatapointName,
@@ -286,6 +291,11 @@ namespace RestService.DataFetchingService
                     if (this.hamnetDbPoller.TryGetSubnetOfHost(item.RemoteAddress, out IHamnetDbSubnet hamentDbSubnet))
                     {
                         remoteSubnet = hamentDbSubnet.Subnet.ToString();
+                    }
+
+                    if (this.currentPayload == null)
+                    {
+                        this.CreateNewPayload();
                     }
 
                     this.currentPayload.Add(

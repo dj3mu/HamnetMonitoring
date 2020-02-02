@@ -28,6 +28,11 @@ namespace HamnetDbRest
         public static readonly string BgpAquisitionServiceSectionKey = "BgpAquisitionService";
 
         /// <summary>
+        /// The key for enabling or disabling of the aquisition penalty system.
+        /// </summary>
+        public static readonly string PenaltySystemEnablingKey = "UsePenaltySystem";
+
+        /// <summary>
         /// The key for the monitoring accounts section.
         /// </summary>
         public static readonly string MonitoringAccountsSectionKey = "MonitoringAccounts";

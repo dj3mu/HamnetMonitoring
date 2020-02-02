@@ -26,7 +26,9 @@ namespace RestService.DataFetchingService
         /// The list of receivers for the data that we aquired.
         /// </summary>
         private readonly List<IAquiredDataHandler> dataHandlers = new List<IAquiredDataHandler>();
-
+        
+        private readonly FailureRetryFilteringDataHandler retryFeasibleHandler;
+        
         private readonly ILogger<BgpAquisitionService> logger;
 
         private readonly IConfiguration configuration;
@@ -51,6 +53,8 @@ namespace RestService.DataFetchingService
 
         private List<Regex> filterRegexList = null;
 
+        private bool usePenaltySystem = false;
+
         private int maxParallelQueries;
 
         /// <summary>
@@ -59,25 +63,18 @@ namespace RestService.DataFetchingService
         /// <param name="logger">The logger to use.</param>
         /// <param name="configuration">The service configuration.</param>
         /// <param name="hamnetDbAccess">The singleton instance of the HamnetDB access handler.</param>
-        public BgpAquisitionService(ILogger<BgpAquisitionService> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess)
+        /// <param name="retryFeasibleHandler">The handler to check whether retry is feasible.</param>
+        public BgpAquisitionService(ILogger<BgpAquisitionService> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess, FailureRetryFilteringDataHandler retryFeasibleHandler)
         {
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger), "The logger is null when creating a BgpAquisitionService");
-            }
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger), "The logger has not been provided by DI engine");
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "The configuration has not been provided by DI engine");
+            this.retryFeasibleHandler = retryFeasibleHandler ?? throw new ArgumentNullException(nameof(retryFeasibleHandler), "The retry feasible handler singleton has not been provided by DI engine");
 
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration), "The configuration is null when creating a BgpAquisitionService");
-            }
-
-            this.logger = logger;
-            this.configuration = configuration;
-
-            this.hamnetDbPoller = new HamnetDbPoller(this.configuration, hamnetDbAccess);
+            this.hamnetDbPoller = new HamnetDbPoller(this.configuration, hamnetDbAccess ?? throw new ArgumentNullException(nameof(hamnetDbAccess), "The HamnetDB accessor singleton has not been provided by DI engine"));
 
             this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
             this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration, this.hamnetDbPoller));
+            this.dataHandlers.Add(this.retryFeasibleHandler);
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -91,6 +88,10 @@ namespace RestService.DataFetchingService
         public Task StartAsync(CancellationToken cancellationToken)
         {
             IConfigurationSection aquisisionServiceSection = this.configuration.GetSection(Program.BgpAquisitionServiceSectionKey);
+
+            this.usePenaltySystem = aquisisionServiceSection.GetValue<bool>(Program.PenaltySystemEnablingKey);
+
+            this.logger.LogInformation($"Penality system for BGP aquisition: {(this.usePenaltySystem ? "enabled" : "disabled")}");
 
             // configure thread pool for number of parallel queries
             this.maxParallelQueries = aquisisionServiceSection.GetValue<int>("MaximumParallelQueries");
@@ -365,6 +366,12 @@ namespace RestService.DataFetchingService
         /// <param name="host">The host to query BGP peers from.</param>
         private void QueryPeersForSingleHost(IHamnetDbHost host)
         {
+            if (this.usePenaltySystem && !this.retryFeasibleHandler.IsRetryFeasible(QueryType.BgpQuery, host.Address).GetValueOrDefault(true))
+            {
+                this.logger.LogInformation($"Skipping BGP peers for host {host.Address} ({host.Name}): Retry not yet due.");
+                return;
+            }
+
             this.logger.LogInformation($"Querying BGP peers for host {host.Address} ({host.Name})");
 
             Exception hitException = null;

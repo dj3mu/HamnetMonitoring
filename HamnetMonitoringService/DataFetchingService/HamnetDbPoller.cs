@@ -48,25 +48,26 @@ namespace RestService.DataFetchingService
             this.configuration = configuration;
 
             this.hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
-            var aquisitionConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
+            var rssiAquisitionConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
 
-            this.maximumSubnetCount = aquisitionConfig.GetValue<int>("MaximumSubnetCount");
+            this.maximumSubnetCount = rssiAquisitionConfig.GetValue<int>("MaximumSubnetCount");
             if (this.maximumSubnetCount == 0)
             {
                 // config returns 0 if not defined --> turn it to the reasonable "maximum" value
                 this.maximumSubnetCount = int.MaxValue;
             }
 
-            this.subnetStartOffset = aquisitionConfig.GetValue<int>("SubnetStartOffset"); // will implicitly return 0 if not defined
+            this.subnetStartOffset = rssiAquisitionConfig.GetValue<int>("SubnetStartOffset"); // will implicitly return 0 if not defined
 
-            this.maximumHostCount = aquisitionConfig.GetValue<int>("MaximumHostCount");
+            var bgpAquisitionConfig = this.configuration.GetSection(Program.BgpAquisitionServiceSectionKey);
+            this.maximumHostCount = bgpAquisitionConfig.GetValue<int>("MaximumHostCount");
             if (this.maximumHostCount == 0)
             {
                 // config returns 0 if not defined --> turn it to the reasonable "maximum" value
                 this.maximumHostCount = int.MaxValue;
             }
             
-            this.hostStartOffset = aquisitionConfig.GetValue<int>("HostStartOffset"); // will implicitly return 0 if not defined
+            this.hostStartOffset = bgpAquisitionConfig.GetValue<int>("HostStartOffset"); // will implicitly return 0 if not defined
 
             this.cacheRefreshInterval = this.hamnetDbConfig.GetValue<TimeSpan>("CacheRefreshInterval");
 
