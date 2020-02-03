@@ -67,7 +67,8 @@ namespace RestService.DataFetchingService
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "The configuration has not been provided by DI engine");
             this.retryFeasibleHandler = retryFeasibleHandler ?? throw new ArgumentNullException(nameof(retryFeasibleHandler), "The retry feasible handler singleton has not been provided by DI engine");
 
-            this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
+            this.dataHandlers.Add(this.retryFeasibleHandler);
+            this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration, this.retryFeasibleHandler));
 
             this.hamnetDbPoller = new HamnetDbPoller(this.configuration, hamnetDbAccess ?? throw new ArgumentNullException(nameof(hamnetDbAccess), "The HamnetDB accessor singleton has not been provided by DI engine"));
 
@@ -81,7 +82,7 @@ namespace RestService.DataFetchingService
                 this.logger.LogInformation($"Influx database disabled: No or empty '{Program.InfluxSectionKey}' section in configuration");
             }
 
-            this.dataHandlers.Add(this.retryFeasibleHandler);
+            this.dataHandlers = this.dataHandlers.OrderBy(h => h.Name).ToList();
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.

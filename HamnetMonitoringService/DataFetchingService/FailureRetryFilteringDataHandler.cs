@@ -70,7 +70,7 @@ namespace RestService.DataFetchingService
         // }
 
         /// <inheritdoc />
-        public string Name { get; } = "Failure Retry Filtering";
+        public string Name { get; } = "01 - Failure Retry Filtering";
 
         /// <inheritdoc />
         public bool? IsRetryFeasible(QueryType source, IPAddress address, IPNetwork network)

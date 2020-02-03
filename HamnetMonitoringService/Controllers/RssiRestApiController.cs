@@ -107,6 +107,11 @@ namespace HamnetDbRest.Controllers
             /// </summary>
             /// <param name="underlyingFailingQuery">The underlying failing query dataset.</param>
             /// <param name="penaltyInfo">The penalty info.</param>
+            /// <remarks>
+            /// Yes, this is code duplication with BgpRestApiController and a common base-class would make sense design-wise (is-a FailingQuery).
+            /// But this has been added later and the underlying classes are Entity Framework Database Models.
+            /// I'm simply scared of modifying them to have a common base class. Not sure if EF migration framework is able to handle this.
+            /// </remarks>
             public RssiFailingQueryWithPenaltyInfo(RssiFailingQuery underlyingFailingQuery, ISingleFailureInfo penaltyInfo)
             {
                 if(underlyingFailingQuery == null)
@@ -118,14 +123,24 @@ namespace HamnetDbRest.Controllers
                 this.ErrorInfo = underlyingFailingQuery.ErrorInfo;
                 this.Subnet = underlyingFailingQuery.Subnet;
                 this.TimeStamp = underlyingFailingQuery.TimeStamp;
-                this.PenaltyInfo = penaltyInfo;
-            }
+                this.PenaltyInfo = underlyingFailingQuery.PenaltyInfo;
 
-            /// <summary>
-            /// Gets the information about how much penalty this errors already receives.
-            /// </summary>
-            [JsonProperty(Order = 5)]
-            public ISingleFailureInfo PenaltyInfo { get; }
+                if (penaltyInfo != null)
+                {
+                    // only replacing the object that has potentially been retrieved from database
+                    // if we have a more recent one directly from handler.
+                    if (this.PenaltyInfo == null)
+                    {
+                        // we have not penalty info -> unconditionally set the new one
+                        this.PenaltyInfo = penaltyInfo;
+                    }
+                    else if (this.PenaltyInfo.LastOccurance <= penaltyInfo.LastOccurance)
+                    {
+                        // we have a penalty info -> only set if new one is newer or same
+                        this.PenaltyInfo = penaltyInfo;
+                    }
+                }
+            }
         }
     }
 }

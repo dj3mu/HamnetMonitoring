@@ -90,7 +90,7 @@ namespace RestService.DataFetchingService
         // }
 
         /// <inheritdoc />
-        public string Name { get; } = "Influx Database";
+        public string Name { get; } = "03 - Influx Database";
 
         /// <inheritdoc />
         public void AquisitionFinished()

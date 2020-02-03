@@ -72,9 +72,10 @@ namespace RestService.DataFetchingService
 
             this.hamnetDbPoller = new HamnetDbPoller(this.configuration, hamnetDbAccess ?? throw new ArgumentNullException(nameof(hamnetDbAccess), "The HamnetDB accessor singleton has not been provided by DI engine"));
 
-            this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
-            this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration, this.hamnetDbPoller));
             this.dataHandlers.Add(this.retryFeasibleHandler);
+            this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration, this.retryFeasibleHandler));
+            this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration, this.hamnetDbPoller));
+            this.dataHandlers = this.dataHandlers.OrderBy(h => h.Name).ToList();
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
