@@ -9,7 +9,7 @@ namespace RestService.DataFetchingService
     /// <summary>
     /// Interface to a handler that does &quot;something&quot; with aquired data.
     /// </summary>
-    internal interface IAquiredDataHandler : IDisposable
+    public interface IAquiredDataHandler : IDisposable
     {
         /// <summary>
         /// Gets the name (i.e. an identifier) of the handler.

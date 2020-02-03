@@ -1,4 +1,4 @@
-#define DEBUG
+//#define DEBUG
 
 using System;
 using System.Collections.Generic;
@@ -10,31 +10,16 @@ using System.Threading.Tasks;
 using HamnetDbAbstraction;
 using HamnetDbRest;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using SnmpAbstraction;
 
 namespace RestService.DataFetchingService
 {
     /// <summary>
-    /// Enumeration of failure sources (entry point for data store).
-    /// </summary>
-    public enum QueryType
-    {
-        /// <summary>
-        /// Feasibility for RSSI query
-        /// </summary>
-        RssiQuery,
-
-        /// <summary>
-        /// Feasibility for BGP query
-        /// </summary>
-        BgpQuery
-    }
-
-    /// <summary>
     /// Implementation of an <see cref="IAquiredDataHandler" /> that records failures and allows filtering
     /// based on the failures and the time and how often they have last been seen.
     /// </summary>
-    public class FailureRetryFilteringDataHandler : IAquiredDataHandler
+    public class FailureRetryFilteringDataHandler : IFailureRetryFilteringDataHandler
     {
         private static readonly log4net.ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -58,13 +43,15 @@ namespace RestService.DataFetchingService
         {
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "configuration is null");
 
-            var configTimestampString = configuration.GetValue<string>(MinimumFailureRetryIntervalKey);
+            var penaltyConfiguration = this.configuration.GetSection(Program.PenaltySystemSectionKey);
+
+            var configTimestampString = penaltyConfiguration.GetValue<string>(MinimumFailureRetryIntervalKey);
             if (!TimeSpan.TryParse(configTimestampString, out TimeSpan minimumRetryInterval))
             {
                 minimumRetryInterval = TimeSpan.FromMinutes(1);
             }
 
-            configTimestampString = configuration.GetValue<string>(MaximumFailureRetryIntervalKey);
+            configTimestampString = penaltyConfiguration.GetValue<string>(MaximumFailureRetryIntervalKey);
             if (!TimeSpan.TryParse(configTimestampString, out TimeSpan maximumRetryInterval))
             {
                 maximumRetryInterval = TimeSpan.FromMinutes(60);
@@ -85,17 +72,7 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public string Name { get; } = "Failure Retry Filtering";
 
-        /// <summary>
-        /// Checks whether a retry shall be made for the given combination of query type, address and network.
-        /// </summary>
-        /// <param name="source">The source that shall be retried.</param>
-        /// <param name="network">The affected network that is being retried.</param>
-        /// <param name="address">The affected host address that is being retried.</param>
-        /// <returns>
-        /// <c>true</c> if a retry is feasible according to the store's settings.
-        /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
-        /// <c>false</c> if a retry is not yet due according to the store's settings.
-        /// </returns>
+        /// <inheritdoc />
         public bool? IsRetryFeasible(QueryType source, IPAddress address, IPNetwork network)
         {
             var feasible = this.recordStore.IsRetryFeasible(source, network, address);
@@ -109,17 +86,7 @@ namespace RestService.DataFetchingService
             return randomizedFeasible;
         }
 
-        /// <summary>
-        /// Checks whether a retry shall be made for the given combination of query type, address and network.
-        /// </summary>
-        /// <param name="source">The source that shall be retried.</param>
-        /// <param name="network">The affected network that is being retried.</param>
-        /// <param name="addresses">The affected host addresses that are being retried.</param>
-        /// <returns>
-        /// <c>true</c> if a retry is feasible according to the store's settings.
-        /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
-        /// <c>false</c> if a retry is not yet due according to the store's settings.
-        /// </returns>
+        /// <inheritdoc />
         public bool? IsRetryFeasible(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork network)
         {
             bool? feasible = null;
@@ -151,16 +118,7 @@ namespace RestService.DataFetchingService
             return randomizedFeasible;
         }
 
-        /// <summary>
-        /// Checks whether a retry shall be made for the given combination of query type and address.
-        /// </summary>
-        /// <param name="source">The source that shall be retried.</param>
-        /// <param name="address">The affected host address that is being retried.</param>
-        /// <returns>
-        /// <c>true</c> if a retry is feasible according to the store's settings.
-        /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
-        /// <c>false</c> if a retry is not yet due according to the store's settings.
-        /// </returns>
+        /// <inheritdoc />
         public bool? IsRetryFeasible(QueryType source, IPAddress address)
         {
             var feasible = this.recordStore.IsRetryFeasible(source, address);
@@ -174,16 +132,7 @@ namespace RestService.DataFetchingService
             return randomizedFeasible;
         }
 
-        /// <summary>
-        /// Checks whether a retry shall be made for the given combination of query type and network.
-        /// </summary>
-        /// <param name="source">The source that shall be retried.</param>
-        /// <param name="network">The affected network that is being retried.</param>
-        /// <returns>
-        /// <c>true</c> if a retry is feasible according to the store's settings.
-        /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
-        /// <c>false</c> if a retry is not yet due according to the store's settings.
-        /// </returns>
+        /// <inheritdoc />
         public bool? IsRetryFeasible(QueryType source, IPNetwork network)
         {
             var feasible = this.recordStore.IsRetryFeasible(source, network);
@@ -195,6 +144,18 @@ namespace RestService.DataFetchingService
             }
 
             return randomizedFeasible;
+        }
+
+        /// <inheritdoc />
+        public ISingleFailureInfo QueryPenaltyDetails(QueryType source, IPAddress address)
+        {
+            return this.recordStore.QueryDetails(source, address);
+        }
+
+        /// <inheritdoc />
+        public ISingleFailureInfo QueryPenaltyDetails(QueryType source, IPNetwork network)
+        {
+            return this.recordStore.QueryDetails(source, network);
         }
 
         /// <inheritdoc />
@@ -379,7 +340,7 @@ namespace RestService.DataFetchingService
         private class FailureRecordStore
         {
             private static readonly Regex IndentationRegex = new Regex(@"^", RegexOptions.Compiled | RegexOptions.Multiline);
-            
+
             private readonly Dictionary<QueryType, PerFailureSourceStore> failureSourceLookup = new Dictionary<QueryType, PerFailureSourceStore>();
 
             private readonly object lockingObject = new object();
@@ -536,13 +497,45 @@ namespace RestService.DataFetchingService
             }
 
             /// <summary>
+            /// Queries the details of the given combination of query type, address and network.
+            /// </summary>
+            /// <param name="source">The source that shall be retried.</param>
+            /// <param name="address">The affected host address that is being retried.</param>
+            /// <returns>
+            /// <c>true</c> if a retry is feasible according to the store's settings.
+            /// <c>null</c> if no information about the source/address/network combination is available.
+            /// <c>false</c> if a retry is not yet due according to the store's settings.
+            /// </returns>
+            internal ISingleFailureInfo QueryDetails(QueryType source, IPAddress address)
+            {
+                var perFailureSourceStore = this.GetOrCreateStoreForSource(source);
+                return perFailureSourceStore.QueryDetails(address);
+            }
+
+            /// <summary>
+            /// Queries the details of the given combination of query type, address and network.
+            /// </summary>
+            /// <param name="source">The source that shall be retried.</param>
+            /// <param name="network">The affected network that is being retried.</param>
+            /// <returns>
+            /// <c>true</c> if a retry is feasible according to the store's settings.
+            /// <c>null</c> if no information about the source/address/network combination is available.
+            /// <c>false</c> if a retry is not yet due according to the store's settings.
+            /// </returns>
+            internal ISingleFailureInfo QueryDetails(QueryType source, IPNetwork network)
+            {
+                var perFailureSourceStore = this.GetOrCreateStoreForSource(source);
+                return perFailureSourceStore.QueryDetails(network);
+            }
+
+            /// <summary>
             /// Get and (if not yet available) create the per-failure-source store for the given failure source.
             /// </summary>
             /// <param name="source">The source causing the failure.</param>
             /// <returns>The store for the given failure source.</returns>
             private PerFailureSourceStore GetOrCreateStoreForSource(QueryType source)
             {
-                lock(this.lockingObject)
+                lock (this.lockingObject)
                 {
                     if (!this.failureSourceLookup.TryGetValue(source, out PerFailureSourceStore perFailureSourceStore))
                     {
@@ -595,7 +588,7 @@ namespace RestService.DataFetchingService
                 /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
                 public void RecordFailure(IPAddress address, IPNetwork network)
                 {
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         this.RecordFailingAddress(address);
                         this.RecordFailingNetwork(network);
@@ -609,7 +602,7 @@ namespace RestService.DataFetchingService
                 /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
                 public void RecordFailure(IEnumerable<IPAddress> addresses, IPNetwork network)
                 {
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         this.RecordFailingNetwork(network);
                         foreach (var address in addresses)
@@ -626,7 +619,7 @@ namespace RestService.DataFetchingService
                 /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
                 public void RecordSuccess(IPAddress address, IPNetwork network)
                 {
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         this.DeleteHostFailure(address);
                         this.DeleteNetworkFailure(network);
@@ -640,7 +633,7 @@ namespace RestService.DataFetchingService
                 /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
                 public void RecordSuccess(IEnumerable<IPAddress> addresses, IPNetwork network)
                 {
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         this.DeleteNetworkFailure(network);
                         foreach (var address in addresses)
@@ -661,7 +654,7 @@ namespace RestService.DataFetchingService
                 /// </returns>
                 public bool? IsRetryFeasible(IPNetwork network)
                 {
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         if (!this.networkFailureInfos.TryGetValue(network, out SingleFailureInfo failureInfo))
                         {
@@ -688,7 +681,7 @@ namespace RestService.DataFetchingService
                 /// </returns>
                 public bool? IsRetryFeasible(IPAddress address)
                 {
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         if (!this.hostFailureInfos.TryGetValue(address, out SingleFailureInfo failureInfo))
                         {
@@ -716,7 +709,7 @@ namespace RestService.DataFetchingService
                 /// </returns>
                 public bool? IsRetryFeasible(IPNetwork network, IPAddress address)
                 {
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         if (!this.networkFailureInfos.TryGetValue(network, out SingleFailureInfo networkFailureInfo))
                         {
@@ -728,7 +721,7 @@ namespace RestService.DataFetchingService
                             return null;
                         }
 
-                        var isFeasible =  hostFailureInfo.IsRetryFeasible && networkFailureInfo.IsRetryFeasible;
+                        var isFeasible = hostFailureInfo.IsRetryFeasible && networkFailureInfo.IsRetryFeasible;
 
 #if DEBUG
                         log.Info($"IsRetryFeasible({network} && {address}) = {isFeasible}");
@@ -763,6 +756,60 @@ namespace RestService.DataFetchingService
                     return returnBuilder.ToString();
                 }
 
+                /// <summary>
+                /// Queries the details of the given combination of query type, address and network.
+                /// </summary>
+                /// <param name="address">The affected host address that is being retried.</param>
+                /// <returns>
+                /// <c>true</c> if a retry is feasible according to the store's settings.
+                /// <c>null</c> if no information about the source/address/network combination is available.
+                /// <c>false</c> if a retry is not yet due according to the store's settings.
+                /// </returns>
+                internal ISingleFailureInfo QueryDetails(IPAddress address)
+                {
+                    if (address == null)
+                    {
+                        return null;
+                    }
+
+                    lock (this.lockingObject)
+                    {
+                        if (!this.hostFailureInfos.TryGetValue(address, out SingleFailureInfo failureInfo))
+                        {
+                           return null;
+                        }
+
+                        return failureInfo;
+                    }
+                }
+
+                /// <summary>
+                /// Queries the details of the given combination of query type, address and network.
+                /// </summary>
+                /// <param name="network">The affected network that is being retried.</param>
+                /// <returns>
+                /// <c>true</c> if a retry is feasible according to the store's settings.
+                /// <c>null</c> if no information about the source/address/network combination is available.
+                /// <c>false</c> if a retry is not yet due according to the store's settings.
+                /// </returns>
+                internal ISingleFailureInfo QueryDetails(IPNetwork network)
+                {
+                    if (network == null)
+                    {
+                        return null;
+                    }
+
+                    lock (this.lockingObject)
+                    {
+                        if (!this.networkFailureInfos.TryGetValue(network, out SingleFailureInfo failureInfo))
+                        {
+                           return null;
+                        }
+
+                        return failureInfo;
+                    }
+                }
+
                 private void DeleteHostFailure(IPAddress address)
                 {
                     if (address == null)
@@ -770,7 +817,7 @@ namespace RestService.DataFetchingService
                         return;
                     }
 
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         var removed = this.hostFailureInfos.Remove(address);
 
@@ -788,7 +835,7 @@ namespace RestService.DataFetchingService
                         return;
                     }
 
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         var removed = this.networkFailureInfos.Remove(network);
 
@@ -806,7 +853,7 @@ namespace RestService.DataFetchingService
                         return;
                     }
 
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         if (!this.networkFailureInfos.TryGetValue(network, out SingleFailureInfo failureInfo))
                         {
@@ -828,7 +875,7 @@ namespace RestService.DataFetchingService
                         return;
                     }
 
-                    lock(this.lockingObject)
+                    lock (this.lockingObject)
                     {
                         if (!this.hostFailureInfos.TryGetValue(address, out SingleFailureInfo failureInfo))
                         {
@@ -846,7 +893,7 @@ namespace RestService.DataFetchingService
                 /// <summary>
                 /// Class for the info about a single failure.
                 /// </summary>
-                private class SingleFailureInfo
+                private class SingleFailureInfo : ISingleFailureInfo
                 {
                     /// <summary>
                     /// Object for locking against concurrent access to ensure consistent setting of all data.
@@ -877,61 +924,57 @@ namespace RestService.DataFetchingService
                         this.maximumRetryInterval = maximumRetryInterval;
                     }
 
-                    /// <summary>
-                    /// Gets the number of occurances of this specific single failure.
-                    /// </summary>
-                    public uint OccuranceCount 
+                    /// <inheritdoc />
+                    [JsonProperty(Order = 1)]
+                    public uint OccuranceCount
                     {
                         get
                         {
-                            lock(this.lockingObject)
+                            lock (this.lockingObject)
                             {
                                 return this.occuranceCount;
                             }
                         }
                     }
 
-                    /// <summary>
-                    /// Gets the time of the last occurance of this specific single failure.
-                    /// </summary>
+                    /// <inheritdoc />
+                    [JsonProperty(Order = 3)]
                     public DateTime LastOccurance
                     {
                         get
                         {
-                            lock(this.lockingObject)
+                            lock (this.lockingObject)
                             {
                                 return this.lastOccurance;
                             }
                         }
                     }
 
-                    /// <summary>
-                    /// Gets the time of the first occurance of this specific single failure (i.e. the time when this failure set has been created).
-                    /// </summary>
+                    /// <inheritdoc />
+                    [JsonProperty(Order = 2)]
                     public DateTime FirsOccurance
                     {
                         get
                         {
-                            lock(this.lockingObject)
+                            lock (this.lockingObject)
                             {
                                 return this.firsOccurance;
                             }
                         }
                     }
 
-                    /// <summary>
-                    /// Gets a value indicating whether a retry is feasible at the current moment.
-                    /// </summary>
+                    /// <inheritdoc />
+                    [JsonProperty(Order = 5)]
                     public bool IsRetryFeasible
                     {
                         get
                         {
-                            lock(this.lockingObject)
+                            lock (this.lockingObject)
                             {
                                 var retryFeasible = ((DateTime.UtcNow - this.lastOccurance) > this.currentRetryInterval);
 
 #if DEBUG
-                                log.Debug($"IsRetryFeasible({this}): {retryFeasible}");
+                                log.Info($"IsRetryFeasible({this}): {retryFeasible}");
 #endif
 
                                 return retryFeasible;
@@ -939,12 +982,16 @@ namespace RestService.DataFetchingService
                         }
                     }
 
+                    /// <inheritdoc />
+                    [JsonProperty(Order = 4)]
+                    public TimeSpan CurrentPenalty => this.currentRetryInterval;
+
                     /// <summary>
                     /// Records a new occurance of this specific failure.
                     /// </summary>
                     public void RecordNewOccurance()
                     {
-                        lock(this.lockingObject)
+                        lock (this.lockingObject)
                         {
                             ++this.occuranceCount;
 
@@ -957,7 +1004,7 @@ namespace RestService.DataFetchingService
 
                             // double the retry interval on every occurance
                             // but make sure it's at most maximumRetryInterval
-                            this.currentRetryInterval = this.currentRetryInterval * this.occuranceCount;
+                            this.currentRetryInterval = this.currentRetryInterval * 2;
                             if (this.currentRetryInterval > this.maximumRetryInterval)
                             {
                                 this.currentRetryInterval = this.maximumRetryInterval;

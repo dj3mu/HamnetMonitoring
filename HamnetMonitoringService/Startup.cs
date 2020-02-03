@@ -69,8 +69,8 @@ namespace HamnetDbRest
             var hamnetDbAccess = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(this.Configuration.GetSection(HamnetDbProvider.HamnetDbSectionName));
             services.AddSingleton(hamnetDbAccess);
 
-            var retryFeasibleHandler = new FailureRetryFilteringDataHandler(this.Configuration);
-            services.AddSingleton(retryFeasibleHandler);
+            IFailureRetryFilteringDataHandler retryFeasibleHandler = new FailureRetryFilteringDataHandler(this.Configuration);
+            services.AddSingleton<IFailureRetryFilteringDataHandler>(retryFeasibleHandler);
 
             QueryResultDatabaseProvider.Instance.SetConfiguration(this.Configuration);
             CacheMaintenance.SetDatabaseConfiguration(this.Configuration);

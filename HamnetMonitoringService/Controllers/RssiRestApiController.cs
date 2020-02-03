@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using RestService.Database;
+using RestService.DataFetchingService;
 using RestService.Model;
 
 namespace HamnetDbRest.Controllers
@@ -19,16 +23,20 @@ namespace HamnetDbRest.Controllers
         private readonly ILogger logger;
 
         private readonly QueryResultDatabaseContext dbContext;
+        
+        private readonly IFailureRetryFilteringDataHandler retryFeasibleHandler;
 
         /// <summary>
         /// Instantiates the controller taking a logger.
         /// </summary>
         /// <param name="logger">The logger to use for logging.</param>
         /// <param name="dbContext">The database context to get the data from.</param>
-        public RestController(ILogger<RestController> logger, QueryResultDatabaseContext dbContext)
+        /// <param name="retryFeasibleHandler">The handler to check whether retry is feasible.</param>
+        public RestController(ILogger<RestController> logger, QueryResultDatabaseContext dbContext, IFailureRetryFilteringDataHandler retryFeasibleHandler)
         {
-            this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger), "The logger to use is null");
-            this.dbContext = dbContext ?? throw new System.ArgumentNullException(nameof(dbContext), "The database context to take the data from is null");
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger), "The logger to use is null");
+            this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext), "The database context to take the data from is null");
+            this.retryFeasibleHandler = retryFeasibleHandler ?? throw new ArgumentNullException(nameof(retryFeasibleHandler), "The retry feasible handler singleton has not been provided by DI engine");
         }
 
         /// <summary>
@@ -47,10 +55,14 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
         [HttpGet("failing")]
-        public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetFailingRssiQueries()
+        public async Task<ActionResult<IEnumerable<RssiFailingQueryWithPenaltyInfo>>> GetFailingRssiQueries()
         {
             Program.RequestStatistics.ApiV1RssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries.ToListAsync();
+            return await this.dbContext.RssiFailingQueries
+                .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
+                .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenBy(ds => ds.Subnet)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -58,10 +70,15 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
         [HttpGet("failing/timeout")]
-        public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetTimeoutFailingRssiQueries()
+        public async Task<ActionResult<IEnumerable<RssiFailingQueryWithPenaltyInfo>>> GetTimeoutFailingRssiQueries()
         {
             Program.RequestStatistics.ApiV1RssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
+            return await this.dbContext.RssiFailingQueries
+                .Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries"))
+                .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
+                .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenBy(ds => ds.Subnet)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -69,10 +86,46 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get /failing request.</returns>
         [HttpGet("failing/nontimeout")]
-        public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetNonTimeoutFailingRssiQueries()
+        public async Task<ActionResult<IEnumerable<RssiFailingQueryWithPenaltyInfo>>> GetNonTimeoutFailingRssiQueries()
         {
             Program.RequestStatistics.ApiV1RssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
+            return await this.dbContext.RssiFailingQueries
+                .Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries"))
+                .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
+                .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenBy(ds => ds.Subnet)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Extension of RssiFailingQuery with penalty info.
+        /// </summary>
+        public class RssiFailingQueryWithPenaltyInfo : RssiFailingQuery
+        {
+            /// <summary>
+            /// Creates a new object from the underlying failing query.
+            /// </summary>
+            /// <param name="underlyingFailingQuery">The underlying failing query dataset.</param>
+            /// <param name="penaltyInfo">The penalty info.</param>
+            public RssiFailingQueryWithPenaltyInfo(RssiFailingQuery underlyingFailingQuery, ISingleFailureInfo penaltyInfo)
+            {
+                if(underlyingFailingQuery == null)
+                {
+                    throw new ArgumentNullException(nameof(underlyingFailingQuery), "The underlying failing query data is null");
+                }
+
+                this.AffectedHosts = underlyingFailingQuery.AffectedHosts;
+                this.ErrorInfo = underlyingFailingQuery.ErrorInfo;
+                this.Subnet = underlyingFailingQuery.Subnet;
+                this.TimeStamp = underlyingFailingQuery.TimeStamp;
+                this.PenaltyInfo = penaltyInfo;
+            }
+
+            /// <summary>
+            /// Gets the information about how much penalty this errors already receives.
+            /// </summary>
+            [JsonProperty(Order = 5)]
+            public ISingleFailureInfo PenaltyInfo { get; }
         }
     }
 }

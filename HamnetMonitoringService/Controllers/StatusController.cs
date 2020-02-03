@@ -95,6 +95,7 @@ namespace HamnetDbRest.Controllers
             this.AddConfiguration(reply, "CacheDatabase");
             this.AddConfiguration(reply, "DeviceDatabase");
             this.AddConfiguration(reply, Program.MonitoringAccountsSectionKey, Program.BgpAccountSectionKey);
+            this.AddConfiguration(reply, Program.PenaltySystemSectionKey);
 
             var statusTableRow = this.dbContext.MonitoringStatus.First();
 

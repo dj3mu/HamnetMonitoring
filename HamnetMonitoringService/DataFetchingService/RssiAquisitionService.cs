@@ -31,7 +31,7 @@ namespace RestService.DataFetchingService
 
         private readonly IConfiguration configuration;
         
-        private readonly FailureRetryFilteringDataHandler retryFeasibleHandler;
+        private readonly IFailureRetryFilteringDataHandler retryFeasibleHandler;
 
         private readonly Mutex rssiMutex = new Mutex(false, Program.RssiRunningMutexName);
 
@@ -61,7 +61,7 @@ namespace RestService.DataFetchingService
         /// <param name="configuration">The service configuration.</param>
         /// <param name="hamnetDbAccess">The singleton instance of the HamnetDB access handler.</param>
         /// <param name="retryFeasibleHandler">The handler to check whether retry is feasible.</param>
-        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess, FailureRetryFilteringDataHandler retryFeasibleHandler)
+        public RssiAquisitionService(ILogger<RssiAquisitionService> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess, IFailureRetryFilteringDataHandler retryFeasibleHandler)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger), "The logger has not been provided by DI engine");
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "The configuration has not been provided by DI engine");
