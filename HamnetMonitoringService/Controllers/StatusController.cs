@@ -115,8 +115,8 @@ namespace HamnetDbRest.Controllers
             {
                 { "UniqueValues", this.dbContext.BgpPeers.Count().ToString() },
                 { "TotalFailures", this.dbContext.BgpFailingQueries.Count().ToString() },
-                { "TimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
-                { "NonTimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).Count().ToString() },
+                { "TimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("timed out")).Count().ToString() },
+                { "NonTimeoutFailures", this.dbContext.BgpFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("timed out")).Count().ToString() },
                 { "LastAquisitionStart", statusTableRow.LastBgpQueryStart.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
                 { "LastAquisitionEnd", statusTableRow.LastBgpQueryEnd.ToString("yyyy-MM-ddTHH\\:mm\\:sszzz") },
             };
