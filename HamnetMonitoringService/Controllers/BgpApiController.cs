@@ -101,6 +101,8 @@ namespace HamnetDbRest.Controllers
             return await this.dbContext.BgpFailingQueries
                 .Select(ds => new BgpFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.BgpQuery, IPAddress.Parse(ds.Host))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
+                .ThenByDescending(ds => ds.TimeStamp)
                 .ThenBy(ds => ds.Host)
                 .ToListAsync();
         }
@@ -118,6 +120,8 @@ namespace HamnetDbRest.Controllers
                 .Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("timed out"))
                 .Select(ds => new BgpFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.BgpQuery, IPAddress.Parse(ds.Host))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
+                .ThenByDescending(ds => ds.TimeStamp)
                 .ThenBy(ds => ds.Host)
                 .ToListAsync();
         }
@@ -135,6 +139,8 @@ namespace HamnetDbRest.Controllers
                 .Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("timed out"))
                 .Select(ds => new BgpFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.BgpQuery, IPAddress.Parse(ds.Host))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
+                .ThenByDescending(ds => ds.TimeStamp)
                 .ThenBy(ds => ds.Host)
                 .ToListAsync();
         }

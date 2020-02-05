@@ -61,6 +61,8 @@ namespace HamnetDbRest.Controllers
             return await this.dbContext.RssiFailingQueries
                 .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
+                .ThenByDescending(ds => ds.TimeStamp)
                 .ThenBy(ds => ds.Subnet)
                 .ToListAsync();
         }
@@ -77,6 +79,8 @@ namespace HamnetDbRest.Controllers
                 .Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries"))
                 .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
+                .ThenByDescending(ds => ds.TimeStamp)
                 .ThenBy(ds => ds.Subnet)
                 .ToListAsync();
         }
@@ -93,6 +97,8 @@ namespace HamnetDbRest.Controllers
                 .Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries"))
                 .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
+                .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
+                .ThenByDescending(ds => ds.TimeStamp)
                 .ThenBy(ds => ds.Subnet)
                 .ToListAsync();
         }
