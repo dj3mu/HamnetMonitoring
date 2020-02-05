@@ -363,7 +363,7 @@ namespace RestService.DataFetchingService
             IPAddress address1 = pair.Value.First().Address;
             IPAddress address2 = pair.Value.Last().Address;
 
-            if (this.usePenaltySystem && !this.retryFeasibleHandler.IsRetryFeasible(QueryType.RssiQuery, pair.Value.Select(h => h.Address), pair.Key.Subnet).GetValueOrDefault(true))
+            if (this.usePenaltySystem && !this.retryFeasibleHandler.IsRetryFeasible(QueryType.RssiQuery, pair.Key.Subnet).GetValueOrDefault(true))
             {
                 this.logger.LogInformation($"Skipping link details for pair {address1} <-> {address2} of subnet {pair.Key.Subnet}: Retry not yet due.");
                 return;

@@ -23,6 +23,23 @@ namespace RestService.DataFetchingService
     }
 
     /// <summary>
+    /// Enumeration of possible entity types in <see cref="ISingleFailureInfoWithEntity" />.
+    /// </summary>
+    public enum EntityType
+    {
+        
+        /// <summary>
+        /// The entity is a host.
+        /// </summary>
+        Host,
+
+        /// <summary>
+        /// The entity is a subnet.
+        /// </summary>
+        Subnet
+    }
+
+    /// <summary>
     /// Extension of an <see cref="IAquiredDataHandler" /> that records failures and allows filtering
     /// based on the failures and the time and how often they have last been seen.
     /// </summary>
@@ -90,7 +107,6 @@ namespace RestService.DataFetchingService
         /// </returns>
         ISingleFailureInfo QueryPenaltyDetails(QueryType source, IPAddress address);
 
-
         /// <summary>
         /// Queries the details of the given combination of query type and network.
         /// </summary>
@@ -102,6 +118,17 @@ namespace RestService.DataFetchingService
         /// <c>false</c> if a retry is not yet due according to the store's settings.
         /// </returns>
         ISingleFailureInfo QueryPenaltyDetails(QueryType source, IPNetwork network);
+
+        /// <summary>
+        /// Loads the data for the given query type from the given enumeration of failure infos
+        /// </summary>
+        /// <param name="queryType">The type of the query that produce the failures.</param>
+        /// <param name="singleFailureInfos">The list of failures.</param>
+        /// <remarks>
+        /// Calling this method will discard all data that might already be stored in the handler.<br/>
+        /// Usually it should be called only and exactly once after initializing the object.
+        /// </remarks>
+        void InitializeData(QueryType queryType, IEnumerable<ISingleFailureInfoWithEntity> singleFailureInfos);
     }
     
     /// <summary>
@@ -133,5 +160,21 @@ namespace RestService.DataFetchingService
         /// Gets a value indicating whether a retry is feasible at the current moment.
         /// </summary>
         bool IsRetryFeasible { get; }
+    }
+
+    /// <summary>
+    /// Class for the info about a single failure.
+    /// </summary>
+    public interface ISingleFailureInfoWithEntity : ISingleFailureInfo
+    {
+        /// <summary>
+        /// Gets the number of occurances of this specific single failure.
+        /// </summary>
+        string Entity { get; }
+
+        /// <summary>
+        /// The type of the entity stored in the string.
+        /// </summary>
+        EntityType EntityType { get; }
     }
 }

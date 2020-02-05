@@ -73,6 +73,12 @@ namespace RestService.DataFetchingService
         public string Name { get; } = "01 - Failure Retry Filtering";
 
         /// <inheritdoc />
+        public void InitializeData(QueryType queryType, IEnumerable<ISingleFailureInfoWithEntity> singleFailureInfos)
+        {
+            this.recordStore.InitializeData(queryType, singleFailureInfos);
+        }
+
+        /// <inheritdoc />
         public bool? IsRetryFeasible(QueryType source, IPAddress address, IPNetwork network)
         {
             var feasible = this.recordStore.IsRetryFeasible(source, network, address);
@@ -529,6 +535,23 @@ namespace RestService.DataFetchingService
             }
 
             /// <summary>
+            /// Loads the data for the given query type from the given enumeration of failure infos
+            /// </summary>
+            /// <param name="queryType">The type of the query that produce the failures.</param>
+            /// <param name="singleFailureInfos">The list of failures.</param>
+            /// <remarks>
+            /// Calling this method will discard all data that might already be stored in the handler.<br/>
+            /// Usually it should be called only and exactly once after initializing the object.
+            /// </remarks>
+            internal void InitializeData(QueryType queryType, IEnumerable<ISingleFailureInfoWithEntity> singleFailureInfos)
+            {
+                log.Info($"Called for query {queryType}");
+
+                var perFailureSourceStore = this.GetOrCreateStoreForSource(queryType);
+                perFailureSourceStore.InitializeData(singleFailureInfos);
+            }
+
+            /// <summary>
             /// Get and (if not yet available) create the per-failure-source store for the given failure source.
             /// </summary>
             /// <param name="source">The source causing the failure.</param>
@@ -810,6 +833,59 @@ namespace RestService.DataFetchingService
                     }
                 }
 
+
+                /// <summary>
+                /// Loads the data for the given query type from the given enumeration of failure infos
+                /// </summary>
+                /// <param name="singleFailureInfos">The list of failures.</param>
+                /// <remarks>
+                /// Calling this method will discard all data that might already be stored in the handler.<br/>
+                /// Usually it should be called only and exactly once after initializing the object.
+                /// </remarks>
+                internal void InitializeData(IEnumerable<ISingleFailureInfoWithEntity> singleFailureInfos)
+                {
+                    if ((singleFailureInfos == null) || !singleFailureInfos.Any())
+                    {
+                        log.Warn("singleFailureInfos is null or an empty enumeration: This is a NOP. Not initializing anything.");
+                        return;
+                    }
+
+                    lock(this.lockingObject)
+                    {
+                        foreach (ISingleFailureInfoWithEntity item in singleFailureInfos)
+                        {
+                            switch (item.EntityType)
+                            {
+                                case EntityType.Host:
+                                    if (!IPAddress.TryParse(item.Entity, out IPAddress ipAddress))
+                                    {
+                                        log.Error($"Cannot convert entity '{item.Entity}' of type {item.EntityType} into an IPAddress of the host");
+                                        break;
+                                    }
+
+                                    this.hostFailureInfos[ipAddress] = new SingleFailureInfo(this.mininumRetryInterval, this.maximumRetryInterval, item);
+
+                                    break;
+
+                                case EntityType.Subnet:
+                                    if (!IPNetwork.TryParse(item.Entity, out IPNetwork ipNetwork))
+                                    {
+                                        log.Error($"Cannot convert entity '{item.Entity}' of type {item.EntityType} into an IPNetwork of the subnet");
+                                        break;
+                                    }
+
+                                    this.networkFailureInfos[ipNetwork] = new SingleFailureInfo(this.mininumRetryInterval, this.maximumRetryInterval, item);
+                                    
+                                    break;
+
+                                default:
+                                    log.Error($"Unknown entity type {item.EntityType} (entity string '{item.Entity}') for failure info will be ignored");
+                                    break;
+                            }
+                        }
+                    }
+                }
+
                 private void DeleteHostFailure(IPAddress address)
                 {
                     if (address == null)
@@ -909,6 +985,27 @@ namespace RestService.DataFetchingService
                     private uint occuranceCount = 0;
 
                     private TimeSpan currentRetryInterval;
+
+                    /// <summary>
+                    /// Creates an instance for the given retry intervals.
+                    /// </summary>
+                    /// <param name="mininumRetryInterval">
+                    /// The minimum time interval for retries. If less than this after the last try has passed, no retry will be made.
+                    /// Upon every consecutively failed retry, this interval will be doubled up to <see paramref="maximumRetryInterval" />.
+                    /// </param>
+                    /// <param name="maximumRetryInterval">The maximum time interval for retries.</param>
+                    /// <param name="item">The item to copy the data from.</param>
+                    public SingleFailureInfo(TimeSpan mininumRetryInterval, TimeSpan maximumRetryInterval, ISingleFailureInfo item)
+                    {
+                        this.currentRetryInterval = mininumRetryInterval;
+                        this.maximumRetryInterval = maximumRetryInterval;
+                        this.firsOccurance = item.FirsOccurance;
+                        this.lastOccurance = item.LastOccurance;
+                        this.occuranceCount = item.OccuranceCount;
+
+                        // for retry intefval we need to check the maximum given to us. it could have changed (and hence lowered) if restarted.
+                        this.currentRetryInterval = item.CurrentPenalty <= maximumRetryInterval ? item.CurrentPenalty : maximumRetryInterval;
+                    }
 
                     /// <summary>
                     /// Creates an instance for the given retry intervals.
