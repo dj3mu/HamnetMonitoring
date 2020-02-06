@@ -26,6 +26,12 @@ namespace HamnetDbAbstraction
         /// </summary>
         /// <returns>The list of hosts which are BGP routers.</returns>
         IHamnetDbHosts QueryBgpRouters();
+        
+        /// <summary>
+        /// Queries the sites defined in the HamnetDB.
+        /// </summary>
+        /// <returns>The list of sites defined in HamnetDB.</returns>
+        IHamnetDbSites QuerySites();
     }
 
     /// <summary>
