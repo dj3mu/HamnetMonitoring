@@ -30,6 +30,8 @@ namespace RestService.DataFetchingService
         private static readonly log4net.ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly IConfiguration configuration;
+        
+        private readonly IFailureRetryFilteringDataHandler failureRetryFilteringDataHandler;
 
         private readonly IConfigurationSection hamnetDbConfig;
         
@@ -39,10 +41,11 @@ namespace RestService.DataFetchingService
         /// Construct for the given configuration.
         /// </summary>
         /// <param name="configuration">The configuration to construct for.</param>
-        public ResultDatabaseDataHandler(IConfiguration configuration)
+        /// <param name="failureRetryFilteringDataHandler">The data handler to add retry information to the database set.</param>
+        public ResultDatabaseDataHandler(IConfiguration configuration, IFailureRetryFilteringDataHandler failureRetryFilteringDataHandler)
         {
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "configuration is null when creating a ResultDatabaseDataHandler");
-
+            this.failureRetryFilteringDataHandler = failureRetryFilteringDataHandler; // null allowed here in which case the penalty information is simply omitted
             this.hamnetDbConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
         }
 
@@ -54,7 +57,7 @@ namespace RestService.DataFetchingService
         // }
 
         /// <inheritdoc />
-        public string Name { get; } = "Result Database";
+        public string Name { get; } = "02 - Result Database";
 
         /// <inheritdoc />
         public void AquisitionFinished()
@@ -409,6 +412,7 @@ namespace RestService.DataFetchingService
             }
 
             failEntry.TimeStamp = DateTime.UtcNow;
+            failEntry.PenaltyInfo = this.failureRetryFilteringDataHandler?.QueryPenaltyDetails(QueryType.BgpQuery, host.Address);
 
 #if DEBUG
             failEntry.ErrorInfo = ex?.ToString() ?? string.Empty;
@@ -440,6 +444,7 @@ namespace RestService.DataFetchingService
             }
 
             failEntry.TimeStamp = DateTime.UtcNow;
+            failEntry.PenaltyInfo = this.failureRetryFilteringDataHandler?.QueryPenaltyDetails(QueryType.RssiQuery, pair.Key.Subnet);
 
 #if DEBUG
             failEntry.ErrorInfo = ex?.ToString() ?? string.Empty;

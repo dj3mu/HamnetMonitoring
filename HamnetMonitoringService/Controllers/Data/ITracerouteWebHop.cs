@@ -26,6 +26,11 @@ namespace HamnetDbRest.Controllers
         string Status { get; }
 
         /// <summary>
+        /// Gets the hop's info which is meant for human reading.
+        /// </summary>
+        string Info { get; }
+
+        /// <summary>
         /// Gets the last measure Round-trip-time in milliseconds.
         /// </summary>
         double LastRttMs { get; }

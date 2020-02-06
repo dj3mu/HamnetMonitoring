@@ -47,6 +47,7 @@ namespace SnmpAbstraction
         /// <param name="addresses">The list of addresses to delete cache entries for.</param>
         public void DeleteForAddress(IEnumerable<IPAddress> addresses)
         {
+            log.Info($"{(this.dryRunMode ? "DRY RUN: " : string.Empty)}STARTING: Deleting explicitly requested cache entries");
             if (addresses == null)
             {
                 throw new ArgumentNullException(nameof(addresses), "Address list to remove is null");
@@ -55,6 +56,7 @@ namespace SnmpAbstraction
             if (!addresses.Any())
             {
                 // save some time if the adress list is empty
+                log.Info($"{(this.dryRunMode ? "DRY RUN: " : string.Empty)}COMPLETED: Nothing to delete for explicitly requested cache entries");
                 return;
             }
 
@@ -66,7 +68,9 @@ namespace SnmpAbstraction
                     foreach (var item in addresses)
                     {
                         var itemIp = new IpAddress(item);
-                        var entryToDelete = dbContext.CacheData.Where(d => d.Address == itemIp);
+
+                        var entryToDelete = dbContext.CacheData
+                            .Where(d => d.Address == itemIp);
 
                         if (entryToDelete.Any())
                         {
@@ -87,6 +91,8 @@ namespace SnmpAbstraction
                     transaction.Commit();
                 }
             }
+
+            log.Info($"{(this.dryRunMode ? "DRY RUN: " : string.Empty)}COMPLETED: Deleting explicitly requested cache entries");
         }
 
         /// <summary>
@@ -112,13 +118,21 @@ namespace SnmpAbstraction
         /// <param name="cacheValidSpan">The amount of time that an entry stays valid.</param>
         public void RemoveFromCacheIfModificationOlderThan(TimeSpan cacheValidSpan)
         {
+            log.Info($"{(this.dryRunMode ? "DRY RUN: " : string.Empty)}STARTING: Deleting cache entries that last changed more than {cacheValidSpan} ago");
+
             using (var dbContext = CacheDatabaseProvider.Instance.CacheDatabase)
             {
                 using (var transaction = dbContext.Database.BeginTransaction())
                 {
                     var nowItIs = DateTime.UtcNow;
 
-                    var entriesToDelete = dbContext.CacheData.Where(d => (nowItIs - d.LastModification) > cacheValidSpan);
+                    // [KL 2020-02-02]: The following is NOT deleting outdated entries since 2020-01-31.
+                    //                  Looks like a bug in DateTime handling of entity framework.
+                    //                  As this method is only seldomly executed, we can switch to C#-internal evaluation
+                    //                  without significant performance issue and investigate later.
+                    var entriesToDelete = dbContext.CacheData
+                        .ToList() // this makes it C# linq instead of entity-converted mysql
+                        .Where(d => (nowItIs - d.LastModification) > cacheValidSpan);
 
                     foreach (var item in entriesToDelete)
                     {
@@ -136,6 +150,8 @@ namespace SnmpAbstraction
                     transaction.Commit();
                 }
             }
+
+            log.Info($"{(this.dryRunMode ? "DRY RUN: " : string.Empty)}COMPLETED: Deleting cache entries that last changed more than {cacheValidSpan} ago");
         }
 
         /// <summary>
