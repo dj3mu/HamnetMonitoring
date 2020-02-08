@@ -51,5 +51,9 @@ namespace HamnetDbAbstraction
         /// </summary>
         [JsonProperty("newCover", Required = Required.Always), JsonConverter(typeof(JsonIntToBoolConverter))]
         public bool NewCover { get; set; }
+
+        /// <inheritdoc />
+        [JsonIgnore]
+        public double Altitude => this.GroundAboveSeaLevel + this.Elevation;
     }
 }
