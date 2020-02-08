@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using HamnetDbAbstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -51,18 +53,22 @@ namespace HamnetDbRest.Controllers
         private readonly IConfiguration configuration;
 
         private readonly QueryResultDatabaseContext dbContext;
-        
+
+        private readonly IHamnetDbAccess hamnetDbAccess;
+
         /// <summary>
         /// Instantiates the controller taking a logger.
         /// </summary>
         /// <param name="logger">The logger to use for logging.</param>
         /// <param name="configuration">The configuration settings.</param>
         /// <param name="dbContext">The databse context to use for retrieving the values to return.</param>
-        public ToolController(ILogger<RestController> logger, IConfiguration configuration, QueryResultDatabaseContext dbContext)
+        /// <param name="hamnetDbAccess">The accessor to HamnetDB (needed to get coordinates for callsigns).</param>
+        public ToolController(ILogger<RestController> logger, IConfiguration configuration, QueryResultDatabaseContext dbContext, IHamnetDbAccess hamnetDbAccess)
         {
             this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger), "The logger to use is null");
             this.configuration = configuration ?? throw new System.ArgumentNullException(nameof(configuration), "The configuration to use is null");
             this.dbContext = dbContext ?? throw new System.ArgumentNullException(nameof(dbContext), "The database context to take the data from is null");
+            this.hamnetDbAccess = hamnetDbAccess ?? throw new System.ArgumentNullException(nameof(dbContext), "The HamnetDB access singleton is null");
         }
 
         /// <summary>
@@ -94,7 +100,14 @@ namespace HamnetDbRest.Controllers
                 return new ErrorReply(new ArgumentException("Invalid feature list."));
             }
 
-            return await Task.Run(() => this.FetchCacheEntries(requestedFeatures));
+            try
+            {
+                return await Task.Run(() => this.FetchCacheEntries(requestedFeatures));
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -103,8 +116,15 @@ namespace HamnetDbRest.Controllers
         /// <returns>The result list.</returns>
         private ActionResult<IStatusReply> FetchCacheEntries(DeviceSupportedFeatures features)
         {
-            var cacheMaintenance = new CacheMaintenance(true);
-            return new HostsSupportingFeatureResult(cacheMaintenance.FetchEntryList().Where(e => ((e.SystemData?.SupportedFeatures ?? DeviceSupportedFeatures.None) & features) == features).Select(cacheEntry => new HostInfoReply(cacheEntry.Address, cacheEntry.SystemData, cacheEntry.ApiUsed, cacheEntry.LastModification)));
+            try
+            {
+                var cacheMaintenance = new CacheMaintenance(true);
+                return new HostsSupportingFeatureResult(cacheMaintenance.FetchEntryList().Where(e => ((e.SystemData?.SupportedFeatures ?? DeviceSupportedFeatures.None) & features) == features).Select(cacheEntry => new HostInfoReply(cacheEntry.Address, cacheEntry.SystemData, cacheEntry.ApiUsed, cacheEntry.LastModification)));
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -133,7 +153,48 @@ namespace HamnetDbRest.Controllers
                 return new ErrorReply(new ArgumentOutOfRangeException(nameof(maxHops), $"maxHops must be in range [{MinTracerouteMaxHops}; {MaxTracerouteMaxHops}] but was found as {maxHops}"));
             }
 
-            return await new TracerouteAction(WebUtility.UrlDecode(fromHost), WebUtility.UrlDecode(toHost), count, TimeSpan.FromSeconds(timeoutSeconds), maxHops, optionsInUse as FromUrlQueryQuerierOptions).Execute();
+            try
+            {
+                return await new TracerouteAction(WebUtility.UrlDecode(fromHost), WebUtility.UrlDecode(toHost), count, TimeSpan.FromSeconds(timeoutSeconds), maxHops, optionsInUse as FromUrlQueryQuerierOptions).Execute();
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("kml/{fromSite}/{toSite}")]
+        public async Task<IActionResult> Kml(string fromSite, string toSite, [FromQuery]FromUrlQueryQuerierOptions options)
+        {
+            Program.RequestStatistics.ApiV1KmlRequests++;
+
+            if (string.IsNullOrWhiteSpace(fromSite))
+            {
+                return this.BadRequest("Error: fromSite is null, empty or white-space-only");
+            }
+
+            if (string.IsNullOrWhiteSpace(toSite))
+            {
+                return this.BadRequest("Error: toSite is null, empty or white-space-only");
+            }
+
+            IQuerierOptions optionsInUse = this.CreateOptions(options);
+
+            try
+            {
+                var action = new KmlAction(WebUtility.UrlDecode(fromSite), WebUtility.UrlDecode(toSite), optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
+                var kmlString = await action.Execute();
+
+                return this.File(Encoding.UTF8.GetBytes(kmlString), "application/octet-stream", $"{fromSite}-{toSite}-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
         }
 
         /// <summary>

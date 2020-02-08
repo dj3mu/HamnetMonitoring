@@ -9,110 +9,13 @@ namespace HamnetMonitoringService
     /// Generator class for creating a KML file for visualization of a single link.
     /// </summary>
     /// <remarks>
-    /// <p>The styles and algorithms are used with friendly permission of Rob Gonggrijp of the Freifunk project.</p>
+    /// <p>The styles and algorithms in this file are used with friendly permission of Rob Gonggrijp of the Freifunk project.</p>
     /// <p>The original PHP version can be found at <see href="https://rop.nl/freifunk/line-of-sight.php.txt" />
     /// and a detailed description at <see href="https://wiki.freifunk.net/Berlin:Line-of-Sight_visualiser" />.</p>
     /// <p>The original PHP code is included in comments.</p>
     /// </remarks>
     internal class SingleLinkViewKmlGenerator : KmlGeneratorBase
     {
-        internal static readonly Uri PlacementCircleStyleMapReferenceUri;
-
-        internal static Uri PolygonStyleReferenceUri;
-
-        internal static readonly Uri LineStyleReferenceUri;
-        
-        internal static readonly Uri PolygonStyleTransparentReferenceUri;
-
-        private static readonly Style LineStyle;
-        private static readonly Style PolygonStyleTransparent;
-        private static readonly Style PolygonStyle;
-        private static readonly StyleMapCollection PlacementCircleStyleMap;
-        private static readonly BalloonStyle StandardBallonStyle;
-
-        /// <summary>
-        /// Initialize the static members of the class.
-        /// </summary>
-        static SingleLinkViewKmlGenerator()
-        {
-            StandardBallonStyle = new BalloonStyle
-            {
-                Id = "balloon",
-                BackgroundColor = Color32.Parse("ff6c3adf"),
-                TextColor = new Color32(0xff, 0x00, 0x00, 0x00),
-                Text = "$[description]",
-                DisplayMode = DisplayMode.Default
-            };        
-
-            PlacementCircleStyleMap = new StyleMapCollection
-            {
-                new Pair
-                {
-                    State = StyleState.Normal,
-                    StyleUrl = new Uri("#sn_placemark_circle", UriKind.Relative)
-                },
-                new Pair
-                {
-                    State = StyleState.Highlight,
-                    StyleUrl = new Uri("#sh_placemark_circle_highlight", UriKind.Relative)
-                }          
-            };
-
-            PlacementCircleStyleMap.Id = "msn_placemark_circle";
-            PlacementCircleStyleMapReferenceUri = new Uri($"#{PlacementCircleStyleMap.Id}", UriKind.Relative);
-
-            PolygonStyle = new Style
-            {
-                Id = "polygon",
-                Line = new LineStyle
-                {
-                    Width = 1.0,
-                    Color = new Color32(0xff, 0x00, 0x60, 0x00)
-                },
-                Polygon = new PolygonStyle
-                {
-                    Color = new Color32(0xff, 0x50, 0xff, 0x50)
-                },
-                Balloon = StandardBallonStyle
-            };
-            
-            PolygonStyleReferenceUri = new Uri($"#{PolygonStyle.Id}", UriKind.Relative);
-
-            PolygonStyleTransparent = new Style
-            {
-                Id = "polygon-transparent",
-                Line = new LineStyle
-                {
-                    Width = 1.0,
-                    Color = new Color32(0x40, 0x00, 0xff, 0x00)
-                },
-                Polygon = new PolygonStyle
-                {
-                    Color = new Color32(0x80, 0x00, 0xff, 0x00)
-                },
-                Balloon = StandardBallonStyle
-            };
-
-            PolygonStyleTransparentReferenceUri = new Uri($"#{PolygonStyleTransparent.Id}", UriKind.Relative);
-
-            LineStyle = new Style
-            {
-                Id = "line",
-                Line = new LineStyle
-                {
-                    Width = 1.0,
-                    Color = new Color32(0xff, 0x00, 0x00, 0x00)
-                },
-                Polygon = new PolygonStyle
-                {
-                    Color = new Color32(0xa0, 0xff, 0xff, 0xff)
-                },
-                Balloon = StandardBallonStyle
-            };
-
-            LineStyleReferenceUri = new Uri($"#{LineStyle.Id}", UriKind.Relative);
-        }
-
         /// <summary>
         /// Initializes a new instance for a link between the two given locations.
         /// </summary>
@@ -126,6 +29,7 @@ namespace HamnetMonitoringService
         /// </param>
         public SingleLinkViewKmlGenerator(IHamnetDbSite from, IHamnetDbSite to)
         {
+            // a lot of work to make sure we get at least half-way consistent data
             this.To = to ?? throw new ArgumentNullException(nameof(to), "to site is null");
             this.From = from ?? throw new ArgumentNullException(nameof(from), "from site is null");
 
@@ -224,8 +128,8 @@ namespace HamnetMonitoringService
                 List = listStyle
             });
 
-            locationFolder.AddFeature(this.From.ToKmlPlacemark(PlacementCircleStyleMapReferenceUri));
-            locationFolder.AddFeature(this.To.ToKmlPlacemark(PlacementCircleStyleMapReferenceUri));
+            locationFolder.AddFeature(this.From.ToKmlPlacemark(KmlCommonElements.PlacementCircleStyleMapReferenceUri));
+            locationFolder.AddFeature(this.To.ToKmlPlacemark(KmlCommonElements.PlacementCircleStyleMapReferenceUri));
         }
 
         private Document StartDocument(out Kml rootElement)
@@ -239,7 +143,7 @@ namespace HamnetMonitoringService
             var document = new Document
             {
                 Open = true,
-                Name = "hamnetdb.monitoring.service"
+                Name = $"Link between {this.From.Callsign?.ToUpperInvariant()} and {this.To.Callsign?.ToUpperInvariant()}"
             };
 
             kml.Feature = document;
@@ -258,7 +162,7 @@ namespace HamnetMonitoringService
                     Scale = 1.7,
                     Icon = new IconStyle.IconLink(new Uri("http://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png", UriKind.Absolute))
                 },
-                Balloon = StandardBallonStyle
+                Balloon = KmlCommonElements.StandardBallonStyle
             });
 
             document.AddStyle(new Style
@@ -269,13 +173,13 @@ namespace HamnetMonitoringService
                     Scale = 1.3,
                     Icon = new IconStyle.IconLink(new Uri("http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png", UriKind.Absolute))
                 },
-                Balloon = StandardBallonStyle
+                Balloon = KmlCommonElements.StandardBallonStyle
             });
 
-            document.AddStyle(PlacementCircleStyleMap);
-            document.AddStyle(LineStyle);
-            document.AddStyle(PolygonStyle);
-            document.AddStyle(PolygonStyleTransparent);
+            document.AddStyle(KmlCommonElements.PlacementCircleStyleMap);
+            document.AddStyle(KmlCommonElements.LineStyle);
+            document.AddStyle(KmlCommonElements.PolygonStyle);
+            document.AddStyle(KmlCommonElements.PolygonStyleTransparent);
         }
     }
 }

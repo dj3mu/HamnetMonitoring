@@ -1,5 +1,9 @@
 <?php
 
+// We're re-using the algorithms and styles with friendly permission of Rob Gonggrijp of the Freifunk project.
+// This script can be found at <see href="https://rop.nl/freifunk/line-of-sight.php.txt" />
+// and a detailed description at <see href="https://wiki.freifunk.net/Berlin:Line-of-Sight_visualiser" />.
+
 define ('SPEED_OF_LIGHT', 299792458);   	// in m/s
 define ('CIRCUMFERENCE_OF_EARTH', 40075000);	// in m 
 

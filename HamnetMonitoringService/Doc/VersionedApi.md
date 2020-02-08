@@ -268,6 +268,20 @@ Example result:
 ```
 
 
+### KML for visualization of Link in Google Earth
+URI path: `/api/v1/tools/kml/<from-call>/<to-call>?<options>`
+
+Generates a KML file that can directly be loaded into Google Earth to plot the link includings it's Fresnel zones. Using the buildings layer of Google Earth this can
+greatly help to identify objects in the way of a (planned) link.
+
+As reply to this request, the browser will open the download dialog to store the generated KML file.
+
+`from-call` and `to-call` are two callsigns. The sites table of the HamnetDB will be searched for sites matching that callsign and the location of the first match will be used for plotting.
+
+Example:
+![Example Visualization](GoogleEarthVisualization.jpg)
+
+
 #### Traceroute
 URI path: `/api/v1/tools/traceroute/<start host or IP>/<destination IP>?<options>`
 

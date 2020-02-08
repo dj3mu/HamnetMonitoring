@@ -12,18 +12,18 @@ namespace HamnetDbAbstraction
     {
         /// <inheritdoc />
         [JsonProperty("edited", Required = Required.Default)]
-        public DateTime Edited { get; set; }
+        public DateTime Edited { get; set; } = DateTime.MinValue;
 
         /// <inheritdoc />
         [JsonProperty("editor", Required = Required.Default)]
-        public string Editor { get; set; }
+        public string Editor { get; set; } = string.Empty;
 
         /// <inheritdoc />
         [JsonProperty("maintainer", Required = Required.Default)]
-        public string Maintainer { get; set; }
+        public string Maintainer { get; set; } = string.Empty;
 
         /// <inheritdoc />
-        [JsonProperty("version", Required = Required.Default)]
+        [JsonProperty("version", Required = Required.Always)]
         public int Version { get; set; }
 
         /// <inheritdoc />
@@ -35,11 +35,11 @@ namespace HamnetDbAbstraction
         public bool Deleted { get; set; }
 
         /// <inheritdoc />
-        [JsonProperty("id", Required = Required.Default)]
+        [JsonProperty("id", Required = Required.Always)]
         public int Id { get; set; }
 
         /// <inheritdoc />
-        [JsonProperty("no_check", Required = Required.Always), JsonConverter(typeof(JsonIntToBoolConverter))]
-        public bool NoCheck { get; set; }
+        [JsonProperty("no_check", Required = Required.Default), JsonConverter(typeof(JsonIntToBoolConverter))]
+        public bool NoCheck { get; set; } = false;
     }
 }

@@ -234,7 +234,7 @@ namespace HamnetDbAbstraction
             /// <inheritdoc />
             public override double ReadJson(JsonReader reader, Type objectType, double existingValue, bool hasExistingValue, JsonSerializer serializer)
             {
-                string s = (string)reader.Value;
+                string s = (string)reader.Value?.ToString();
 
                 if (!double.TryParse(s, NumberStyles.Any, HamnetDbJsonCultureInfo, out double parsedDouble))
                 {

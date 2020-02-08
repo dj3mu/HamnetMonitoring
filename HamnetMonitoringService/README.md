@@ -11,5 +11,5 @@ The service is configured using a file called `appsettings.json`. The settings a
 
 ## REST API
 There are two kinds of APIs provided:
-* The [legacy API](LegacyApi.md) emulates the API of the previous monitoring tools.
-* The [versioned API](VersionedApi.md) provides the data using versioned URLs and offers extended functionalities like real-time link testing.
+* The [legacy API](Doc/LegacyApi.md) emulates the API of the previous monitoring tools.
+* The [versioned API](Doc/VersionedApi.md) provides the data using versioned URLs and offers extended functionalities like real-time link testing.

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using HamnetDbAbstraction;
 using SharpKml.Base;
 using SharpKml.Dom;
@@ -27,11 +26,21 @@ namespace HamnetMonitoringService
 
             var pm = new Placemark
             {
-                Name = site.Callsign,
-                Id = site.Callsign, // we use callsign for unique ID - must see if that works out
+                Name = site.Callsign?.ToUpperInvariant(),
+                Id = site.Callsign?.ToUpperInvariant(), // we use callsign for unique ID - must see if that works out
                 Description = new Description
                 {
-                    Text = site.Comment
+                    Text = $@"<h2>{site.Callsign?.ToUpperInvariant()}:</h2>
+<table>
+<tr><td class=""left"">latitude: </td><td>{site.Latitude}&#176;</td></tr>
+<tr><td class=""left"">longitude: </td><td>{site.Longitude}&#176;</td></tr>
+<tr><td class=""left"">ground asl: </td><td>{site.GroundAboveSeaLevel} m</td></tr>
+<tr><td class=""left"">elevation: </td><td>{site.Elevation} m</td></tr>
+<tr><td class=""left"">abs. altitude: </td><td>{site.Altitude} m</td></tr>
+</table>
+<p>Comment:</p>
+<p>{site.Comment.Replace("\n", "<br/>")}</p>
+"
                 },
                 Geometry = site.ToKmlPoint()
             };
@@ -95,8 +104,8 @@ namespace HamnetMonitoringService
             var linkFolder = new Folder
             {
                 Name = (fromAsHamnetSite != null) && (toAsHamnetSite != null)
-                    ? $"Link from {fromAsHamnetSite.Callsign} to {toAsHamnetSite.Callsign}"
-                    : $"Link from {directionVector.From.Latitude}/{directionVector.From.Longitude} to {directionVector.To.Latitude}/{directionVector.To.Longitude}",
+                    ? $"Link between {fromAsHamnetSite.Callsign?.ToUpperInvariant()} and {toAsHamnetSite.Callsign?.ToUpperInvariant()}"
+                    : $"Link between {directionVector.From.Latitude}/{directionVector.From.Longitude} and {directionVector.To.Latitude}/{directionVector.To.Longitude}",
                 Visibility = true
             };
 
@@ -115,18 +124,32 @@ namespace HamnetMonitoringService
                 List = listStyle
             });
 
-            linkFolder.AddFeature(CreateLinePlacemark(directionVector.From, directionVector.To, "Line with screen to ground", new Uri("#line", UriKind.Relative), true));
-            linkFolder.AddFeature(CreateFresnelPlacemark(directionVector, "2.4 GHz fresnel zone", 2.4e9, SingleLinkViewKmlGenerator.PolygonStyleTransparentReferenceUri));
-            linkFolder.AddFeature(CreateFresnelPlacemark(directionVector, "5.8 GHz fresnel zone", 5.8e9, SingleLinkViewKmlGenerator.PolygonStyleReferenceUri));
+            linkFolder.AddFeature(CreateLinePlacemark(directionVector.From, directionVector.To, "Line with screen to ground", new Uri("#line", UriKind.Relative), true, string.Empty));
+
+            // description will be added to the larger (outer) zone only - hence the 2.4 GHz zone
+            string description = KmlCommonElements.BalloonCssString;
+            description += (fromAsHamnetSite != null) && (toAsHamnetSite != null)
+                    ? $"<h2>Link between {fromAsHamnetSite.Callsign?.ToUpperInvariant()} and {toAsHamnetSite.Callsign?.ToUpperInvariant()}</h2>"
+                    : $"<h2>Link between {directionVector.From.Latitude}/{directionVector.From.Longitude} and {directionVector.To.Latitude}/{directionVector.To.Longitude}</h2>";
+
+            description += $@"<table>
+<tr><td class=""left"">distance: </td><td>{directionVector.Distance / 1000.0:F1} km</td></tr>
+<tr><td class=""left"">azimuth to: </td><td>{directionVector.Bearing:F1}&#176;</td></tr>
+<tr><td class=""left"">elevation to: </td><td>{directionVector.Elevation:F1}&#176;</td></tr>
+<tr><td class=""left"">azimuth from: </td><td>{(directionVector.Bearing + 180.0) % 360.0:F3}&#176;</td></tr>
+<tr><td class=""left""><a href=""https://en.wikipedia.org/wiki/Free-space_path_loss"">FSPL</a>: </td><td>{directionVector.Distance.FreeSpacePathloss(2.4e9):F1} dB @ 2.4 GHz<br>{directionVector.Distance.FreeSpacePathloss(5.8e9):F1} dB @ 5.8 GHz</td></tr>
+</table>";
+            linkFolder.AddFeature(CreateFresnelPlacemark(directionVector, "2.4 GHz fresnel zone", 2.4e9, KmlCommonElements.PolygonStyleTransparentReferenceUri, description));
+            linkFolder.AddFeature(CreateFresnelPlacemark(directionVector, "5.8 GHz fresnel zone", 5.8e9, KmlCommonElements.PolygonStyleReferenceUri, string.Empty));
 
             return linkFolder;
         }
 
-        private static Placemark CreateFresnelPlacemark(IDirectionVector directionVector, string name, double frequency, Uri styleReferenceUri)
+        private static Placemark CreateFresnelPlacemark(IDirectionVector directionVector, string name, double frequency, Uri styleReferenceUri, string description)
         {
             var fresnelCreator = new FresnelPolygonsCreator(directionVector);
 
-            IReadOnlyList<IReadOnlyList<ILocation>> fresnelRingLocations = fresnelCreator.CreateRingLocations(frequency, 20);
+            IReadOnlyList<IReadOnlyList<ILocation>> fresnelRingLocations = fresnelCreator.CalculateRingLocations(frequency, 20);
             var linearRings = CreateKmlRings(fresnelRingLocations);
 
             var multiGeometry = new MultipleGeometry();
@@ -150,7 +173,7 @@ namespace HamnetMonitoringService
                 Snippet = new Snippet(),
                 Description = new Description
                 {
-                    Text = "description will be added later"
+                    Text = description
                 }
             };
 
@@ -226,7 +249,10 @@ namespace HamnetMonitoringService
             }
         }
 
-        private static Placemark CreateLinePlacemark(ILocation from, ILocation to, string name, Uri styleUrl, bool extrude)
+        /// <summary>
+        /// Create the KML Placemark containing a LineString object between the given locations.
+        /// </summary>
+        private static Placemark CreateLinePlacemark(ILocation from, ILocation to, string name, Uri styleUrl, bool extrude, string description)
         {
             var lineStringCoordinates = new CoordinateCollection
             {
@@ -245,7 +271,11 @@ namespace HamnetMonitoringService
             {
                 Name = name,
                 StyleUrl = styleUrl,
-                Geometry = lineString
+                Geometry = lineString,
+                Description = new Description
+                {
+                    Text = description ?? string.Empty
+                }
             };
 
             return linePlacemark;

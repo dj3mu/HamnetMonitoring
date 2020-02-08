@@ -27,7 +27,7 @@ namespace HamnetMonitoringService
             this.directionVector = directionVector ?? throw new ArgumentNullException(nameof(directionVector), "directionVector is null");
         }
 
-        internal IReadOnlyList<IReadOnlyList<ILocation>> CreateRingLocations(double frequency, int stepsInCircles)
+        internal IReadOnlyList<IReadOnlyList<ILocation>> CalculateRingLocations(double frequency, int stepsInCircles)
         {
             // How many degrees is a meter?
             // $lat_meter = 1 / ( CIRCUMFERENCE_OF_EARTH / 360 );

@@ -174,25 +174,13 @@ namespace HamnetDbAbstraction
         }
 
         /// <summary>
-        /// Gets the free space pathloss between this location and another location on the given frequency.
+        /// Gets the free space pathloss between for the given distance on the given frequency.
         /// </summary>
-        /// <param name="from">This starting point location.</param>
-        /// <param name="to">The destination location.</param>
-        /// <param name="frequency">The frequency to calculate the pathloss for in Hertz.</param>
         /// <param name="distance">The distance between the two locations.</param>
-        /// <returns>The distance vector between the two locations.</returns>
-        public static double FreeSpacePathloss(this ILocation from, ILocation to, double frequency, double distance)
+        /// <param name="frequency">The frequency to calculate the pathloss for in Hertz.</param>
+        /// <returns>The the free space pathloss for the given distance in dB.</returns>
+        public static double FreeSpacePathloss(this double distance, double frequency)
         {
-            if (from == null)
-            {
-                throw new ArgumentNullException(nameof(from), "The from location is null");
-            }
-
-            if (to == null)
-            {
-                throw new ArgumentNullException(nameof(to), "The to location is null");
-            }
-
           	return 20.0 * Math.Log10(((4.0 * Math.PI) / SpeedOfLight) * distance * frequency);
         }
 
@@ -202,7 +190,7 @@ namespace HamnetDbAbstraction
         /// <param name="from">This starting point location.</param>
         /// <param name="to">The destination location.</param>
         /// <param name="frequency">The frequency to calculate the pathloss for in Hertz.</param>
-        /// <returns>The distance vector between the two locations.</returns>
+        /// <returns>The the free space pathloss between the two locations in dB.</returns>
         public static double FreeSpacePathloss(this ILocation from, ILocation to, double frequency)
         {
             if (from == null)
@@ -215,7 +203,7 @@ namespace HamnetDbAbstraction
                 throw new ArgumentNullException(nameof(to), "The to location is null");
             }
 
-          	return from.FreeSpacePathloss(to, frequency, from.HaversineDistanceTo(to));
+          	return from.HaversineDistanceTo(to).FreeSpacePathloss(frequency);
         }
 
         /// <summary>

@@ -120,7 +120,7 @@ namespace HamnetDbAbstractionTests
             var fspl = from.FreeSpacePathloss(to, frequency);
             Assert.AreEqual(Math.Round(136.668370283, 9), Math.Round(fspl, 9), "wrong path loss w/o distance");
 
-            fspl = from.FreeSpacePathloss(to, frequency, distance);
+            fspl = distance.FreeSpacePathloss(frequency);
             Assert.AreEqual(Math.Round(136.668370283, 9), Math.Round(fspl, 9), "wrong path loss w/ distance");
         }
 
