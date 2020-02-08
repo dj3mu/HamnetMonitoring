@@ -111,23 +111,6 @@ namespace HamnetDbRest.Controllers
         }
 
         /// <summary>
-        /// Fetches the cache data and converts to an array.
-        /// </summary>
-        /// <returns>The result list.</returns>
-        private ActionResult<IStatusReply> FetchCacheEntries(DeviceSupportedFeatures features)
-        {
-            try
-            {
-                var cacheMaintenance = new CacheMaintenance(true);
-                return new HostsSupportingFeatureResult(cacheMaintenance.FetchEntryList().Where(e => ((e.SystemData?.SupportedFeatures ?? DeviceSupportedFeatures.None) & features) == features).Select(cacheEntry => new HostInfoReply(cacheEntry.Address, cacheEntry.SystemData, cacheEntry.ApiUsed, cacheEntry.LastModification)));
-            }
-            catch(Exception ex)
-            {
-                return this.BadRequest($"Error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
         /// Implementation of GET request.
         /// </summary>
         /// <returns>The results of the get request.</returns>
@@ -198,6 +181,74 @@ namespace HamnetDbRest.Controllers
         }
 
         /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("kml/{fromSite}")]
+        public async Task<IActionResult> KmlFromCallToRaw(string fromSite, [FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]ToLocationFromQuery toLocation)
+        {
+            Program.RequestStatistics.ApiV1KmlRequests++;
+
+            if (string.IsNullOrWhiteSpace(fromSite))
+            {
+                return this.BadRequest("Error: fromSite is null, empty or white-space-only");
+            }
+
+            if (toLocation == null)
+            {
+                return this.BadRequest("Error: location is null");
+            }
+
+            IQuerierOptions optionsInUse = this.CreateOptions(options);
+
+            try
+            {
+                var action = new KmlAction(WebUtility.UrlDecode(fromSite), toLocation, optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
+                var kmlString = await action.Execute();
+
+                return this.File(Encoding.UTF8.GetBytes(kmlString), "application/octet-stream", $"{fromSite}-raw-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("kml")]
+        public async Task<IActionResult> KmlFromCallToRaw([FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]ToLocationFromQuery toLocation, [FromQuery]FromLocationFromQuery fromLocation)
+        {
+            Program.RequestStatistics.ApiV1KmlRequests++;
+
+            if (fromLocation == null)
+            {
+                return this.BadRequest("Error: fromLocation is null");
+            }
+
+            if (toLocation == null)
+            {
+                return this.BadRequest("Error: location is null");
+            }
+
+            IQuerierOptions optionsInUse = this.CreateOptions(options);
+
+            try
+            {
+                var action = new KmlAction(fromLocation, toLocation, optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
+                var kmlString = await action.Execute();
+
+                return this.File(Encoding.UTF8.GetBytes(kmlString), "application/octet-stream", $"raw-From-To-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Creates the querier options prioritizing query URL over the confiugration settings.
         /// </summary>
         /// <param name="options">The options from query URL.</param>
@@ -221,6 +272,97 @@ namespace HamnetDbRest.Controllers
             }
 
             return optionsInUse;
+        }
+
+        /// <summary>
+        /// Fetches the cache data and converts to an array.
+        /// </summary>
+        /// <returns>The result list.</returns>
+        private ActionResult<IStatusReply> FetchCacheEntries(DeviceSupportedFeatures features)
+        {
+            try
+            {
+                var cacheMaintenance = new CacheMaintenance(true);
+                return new HostsSupportingFeatureResult(cacheMaintenance.FetchEntryList().Where(e => ((e.SystemData?.SupportedFeatures ?? DeviceSupportedFeatures.None) & features) == features).Select(cacheEntry => new HostInfoReply(cacheEntry.Address, cacheEntry.SystemData, cacheEntry.ApiUsed, cacheEntry.LastModification)));
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Container for a TO-location that is constructed from a Query URL.
+        /// </summary>
+        /// <remarks>
+        /// <p>Must be public due to ASP.NET requirements.</p>
+        /// <p>This code duplication for from and to looks odd. But the alternative would be an
+        /// awfully more complicated parsing of query URL (the container property names are the query URL parameter names).<br/>
+        /// Perhaps I find a better approach some day.</p>
+        /// </remarks>
+        public class ToLocationFromQuery
+        {
+            /// <summary>
+            /// Gets or sets the name of the location.
+            /// </summary>
+            public string ToName { get; set; } = "TO Location from Query Parameters";
+
+            /// <summary>
+            /// Gets or sets the latitude of the location.
+            /// </summary>
+            public double ToLatitude { get; set; } = double.NaN;
+
+            /// <summary>
+            /// Gets or sets the longitude of the location.
+            /// </summary>
+            public double ToLongitude { get; set; } = double.NaN;
+
+            /// <summary>
+            /// Gets or sets the height above sea level of the ground of the site in meters.
+            /// </summary>
+            public double ToGroundAboveSeaLevel { get; set; } = 0.0;
+
+            /// <summary>
+            /// Gets or sets the height of the antenna of the site in meters, relative to <see cref="ToGroundAboveSeaLevel" />.
+            /// </summary>
+            public double ToElevation { get; set; } = 0.0;
+        }
+
+        /// <summary>
+        /// Container for a FROM-location that is constructed from a Query URL.
+        /// </summary>
+        /// <remarks>
+        /// <p>Must be public due to ASP.NET requirements.</p>
+        /// <p>This code duplication for from and to looks odd. But the alternative would be an
+        /// awfully more complicated parsing of query URL (the container property names are the query URL parameter names).<br/>
+        /// Perhaps I find a better approach some day.</p>
+        /// </remarks>
+        public class FromLocationFromQuery
+        {
+            /// <summary>
+            /// Gets or sets the name of the location.
+            /// </summary>
+            public string FromName { get; set; } = "FROM Location from Query Parameters";
+
+            /// <summary>
+            /// Gets or sets the latitude of the location.
+            /// </summary>
+            public double FromLatitude { get; set; } = double.NaN;
+
+            /// <summary>
+            /// Gets or sets the longitude of the location.
+            /// </summary>
+            public double FromLongitude { get; set; } = double.NaN;
+
+            /// <summary>
+            /// Gets or sets the height above sea level of the ground of the site in meters.
+            /// </summary>
+            public double FromGroundAboveSeaLevel { get; set; } = 0.0;
+
+            /// <summary>
+            /// Gets or sets the height of the antenna of the site in meters, relative to <see cref="FromGroundAboveSeaLevel" />.
+            /// </summary>
+            public double FromElevation { get; set; } = 0.0;
         }
 
         /// <summary>
