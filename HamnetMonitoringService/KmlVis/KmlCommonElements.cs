@@ -9,7 +9,7 @@ namespace HamnetMonitoringService
     /// Generator class for creating a KML file for visualization of a single link.
     /// </summary>
     /// <remarks>
-    /// <p>The styles and algorithms in this file are used with friendly permission of Rob Gonggrijp of the Freifunk project.</p>
+    /// <p>The styles and algorithms in this file are used with friendly permission of Rop Gonggrijp of the Freifunk project.</p>
     /// <p>The original PHP version can be found at <see href="https://rop.nl/freifunk/line-of-sight.php.txt" />
     /// and a detailed description at <see href="https://wiki.freifunk.net/Berlin:Line-of-Sight_visualiser" />.</p>
     /// <p>The original PHP code is included in comments.</p>
