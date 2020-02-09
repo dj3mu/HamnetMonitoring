@@ -271,12 +271,22 @@ Example result:
 ### KML for visualization of Link in Google Earth
 URI path: `/api/v1/tools/kml/<from-call>/<to-call>?<options>`
 
+or
+
+URI path: `/api/v1/tools/kml/<from-call>?ToLatitude=<decimal-degree>&ToLongitude=<decimal-degree>&ToAltitude=<alt-in-meters>&ToName=<location-name>&<options>`
+
+or
+
+URI path: `/api/v1/tools/kml?ToLatitude=<decimal-degree>&ToLongitude=<decimal-degree>&ToAltitude=<alt-in-meters>&ToName=<location-name>&FromLatitude=<decimal-degree>&FromLongitude=<decimal-degree>&FromAltitude=<alt-in-meters>&FromName=<location-name>&<options>`
+
 Generates a KML file that can directly be loaded into Google Earth to plot the link includings it's Fresnel zones. Using the buildings layer of Google Earth this can
 greatly help to identify objects in the way of a (planned) link.
 
 As reply to this request, the browser will open the download dialog to store the generated KML file.
 
 `from-call` and `to-call` are two callsigns. The sites table of the HamnetDB will be searched for sites matching that callsign and the location of the first match will be used for plotting.
+
+The alternative URIs allow to pass one or even both locations as raw geographical coordinates. These are the variants that allow to use this feature without having to enter data into the HamnetDB.
 
 Example:
 ![Example Visualization](GoogleEarthVisualization.jpg)

@@ -46,6 +46,11 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         private const int MaxTracerouteMaxHops = 255;
 
+        /// <summary>
+        /// The mime type to use for the provided KML files.
+        /// </summary>
+        private const string KmlContentType = "application/vnd.google-earth.kml+xml";
+
         private static readonly char[] Separators = new[] { ' ', '\t', ',' };
 
         private readonly ILogger logger;
@@ -151,7 +156,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet("kml/{fromSite}/{toSite}")]
-        public async Task<IActionResult> Kml(string fromSite, string toSite, [FromQuery]FromUrlQueryQuerierOptions options)
+        public async Task<IActionResult> Kml(string fromSite, string toSite, [FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]KmlSettingsFromQuery kmlSettings)
         {
             Program.RequestStatistics.ApiV1KmlRequests++;
 
@@ -172,7 +177,12 @@ namespace HamnetDbRest.Controllers
                 var action = new KmlAction(WebUtility.UrlDecode(fromSite), WebUtility.UrlDecode(toSite), optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
                 var kmlString = await action.Execute();
 
-                return this.File(Encoding.UTF8.GetBytes(kmlString), "application/octet-stream", $"{fromSite}-{toSite}-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+                if ((kmlSettings != null) && (kmlSettings.AsText))
+                {
+                    return this.Ok(kmlString);
+                }
+                
+                return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"{fromSite}-{toSite}-{DateTime.Now:yyyyMMddTHHmmss}.kml");
             }
             catch(Exception ex)
             {
@@ -185,7 +195,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet("kml/{fromSite}")]
-        public async Task<IActionResult> KmlFromCallToRaw(string fromSite, [FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]ToLocationFromQuery toLocation)
+        public async Task<IActionResult> KmlFromCallToRaw(string fromSite, [FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]ToLocationFromQuery toLocation, [FromQuery]KmlSettingsFromQuery kmlSettings)
         {
             Program.RequestStatistics.ApiV1KmlRequests++;
 
@@ -206,7 +216,12 @@ namespace HamnetDbRest.Controllers
                 var action = new KmlAction(WebUtility.UrlDecode(fromSite), toLocation, optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
                 var kmlString = await action.Execute();
 
-                return this.File(Encoding.UTF8.GetBytes(kmlString), "application/octet-stream", $"{fromSite}-raw-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+                if ((kmlSettings != null) && (kmlSettings.AsText))
+                {
+                    return this.Ok(kmlString);
+                }
+                
+                return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"{fromSite}-raw-{DateTime.Now:yyyyMMddTHHmmss}.kml");
             }
             catch(Exception ex)
             {
@@ -219,7 +234,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet("kml")]
-        public async Task<IActionResult> KmlFromCallToRaw([FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]ToLocationFromQuery toLocation, [FromQuery]FromLocationFromQuery fromLocation)
+        public async Task<IActionResult> KmlFromCallToRaw([FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]ToLocationFromQuery toLocation, [FromQuery]FromLocationFromQuery fromLocation, [FromQuery]KmlSettingsFromQuery kmlSettings)
         {
             Program.RequestStatistics.ApiV1KmlRequests++;
 
@@ -240,7 +255,12 @@ namespace HamnetDbRest.Controllers
                 var action = new KmlAction(fromLocation, toLocation, optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
                 var kmlString = await action.Execute();
 
-                return this.File(Encoding.UTF8.GetBytes(kmlString), "application/octet-stream", $"raw-From-To-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+                if ((kmlSettings != null) && (kmlSettings.AsText))
+                {
+                    return this.Ok(kmlString);
+                }
+                
+                return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"raw-From-To-{DateTime.Now:yyyyMMddTHHmmss}.kml");
             }
             catch(Exception ex)
             {
@@ -363,6 +383,20 @@ namespace HamnetDbRest.Controllers
             /// Gets or sets the height of the antenna of the site in meters, relative to <see cref="FromGroundAboveSeaLevel" />.
             /// </summary>
             public double FromElevation { get; set; } = 0.0;
+        }
+
+        /// <summary>
+        /// Container for KML generation settings that is constructed from a Query URL.
+        /// </summary>
+        /// <remarks>
+        /// <p>Must be public due to ASP.NET requirements.</p>
+        /// </remarks>
+        public class KmlSettingsFromQuery
+        {
+            /// <summary>
+            /// Gets a value indicating whether to provide the KML data as plain text instead of a file download.
+            /// </summary>
+            public bool AsText { get; set; } = false;
         }
 
         /// <summary>
