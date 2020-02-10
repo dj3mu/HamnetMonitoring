@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>HamnetMonitoringServiceTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <PackageId>HamnetMonitor.RestService.Tests</PackageId>
+    <AssemblyTitle>Unit Tests for Hamnet Monitoring Service.</AssemblyTitle>
+    <PackageDescription>
+    Unit Tests for the Hamnet Monitoring service package.
+    </PackageDescription>
+    <Authors>DJ3MU</Authors>
+    <Product>HamneHamnet Monitoring Service Tests</Product>
+    <Copyright>(c) 2020 by the Amateur Radio Community</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>Hamnet Monitoring HamnetDB Service Tests</PackageTags>
+    <ConfigDir>Config</ConfigDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitVersionTask" Version="5.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nunit" Version="3.11.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj" />
+    <ProjectReference Include="..\HamnetMonitoringService\HamnetMonitoringService.csproj" />
+    <PackageReference Include="SharpKml.Core" Version="5.1.0"/>
+  </ItemGroup>
+
+  <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+    <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
+    <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
+  </Target>
+
+</Project>

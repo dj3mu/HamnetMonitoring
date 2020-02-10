@@ -92,6 +92,12 @@ namespace HamnetDbAbstraction
         }
 
         /// <inheritdoc />
+        public IHamnetDbSites QuerySites()
+        {
+            throw new NotImplementedException("Querying sites from HamnetDB via MySQL is not yet implemented (was not needed up to now)");
+        }
+        
+        /// <inheritdoc />
         public IHamnetDbSubnets QuerySubnets()
         {
             var connection = this.GetConnection();
@@ -186,5 +192,5 @@ namespace HamnetDbAbstraction
 
             return hosts;
         }
-   }
+    }
 }

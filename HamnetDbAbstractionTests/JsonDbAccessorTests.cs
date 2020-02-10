@@ -22,7 +22,7 @@ namespace HamnetDbAbstractionTests
         [Test]
         public void ConstructionTests()
         {
-            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, null);
+            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
 
             Assert.NotNull(accessor, "Constructed accessor is null");
             Assert.AreEqual(TestConstants.HostsUrl, accessor.HostApiUrl);
@@ -35,7 +35,7 @@ namespace HamnetDbAbstractionTests
         [Test]
         public void QueryRouterHostsTest()
         {
-            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, null);
+            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
             
             Assert.NotNull(accessor, "The accessor returned by provider is null");
 
@@ -46,12 +46,28 @@ namespace HamnetDbAbstractionTests
         }
 
         /// <summary>
+        /// Test for querying of router hosts (implicitly testing the provider).
+        /// </summary>
+        [Test]
+        public void QuerySitesTest()
+        {
+            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SitesUrl, TestConstants.SitesUrl, null);
+            
+            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            var sites = accessor.QuerySites();
+
+            Assert.NotNull(sites, "The sites return data is null");
+            Assert.Greater(sites.Count, 0, "No sites returned at all");
+        }
+
+        /// <summary>
         /// Test for querying of monitored hosts (implicitly testing the provider).
         /// </summary>
         [Test]
         public void QueryMonitoredHostsTest()
         {
-            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, null);
+            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
             
             Assert.NotNull(accessor, "The accessor returned by provider is null");
 
@@ -67,7 +83,7 @@ namespace HamnetDbAbstractionTests
         [Test]
         public void QuerySubnetsTest()
         {
-            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, null);
+            var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
             
             Assert.NotNull(accessor, "The accessor returned by provider is null");
 

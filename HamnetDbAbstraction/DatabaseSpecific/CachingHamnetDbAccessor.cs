@@ -136,6 +136,18 @@ namespace HamnetDbAbstraction
         }
 
         /// <inheritdoc />
+        public IHamnetDbSites QuerySites()
+        {
+            lock(this.cacheRefreshLock)
+            {
+                var timeOfQuery = DateTime.UtcNow;
+                var dbSiteDataSet = this.cacheDataStore.GetCacheDataSetOrNull<IHamnetDbSites>(DataTypes.Sites, timeOfQuery);
+
+                return (dbSiteDataSet == null) ? this.RefreshSites(timeOfQuery) : dbSiteDataSet.Data;
+            }
+        }
+
+        /// <inheritdoc />
         public IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> UniqueMonitoredHostPairsInSubnet(IPNetwork subnet)
         {
             if (subnet == null)
@@ -288,6 +300,14 @@ namespace HamnetDbAbstraction
             return hamnetDbSubnets;
         }
 
+        private IHamnetDbSites RefreshSites(DateTime timeOfQuery)
+        {
+            var hamnetDbSites = this.underlyingHamnetDbAccess.QuerySites();
+            this.cacheDataStore.AddOrReplaceCacheValue(DataTypes.Sites, hamnetDbSites, timeOfQuery);
+
+            return hamnetDbSites;
+        }
+
         /// <summary>
         /// Enumeration of data types stored in the cache store.
         /// </summary>
@@ -301,7 +321,9 @@ namespace HamnetDbAbstraction
 
             UniqueMonitoredHostPairsInSubnet,
 
-            UniqueMonitoredHostPairsInSameSubnet
+            UniqueMonitoredHostPairsInSameSubnet,
+
+            Sites
         }
 
         /// <summary>

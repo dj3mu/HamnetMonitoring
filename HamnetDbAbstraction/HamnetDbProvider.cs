@@ -45,6 +45,11 @@ namespace HamnetDbAbstraction
         public static readonly string SubnetsUrlKey = "Subnets";
 
         /// <summary>
+        /// The configuration key for getting the API URL for obtaining the sites of HamnetDB.
+        /// </summary>
+        public static readonly string SitesUrlKey = "Sites";
+
+        /// <summary>
         /// The configuration key for getting the database API URLs.
         /// </summary>
         public static readonly string DatabaseUrlsKey = "DatabaseUrls";
@@ -163,6 +168,7 @@ namespace HamnetDbAbstraction
             return new JsonHamnetDbAccessor(
                 configurationSection.GetValue<string>(HamnetDbProvider.HostsUrlKey),
                 configurationSection.GetValue<string>(HamnetDbProvider.SubnetsUrlKey),
+                configurationSection.GetValue<string>(HamnetDbProvider.SitesUrlKey),
                 null
                 );
         }
