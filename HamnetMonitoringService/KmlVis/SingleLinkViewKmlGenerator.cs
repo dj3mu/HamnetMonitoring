@@ -35,22 +35,22 @@ namespace HamnetMonitoringService
 
             if (double.IsNaN(this.From.Altitude) || !double.IsFinite(this.From.Altitude))
             {
-                throw new ArgumentOutOfRangeException(nameof(to), "The Altitude property of the From location is NaN or inifite");
+                throw new ArgumentOutOfRangeException(nameof(from), "The Altitude property of the From location is NaN or inifite. Make sure both, ground above sea level _and_ elevation are set properly");
             }
 
             if (double.IsNaN(this.From.Latitude) || !double.IsFinite(this.From.Latitude))
             {
-                throw new ArgumentOutOfRangeException(nameof(to), "The Latitude property of the From location is NaN or inifite");
+                throw new ArgumentOutOfRangeException(nameof(from), "The Latitude property of the From location is NaN or inifite");
             }
 
             if (double.IsNaN(this.From.Longitude) || !double.IsFinite(this.From.Longitude))
             {
-                throw new ArgumentOutOfRangeException(nameof(to), "The Longitude property of the From location is NaN or inifite");
+                throw new ArgumentOutOfRangeException(nameof(from), "The Longitude property of the From location is NaN or inifite");
             }
 
             if (double.IsNaN(this.To.Altitude) || !double.IsFinite(this.To.Altitude))
             {
-                throw new ArgumentOutOfRangeException(nameof(to), "The Altitude property of the To location is NaN or inifite");
+                throw new ArgumentOutOfRangeException(nameof(to), "The Altitude property of the To location is NaN or inifite. Make sure both, ground above sea level _and_ elevation are set properly");
             }
 
             if (double.IsNaN(this.To.Latitude) || !double.IsFinite(this.To.Latitude))

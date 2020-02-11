@@ -10,19 +10,19 @@ namespace HamnetDbAbstraction
     {
         /// <inheritdoc />
         [JsonProperty("latitude", Required = Required.Always)]
-        public double Latitude { get; set; }
+        public double Latitude { get; set; } = double.NaN;
 
         /// <inheritdoc />
         [JsonProperty("longitude", Required = Required.Always)]
-        public double Longitude { get; set; }
+        public double Longitude { get; set; } = double.NaN;
 
         /// <inheritdoc />
         [JsonProperty("ground_asl", Required = Required.Always)]
-        public double GroundAboveSeaLevel { get; set; }
+        public double GroundAboveSeaLevel { get; set; } = double.NaN;
 
         /// <inheritdoc />
         [JsonProperty("elevation", Required = Required.Always)]
-        public double Elevation { get; set; }
+        public double Elevation { get; set; } = double.NaN;
 
         /// <inheritdoc />
         [JsonProperty("callsign", Required = Required.Always)]
@@ -54,6 +54,8 @@ namespace HamnetDbAbstraction
 
         /// <inheritdoc />
         [JsonIgnore]
-        public double Altitude => this.GroundAboveSeaLevel + this.Elevation;
+        public double Altitude => (double.IsNaN(this.GroundAboveSeaLevel) || double.IsNaN(this.Elevation)) 
+            ? double.NaN
+            : this.GroundAboveSeaLevel + this.Elevation;
     }
 }
