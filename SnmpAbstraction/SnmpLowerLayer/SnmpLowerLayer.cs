@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
@@ -16,6 +17,11 @@ namespace SnmpAbstraction
         /// Handle to the logger.
         /// </summary>
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// To create strictly incrementing request ID for every request. Read by means of Interlocked.Increment.
+        /// </summary>
+        private static int nextRequestId = 0;
 
         /// <summary>
         /// The target that we talk to.
@@ -203,11 +209,19 @@ namespace SnmpAbstraction
         {
             var pduType = PduType.Get;
 
-            Pdu pdu = new Pdu(pduType);
+            Interlocked.CompareExchange(ref nextRequestId, 0, int.MaxValue); // wrap the request ID
+            var requestId = Interlocked.Increment(ref nextRequestId);
+            Pdu pdu = new Pdu(pduType)
+            {
+                RequestId = requestId // 0 --> generate random ID on encode, anyhting else --> use that value for request ID
+            };
+
             foreach (Oid item in oids)
             {
                 pdu.VbList.Add(item);
             }
+
+            log.Info($"Using request ID '{requestId}' for PDU with {pdu.VbCount} elements to {this.Target.Address}");
 
             SnmpPacket result = this.Target.Request(pdu, this.QueryParameters);
 
