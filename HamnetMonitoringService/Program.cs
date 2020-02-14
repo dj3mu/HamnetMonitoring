@@ -184,11 +184,6 @@ namespace HamnetDbRest
                         // the lowest possible level for logging. The log4net
                         // level then sets the level that we actually log at.
                         logging.AddLog4Net(Log4netConfigFile);
-#if DEBUG
-                        logging.SetMinimumLevel(LogLevel.Debug);
-#else
-                        logging.SetMinimumLevel(LogLevel.Information);
-#endif
                     })
                 .Build();
 
