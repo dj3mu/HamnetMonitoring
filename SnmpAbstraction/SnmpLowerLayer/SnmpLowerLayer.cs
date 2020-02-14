@@ -24,12 +24,7 @@ namespace SnmpAbstraction
         private static int nextRequestId = 0;
 
         /// <summary>
-        /// The target that we talk to.
-        /// </summary>
-        protected UdpTarget Target { get; private set; } = null;
-
-        /// <summary>
-        /// The query parameters. Initialized by call to <see cref="InitializeTarget" />
+        /// The query parameters.
         /// </summary>
         protected AgentParameters QueryParameters { get; private set; } = null;
 
@@ -98,8 +93,6 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public VbCollection DoWalk(Oid interfaceIdWalkRootOid)
         {
-            this.InitializeTarget();
-
             if (this.ProtocolVersionInUse == SnmpVersion.Ver1)
             {
                 return this.DoWalkGetNext(interfaceIdWalkRootOid);
@@ -127,8 +120,6 @@ namespace SnmpAbstraction
                 throw new ArgumentNullException(nameof(oids), "The list of OIDs to query is null");
             }
 
-            this.InitializeTarget();
-            
             SnmpPacket response = this.SendRequest(oids);
 
             if (response == null)
@@ -187,11 +178,6 @@ namespace SnmpAbstraction
             {
                 if (disposing)
                 {
-                    if (this.Target != null)
-                    {
-                        this.Target.Dispose();
-                        this.Target = null;
-                    }
                 }
 
                 // Free unmanaged resources here and set large fields to null.
@@ -221,26 +207,16 @@ namespace SnmpAbstraction
                 pdu.VbList.Add(item);
             }
 
-            log.Info($"Using request ID '{requestId}' for PDU with {pdu.VbCount} elements to {this.Target.Address}");
+            log.Debug($"Using request ID '{requestId}' for PDU with {pdu.VbCount} elements to {this.Address}");
 
-            SnmpPacket result = this.Target.Request(pdu, this.QueryParameters);
-
-            SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
-
-            return result;
-        }
-
-        /// <summary>
-        /// Implements lazy initialization of the SnmpSharpNet target instance.<br/>
-        /// </summary>
-        private void InitializeTarget()
-        {
-            if (this.Target != null)
+            using(var target = new UdpTarget((IPAddress)this.Address, this.Options.Port, Convert.ToInt32(this.Options.Timeout.TotalMilliseconds), this.Options.Retries))
             {
-                return;
-            }
+                SnmpPacket result = target.Request(pdu, this.QueryParameters);
 
-            this.Target = new UdpTarget((IPAddress)this.Address, this.Options.Port, Convert.ToInt32(this.Options.Timeout.TotalMilliseconds), this.Options.Retries);
+                SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
+
+                return result;
+            }
         }
 
         /// <summary>
@@ -287,6 +263,9 @@ namespace SnmpAbstraction
             // This Oid represents last Oid returned by the SNMP agent
             Oid lastOid = (Oid)interfaceIdWalkRootOid.Clone();
  
+            Interlocked.CompareExchange(ref nextRequestId, 0, int.MaxValue); // wrap the request ID
+            var requestId = Interlocked.Increment(ref nextRequestId);
+
             // Pdu class used for all requests
             Pdu pdu = new Pdu(PduType.GetBulk);
  
@@ -306,10 +285,8 @@ namespace SnmpAbstraction
                 // for subsequent requests, id will be set to a value that
                 // needs to be incremented to have unique request ids for each
                 // packet
-                if (pdu.RequestId != 0)
-                {
-                    pdu.RequestId += 1;
-                }
+                Interlocked.CompareExchange(ref nextRequestId, 0, int.MaxValue); // wrap the request ID
+                pdu.RequestId = Interlocked.Increment(ref nextRequestId);
 
                 // Clear Oids from the Pdu class.
                 pdu.VbList.Clear();
@@ -317,15 +294,19 @@ namespace SnmpAbstraction
                 // Initialize request PDU with the last retrieved Oid
                 pdu.VbList.Add(lastOid);
 
-                // Make SNMP request
-                SnmpV2Packet result = (SnmpV2Packet)this.Target.Request(pdu, this.QueryParameters);
+                SnmpV2Packet result;
+                using(var target = new UdpTarget((IPAddress)this.Address, this.Options.Port, Convert.ToInt32(this.Options.Timeout.TotalMilliseconds), this.Options.Retries))
+                {
+                    // Make SNMP request
+                    result = (SnmpV2Packet)target.Request(pdu, this.QueryParameters);
+                }
 
                 SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
 
                 // You should catch exceptions in the Request if using in real application.
                 // [DJ3MU] : Yeah - cool idea - but I still wouldn't know what else to do with them.
                 //           So for now, let fly them out to our caller.
- 
+
                 // If result is null then agent didn't reply or we couldn't parse the reply.
                 if (result != null)
                 {
@@ -398,10 +379,8 @@ namespace SnmpAbstraction
                 // When Pdu class is first constructed, RequestId is set to a random value
                 // that needs to be incremented on subsequent requests made using the
                 // same instance of the Pdu class.
-                if (pdu.RequestId != 0)
-                {
-                    pdu.RequestId += 1;
-                }
+                Interlocked.CompareExchange(ref nextRequestId, 0, int.MaxValue); // wrap the request ID
+                pdu.RequestId = Interlocked.Increment(ref nextRequestId);
 
                 // Clear Oids from the Pdu class.
                 pdu.VbList.Clear();
@@ -409,8 +388,12 @@ namespace SnmpAbstraction
                 // Initialize request PDU with the last retrieved Oid
                 pdu.VbList.Add(lastOid);
 
-                // Make SNMP request
-                SnmpV1Packet result = (SnmpV1Packet)this.Target.Request(pdu, this.QueryParameters);
+                SnmpV1Packet result;
+                using(var target = new UdpTarget((IPAddress)this.Address, this.Options.Port, Convert.ToInt32(this.Options.Timeout.TotalMilliseconds), this.Options.Retries))
+                {
+                    // Make SNMP request
+                    result = (SnmpV1Packet)target.Request(pdu, this.QueryParameters);
+                }
 
                 SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
 
