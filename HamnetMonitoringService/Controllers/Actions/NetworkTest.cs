@@ -5,7 +5,6 @@ using System.Net;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SnmpAbstraction;
 
@@ -20,7 +19,7 @@ namespace HamnetDbRest.Controllers
 
         private readonly ILogger logger;
 
-        private readonly IConfiguration configuration;
+        private readonly IHamnetDbAccess hamnetDbAccess;
         
         private IQuerierOptions querierOptions;
 
@@ -29,9 +28,9 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <param name="network">The network to test in CIDR or IP/Netmask notation.</param>
         /// <param name="logger">The logger to use.</param>
-        /// <param name="configuration">The service configuration.</param>
+        /// <param name="hamnetDbAccess">The service configuration.</param>
         /// <param name="querierOptions">The options to the Hamnet querier.</param>
-        public NetworkTest(string network, ILogger logger, IConfiguration configuration, IQuerierOptions querierOptions)
+        public NetworkTest(string network, ILogger logger, IHamnetDbAccess hamnetDbAccess, IQuerierOptions querierOptions)
         {
             if (string.IsNullOrWhiteSpace(network))
             {
@@ -45,7 +44,7 @@ namespace HamnetDbRest.Controllers
             }
 
             this.logger = logger;
-            this.configuration = configuration;
+            this.hamnetDbAccess = hamnetDbAccess ?? throw new ArgumentNullException(nameof(hamnetDbAccess), "Handle to the HamnetDB accessor is null");
             this.network = subnet;
             this.querierOptions = querierOptions ?? new FromUrlQueryQuerierOptions();
         }
@@ -63,7 +62,7 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                var matchingHosts = this.FetchSubnetsWithHostsFromHamnetDb(this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName));
+                var matchingHosts = this.FetchSubnetsWithHostsFromHamnetDb();
 
                 if ((matchingHosts == null) || (matchingHosts.Count == 0))
                 {
@@ -87,16 +86,12 @@ namespace HamnetDbRest.Controllers
         /// <summary>
         /// Retrieves the list of subnets with their hosts to monitor from HamnetDB.
         /// </summary>
-        /// <param name="hamnetDbConfig">The configuration section.</param>
         /// <returns>The list of subnets with their hosts to monitor from HamnetDB.</returns>
-        private IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> FetchSubnetsWithHostsFromHamnetDb(IConfigurationSection hamnetDbConfig)
+        private IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> FetchSubnetsWithHostsFromHamnetDb()
         {
-            using(var accessor = HamnetDbProvider.Instance.GetHamnetDbFromConfiguration(hamnetDbConfig))
-            {
-                var uniquePairs = accessor.UniqueMonitoredHostPairsInSubnet(this.network);
+            var uniquePairs = this.hamnetDbAccess.UniqueMonitoredHostPairsInSubnet(this.network);
 
-                return uniquePairs;
-            }
+            return uniquePairs;
         }
 
         /// <summary>

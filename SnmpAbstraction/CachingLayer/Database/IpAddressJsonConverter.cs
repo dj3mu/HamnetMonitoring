@@ -8,7 +8,7 @@ namespace SnmpAbstraction
     /// <summary>
     /// <see cref="JsonConverter" /> for an SNMP IpAddress.
     /// </summary>
-    internal class IpAddressJsonConverter : JsonConverter<IpAddress>
+    public class IpAddressJsonConverter : JsonConverter<IpAddress>
     {
         /// <inheritdoc />
         public override IpAddress ReadJson(JsonReader reader, Type objectType, IpAddress existingValue, bool hasExistingValue, JsonSerializer serializer)

@@ -23,5 +23,10 @@
         /// Path to a file containing the URL to obtain the subnets.
         /// </summary>
         public static readonly string SubnetsUrl = @"http://fhn.lspe.org/hamnetdb/codiad/workspace/hamnetdb/csv.cgi?tab=subnet&json=1";
+
+        /// <summary>
+        /// Path to a file containing the URL to obtain the sites.
+        /// </summary>
+        public static readonly string SitesUrl = @"http://fhn.lspe.org/hamnetdb/codiad/workspace/hamnetdb/csv.cgi?tab=site&json=1";
     }
 }

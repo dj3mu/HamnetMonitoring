@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Xml;
 using log4net;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
+[assembly: InternalsVisibleTo("HamnetMonitoringServiceTests")]
 namespace HamnetDbRest
 {
     /// <summary>
@@ -26,6 +28,16 @@ namespace HamnetDbRest
         /// The section key for the RSSI Aquisition service configuration.
         /// </summary>
         public static readonly string BgpAquisitionServiceSectionKey = "BgpAquisitionService";
+
+        /// <summary>
+        /// The section key for the penalty system settings.
+        /// </summary>
+        public static readonly string PenaltySystemSectionKey = "PenaltySystem";
+
+        /// <summary>
+        /// The key for enabling or disabling of the aquisition penalty system.
+        /// </summary>
+        public static readonly string PenaltySystemEnablingKey = "UsePenaltySystem";
 
         /// <summary>
         /// The key for the monitoring accounts section.
@@ -172,11 +184,6 @@ namespace HamnetDbRest
                         // the lowest possible level for logging. The log4net
                         // level then sets the level that we actually log at.
                         logging.AddLog4Net(Log4netConfigFile);
-#if DEBUG
-                        logging.SetMinimumLevel(LogLevel.Debug);
-#else
-                        logging.SetMinimumLevel(LogLevel.Information);
-#endif
                     })
                 .Build();
 

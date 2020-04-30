@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using HamnetDbAbstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -44,6 +46,11 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         private const int MaxTracerouteMaxHops = 255;
 
+        /// <summary>
+        /// The mime type to use for the provided KML files.
+        /// </summary>
+        private const string KmlContentType = "application/vnd.google-earth.kml+xml";
+
         private static readonly char[] Separators = new[] { ' ', '\t', ',' };
 
         private readonly ILogger logger;
@@ -51,18 +58,22 @@ namespace HamnetDbRest.Controllers
         private readonly IConfiguration configuration;
 
         private readonly QueryResultDatabaseContext dbContext;
-        
+
+        private readonly IHamnetDbAccess hamnetDbAccess;
+
         /// <summary>
         /// Instantiates the controller taking a logger.
         /// </summary>
         /// <param name="logger">The logger to use for logging.</param>
         /// <param name="configuration">The configuration settings.</param>
         /// <param name="dbContext">The databse context to use for retrieving the values to return.</param>
-        public ToolController(ILogger<RestController> logger, IConfiguration configuration, QueryResultDatabaseContext dbContext)
+        /// <param name="hamnetDbAccess">The accessor to HamnetDB (needed to get coordinates for callsigns).</param>
+        public ToolController(ILogger<RestController> logger, IConfiguration configuration, QueryResultDatabaseContext dbContext, IHamnetDbAccess hamnetDbAccess)
         {
             this.logger = logger ?? throw new System.ArgumentNullException(nameof(logger), "The logger to use is null");
             this.configuration = configuration ?? throw new System.ArgumentNullException(nameof(configuration), "The configuration to use is null");
             this.dbContext = dbContext ?? throw new System.ArgumentNullException(nameof(dbContext), "The database context to take the data from is null");
+            this.hamnetDbAccess = hamnetDbAccess ?? throw new System.ArgumentNullException(nameof(dbContext), "The HamnetDB access singleton is null");
         }
 
         /// <summary>
@@ -94,17 +105,14 @@ namespace HamnetDbRest.Controllers
                 return new ErrorReply(new ArgumentException("Invalid feature list."));
             }
 
-            return await Task.Run(() => this.FetchCacheEntries(requestedFeatures));
-        }
-
-        /// <summary>
-        /// Fetches the cache data and converts to an array.
-        /// </summary>
-        /// <returns>The result list.</returns>
-        private ActionResult<IStatusReply> FetchCacheEntries(DeviceSupportedFeatures features)
-        {
-            var cacheMaintenance = new CacheMaintenance(true);
-            return new HostsSupportingFeatureResult(cacheMaintenance.FetchEntryList().Where(e => ((e.SystemData?.SupportedFeatures ?? DeviceSupportedFeatures.None) & features) == features).Select(cacheEntry => new HostInfoReply(cacheEntry.Address, cacheEntry.SystemData, cacheEntry.ApiUsed, cacheEntry.LastModification)));
+            try
+            {
+                return await Task.Run(() => this.FetchCacheEntries(requestedFeatures));
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -133,7 +141,131 @@ namespace HamnetDbRest.Controllers
                 return new ErrorReply(new ArgumentOutOfRangeException(nameof(maxHops), $"maxHops must be in range [{MinTracerouteMaxHops}; {MaxTracerouteMaxHops}] but was found as {maxHops}"));
             }
 
-            return await new TracerouteAction(WebUtility.UrlDecode(fromHost), WebUtility.UrlDecode(toHost), count, TimeSpan.FromSeconds(timeoutSeconds), maxHops, optionsInUse as FromUrlQueryQuerierOptions).Execute();
+            try
+            {
+                return await new TracerouteAction(WebUtility.UrlDecode(fromHost), WebUtility.UrlDecode(toHost), count, TimeSpan.FromSeconds(timeoutSeconds), maxHops, optionsInUse as FromUrlQueryQuerierOptions).Execute();
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("kml/{fromSite}/{toSite}")]
+        public async Task<IActionResult> Kml(string fromSite, string toSite, [FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]KmlSettingsFromQuery kmlSettings)
+        {
+            Program.RequestStatistics.ApiV1KmlRequests++;
+
+            if (string.IsNullOrWhiteSpace(fromSite))
+            {
+                return this.BadRequest("Error: fromSite is null, empty or white-space-only");
+            }
+
+            if (string.IsNullOrWhiteSpace(toSite))
+            {
+                return this.BadRequest("Error: toSite is null, empty or white-space-only");
+            }
+
+            IQuerierOptions optionsInUse = this.CreateOptions(options);
+
+            try
+            {
+                var action = new KmlAction(WebUtility.UrlDecode(fromSite), WebUtility.UrlDecode(toSite), optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
+                var kmlString = await action.Execute();
+
+                if ((kmlSettings != null) && (kmlSettings.AsText))
+                {
+                    return this.Ok(kmlString);
+                }
+                
+                return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"{fromSite}-{toSite}-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("kml/{fromSite}")]
+        public async Task<IActionResult> KmlFromCallToRaw(string fromSite, [FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]ToLocationFromQuery toLocation, [FromQuery]KmlSettingsFromQuery kmlSettings)
+        {
+            Program.RequestStatistics.ApiV1KmlRequests++;
+
+            if (string.IsNullOrWhiteSpace(fromSite))
+            {
+                return this.BadRequest("Error: fromSite is null, empty or white-space-only");
+            }
+
+            if (toLocation == null)
+            {
+                return this.BadRequest("Error: location is null");
+            }
+
+            IQuerierOptions optionsInUse = this.CreateOptions(options);
+
+            try
+            {
+                var action = new KmlAction(WebUtility.UrlDecode(fromSite), toLocation, optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
+                var kmlString = await action.Execute();
+
+                if ((kmlSettings != null) && (kmlSettings.AsText))
+                {
+                    return this.Ok(kmlString);
+                }
+                
+                return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"{fromSite}-raw-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Implementation of GET request.
+        /// </summary>
+        /// <returns>The results of the get request.</returns>
+        [HttpGet("kml")]
+        public async Task<IActionResult> KmlFromCallToRaw([FromQuery]FromUrlQueryQuerierOptions options, [FromQuery]ToLocationFromQuery toLocation, [FromQuery]FromLocationFromQuery fromLocation, [FromQuery]KmlSettingsFromQuery kmlSettings)
+        {
+            Program.RequestStatistics.ApiV1KmlRequests++;
+
+            if (fromLocation == null)
+            {
+                return this.BadRequest("Error: fromLocation is null");
+            }
+
+            if (toLocation == null)
+            {
+                return this.BadRequest("Error: location is null");
+            }
+
+            IQuerierOptions optionsInUse = this.CreateOptions(options);
+
+            try
+            {
+                var action = new KmlAction(fromLocation, toLocation, optionsInUse as FromUrlQueryQuerierOptions, this.hamnetDbAccess);
+                var kmlString = await action.Execute();
+
+                if ((kmlSettings != null) && (kmlSettings.AsText))
+                {
+                    return this.Ok(kmlString);
+                }
+                
+                return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"raw-From-To-{DateTime.Now:yyyyMMddTHHmmss}.kml");
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -160,6 +292,111 @@ namespace HamnetDbRest.Controllers
             }
 
             return optionsInUse;
+        }
+
+        /// <summary>
+        /// Fetches the cache data and converts to an array.
+        /// </summary>
+        /// <returns>The result list.</returns>
+        private ActionResult<IStatusReply> FetchCacheEntries(DeviceSupportedFeatures features)
+        {
+            try
+            {
+                var cacheMaintenance = new CacheMaintenance(true);
+                return new HostsSupportingFeatureResult(cacheMaintenance.FetchEntryList().Where(e => ((e.SystemData?.SupportedFeatures ?? DeviceSupportedFeatures.None) & features) == features).Select(cacheEntry => new HostInfoReply(cacheEntry.Address, cacheEntry.SystemData, cacheEntry.ApiUsed, cacheEntry.LastModification)));
+            }
+            catch(Exception ex)
+            {
+                return this.BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Container for a TO-location that is constructed from a Query URL.
+        /// </summary>
+        /// <remarks>
+        /// <p>Must be public due to ASP.NET requirements.</p>
+        /// <p>This code duplication for from and to looks odd. But the alternative would be an
+        /// awfully more complicated parsing of query URL (the container property names are the query URL parameter names).<br/>
+        /// Perhaps I find a better approach some day.</p>
+        /// </remarks>
+        public class ToLocationFromQuery
+        {
+            /// <summary>
+            /// Gets or sets the name of the location.
+            /// </summary>
+            public string ToName { get; set; } = "TO Location from Query Parameters";
+
+            /// <summary>
+            /// Gets or sets the latitude of the location.
+            /// </summary>
+            public double ToLatitude { get; set; } = double.NaN;
+
+            /// <summary>
+            /// Gets or sets the longitude of the location.
+            /// </summary>
+            public double ToLongitude { get; set; } = double.NaN;
+
+            /// <summary>
+            /// Gets or sets the height above sea level of the ground of the site in meters.
+            /// </summary>
+            public double ToGroundAboveSeaLevel { get; set; } = 0.0;
+
+            /// <summary>
+            /// Gets or sets the height of the antenna of the site in meters, relative to <see cref="ToGroundAboveSeaLevel" />.
+            /// </summary>
+            public double ToElevation { get; set; } = 0.0;
+        }
+
+        /// <summary>
+        /// Container for a FROM-location that is constructed from a Query URL.
+        /// </summary>
+        /// <remarks>
+        /// <p>Must be public due to ASP.NET requirements.</p>
+        /// <p>This code duplication for from and to looks odd. But the alternative would be an
+        /// awfully more complicated parsing of query URL (the container property names are the query URL parameter names).<br/>
+        /// Perhaps I find a better approach some day.</p>
+        /// </remarks>
+        public class FromLocationFromQuery
+        {
+            /// <summary>
+            /// Gets or sets the name of the location.
+            /// </summary>
+            public string FromName { get; set; } = "FROM Location from Query Parameters";
+
+            /// <summary>
+            /// Gets or sets the latitude of the location.
+            /// </summary>
+            public double FromLatitude { get; set; } = double.NaN;
+
+            /// <summary>
+            /// Gets or sets the longitude of the location.
+            /// </summary>
+            public double FromLongitude { get; set; } = double.NaN;
+
+            /// <summary>
+            /// Gets or sets the height above sea level of the ground of the site in meters.
+            /// </summary>
+            public double FromGroundAboveSeaLevel { get; set; } = 0.0;
+
+            /// <summary>
+            /// Gets or sets the height of the antenna of the site in meters, relative to <see cref="FromGroundAboveSeaLevel" />.
+            /// </summary>
+            public double FromElevation { get; set; } = 0.0;
+        }
+
+        /// <summary>
+        /// Container for KML generation settings that is constructed from a Query URL.
+        /// </summary>
+        /// <remarks>
+        /// <p>Must be public due to ASP.NET requirements.</p>
+        /// </remarks>
+        public class KmlSettingsFromQuery
+        {
+            /// <summary>
+            /// Gets a value indicating whether to provide the KML data as plain text instead of a file download.
+            /// </summary>
+            public bool AsText { get; set; } = false;
         }
 
         /// <summary>

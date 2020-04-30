@@ -73,12 +73,13 @@ namespace RestService.DataFetchingService
         /// Construct for the given configuration.
         /// </summary>
         /// <param name="configuration">The configuration to construct for.</param>
-        public InfluxDatabaseDataHandler(IConfiguration configuration)
+        /// <param name="hamnetDbPoller">The HamnetDB poller to use for lookups.</param>
+        public InfluxDatabaseDataHandler(IConfiguration configuration, HamnetDbPoller hamnetDbPoller)
         {
-            this.configuration = configuration;
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "configuration is null");
             this.influxConfiguration = configuration.GetSection(Program.InfluxSectionKey);
             this.CreateInfluxClient();
-            this.hamnetDbPoller = new HamnetDbPoller(configuration);
+            this.hamnetDbPoller = hamnetDbPoller ?? throw new ArgumentNullException(nameof(hamnetDbPoller), "hamnetDbPoller is null");
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -89,7 +90,7 @@ namespace RestService.DataFetchingService
         // }
 
         /// <inheritdoc />
-        public string Name { get; } = "Influx Database";
+        public string Name { get; } = "03 - Influx Database";
 
         /// <inheritdoc />
         public void AquisitionFinished()
@@ -132,6 +133,11 @@ namespace RestService.DataFetchingService
 
                 foreach (var item in linkDetails.Details)
                 {
+                    if (this.currentPayload == null)
+                    {
+                        this.CreateNewPayload();
+                    }
+
                     this.currentPayload.Add(
                         new LineProtocolPoint(
                             InfluxRssiDatapointName,
@@ -285,6 +291,11 @@ namespace RestService.DataFetchingService
                     if (this.hamnetDbPoller.TryGetSubnetOfHost(item.RemoteAddress, out IHamnetDbSubnet hamentDbSubnet))
                     {
                         remoteSubnet = hamentDbSubnet.Subnet.ToString();
+                    }
+
+                    if (this.currentPayload == null)
+                    {
+                        this.CreateNewPayload();
                     }
 
                     this.currentPayload.Add(

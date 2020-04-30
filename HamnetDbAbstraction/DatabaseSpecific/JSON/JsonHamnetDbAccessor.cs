@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -11,9 +12,22 @@ namespace HamnetDbAbstraction
     /// <summary>
     /// Implementation of <see cref="IHamnetDbAccess" /> retrieving data via REST / JSON interface of HamnetDB.
     /// </summary>
-    internal partial class JsonHamnetDbAccessor : IHamnetDbAccess
+    internal class JsonHamnetDbAccessor : IHamnetDbAccess
     {
         private static readonly log4net.ILog log = HamnetDbAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// Culture used by HamnetDB.
+        /// </summary>
+        private static CultureInfo HamnetDbJsonCultureInfo = CultureInfo.CreateSpecificCulture("de-DE");
+
+        /// <summary>
+        /// HamnetDB is using German formattings.
+        /// </summary>
+        private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
+        {
+            Converters = { new HamnetDbDoubleConverter() }
+        };
 
         /// <summary>
         /// To detect redundant calls.
@@ -30,8 +44,9 @@ namespace HamnetDbAbstraction
         /// </summary>
         /// <param name="hostsApiUrl">The URL to access the hosts of HamnetDB.</param>
         /// <param name="subnetsApiUrl">The URL to access the subnets of HamnetDB.</param>
-        /// /// <param name="additionalDisposer">An additional Disposer that will be called (if not null) when this obejects gets disposed off.</param>
-        public JsonHamnetDbAccessor(string hostsApiUrl, string subnetsApiUrl, IDisposable additionalDisposer)
+        /// <param name="sitesApiUrl">The URL to access the sites of HamnetDB.</param>
+        /// <param name="additionalDisposer">An additional Disposer that will be called (if not null) when this obejects gets disposed off.</param>
+        public JsonHamnetDbAccessor(string hostsApiUrl, string subnetsApiUrl, string sitesApiUrl, IDisposable additionalDisposer)
         {
             if (string.IsNullOrWhiteSpace(hostsApiUrl))
             {
@@ -43,8 +58,14 @@ namespace HamnetDbAbstraction
                 throw new ArgumentNullException(nameof(subnetsApiUrl), "The subnets API URL is null, empty or white-space-only");
             }
 
+            if (string.IsNullOrWhiteSpace(sitesApiUrl))
+            {
+                throw new ArgumentNullException(nameof(sitesApiUrl), "The sitesApiUrl API URL is null, empty or white-space-only");
+            }
+
             this.HostApiUrl = hostsApiUrl;
             this.SubnetsApiUrl = subnetsApiUrl;
+            this.SitesApiUrl = sitesApiUrl;
             this.additionalDisposer = additionalDisposer;
         }
 
@@ -64,6 +85,11 @@ namespace HamnetDbAbstraction
         /// Gets the URL to access the subnets of HamnetDB.
         /// </summary>
         public string SubnetsApiUrl { get; }
+
+        /// <summary>
+        /// Gets the URL to access the sites of HamnetDB.
+        /// </summary>
+        public string SitesApiUrl { get; }
 
         /// <inheritdoc />
         public IHamnetDbHosts QueryBgpRouters()
@@ -131,6 +157,16 @@ namespace HamnetDbAbstraction
             return new HamnetDbSubnets(hosts);
         }
 
+        /// <inheritdoc />
+        public IHamnetDbSites QuerySites()
+        {
+            var responseString = this.SendHttpRequest(new Uri(this.SitesApiUrl, UriKind.Absolute));
+
+            var responseData = JsonConvert.DeserializeObject<IEnumerable<JsonSiteDataSet>>(responseString, SerializerSettings);
+
+            return new HamnetDbSites(responseData);
+        }
+
         /// <summary>
         /// Correctly implement the disposable pattern.
         /// </summary>
@@ -187,6 +223,31 @@ namespace HamnetDbAbstraction
                 {
                     throw new HttpRequestException($"Request for '{uri}' failed: Status {response.StatusCode}, Reason '{response.ReasonPhrase}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// JsonConverter for reading the double values with German formatting as used by HamnetDB REST API.
+        /// </summary>
+        private class HamnetDbDoubleConverter : JsonConverter<double>
+        {
+            /// <inheritdoc />
+            public override double ReadJson(JsonReader reader, Type objectType, double existingValue, bool hasExistingValue, JsonSerializer serializer)
+            {
+                string s = (string)reader.Value?.ToString();
+
+                if (!double.TryParse(s, NumberStyles.Any, HamnetDbJsonCultureInfo, out double parsedDouble))
+                {
+                    return double.NaN;
+                }
+
+                return parsedDouble;
+            }
+
+            /// <inheritdoc />
+            public override void WriteJson(JsonWriter writer, double value, JsonSerializer serializer)
+            {
+                writer.WriteValue(value.ToString(HamnetDbJsonCultureInfo));
             }
         }
     }

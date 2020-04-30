@@ -101,5 +101,10 @@ namespace HamnetDbRest
         /// Gets or sets the count of maintenance runds.
         /// </summary>
         public int MaintenanceRuns { get; internal set; } = 0;
+
+        /// <summary>
+        /// Gets the number of KML visualization requests.
+        /// </summary>
+        public int ApiV1KmlRequests { get; internal set; } = 0;
     }
 }

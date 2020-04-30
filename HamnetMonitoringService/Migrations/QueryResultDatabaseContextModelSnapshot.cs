@@ -25,6 +25,8 @@ namespace HamnetDbRest.Migrations
                     b.Property<string>("ErrorInfo")
                         .IsRequired();
 
+                    b.Property<string>("PenaltyInfo");
+
                     b.Property<DateTime>("TimeStamp");
 
                     b.HasKey("Host");
@@ -134,6 +136,8 @@ namespace HamnetDbRest.Migrations
 
                     b.Property<string>("ErrorInfo")
                         .IsRequired();
+
+                    b.Property<string>("PenaltyInfo");
 
                     b.Property<DateTime>("TimeStamp");
 

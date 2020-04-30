@@ -120,7 +120,8 @@ namespace HamnetDbRest.Controllers
                 this.Address = querierHop.Address?.ToString();
                 this.LossPercent = querierHop.LossPercent;
                 this.SentCount = querierHop.SentCount;
-                this.Status = querierHop.Status;
+                this.Status = querierHop.Status.ToString();
+                this.Info = querierHop.Info;
                 this.LastRttMs = querierHop.LastRtt;
                 this.AverageRttMs = querierHop.AverageRtt;
                 this.BestRttMs = querierHop.BestRtt;
@@ -138,6 +139,9 @@ namespace HamnetDbRest.Controllers
 
             /// <inheritdoc />
             public string Status { get; }
+
+            /// <inheritdoc />
+            public string Info { get; }
 
             /// <inheritdoc />
             public double LastRttMs { get; }

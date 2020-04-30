@@ -3,6 +3,37 @@ using System.Net;
 namespace SnmpAbstraction
 {
     /// <summary>
+    /// The hop status as enum.
+    /// </summary>
+    public enum HopStatus
+    {
+        /// <summary>
+        /// All ok with the hop
+        /// </summary>
+        Ok,
+
+        /// <summary>
+        /// The hop timed out
+        /// </summary>
+        Timeout,
+        
+        /// <summary>
+        /// The hop's packet has been lost
+        /// </summary>
+        Lost,
+        
+        /// <summary>
+        /// The hop contains replies but also losses of packets
+        /// </summary>
+        Unstable,
+        
+        /// <summary>
+        /// The hop includes a statement that the address is unreachable
+        /// </summary>
+        Unreachable
+    }
+
+    /// <summary>
     /// Interface to the data of a single traceroute hop.
     /// </summary>
     public interface ITracerouteHop
@@ -23,9 +54,14 @@ namespace SnmpAbstraction
         int SentCount { get; }
 
         /// <summary>
-        /// Gets the hop's status.
+        /// Gets some info about the hop (a more verbose status meant for human reading)
         /// </summary>
-        string Status { get; }
+        string Info { get; }
+
+        /// <summary>
+        /// Gets the hop's status as enum.
+        /// </summary>
+        HopStatus Status { get; }
 
         /// <summary>
         /// Gets the last measure Round-trip-time in milliseconds.

@@ -26,12 +26,20 @@ namespace RestService.DataFetchingService
         /// The list of receivers for the data that we aquired.
         /// </summary>
         private readonly List<IAquiredDataHandler> dataHandlers = new List<IAquiredDataHandler>();
-
+        
+        private readonly IFailureRetryFilteringDataHandler retryFeasibleHandler;
+        
         private readonly ILogger<BgpAquisitionService> logger;
 
         private readonly IConfiguration configuration;
         
         private readonly Mutex bgpMutex = new Mutex(false, Program.BgpRunningMutexName);
+
+        private readonly object multiTimerLockingObject = new object();
+
+        private readonly object databaseLockingObject = new object();
+
+        private HamnetDbPoller hamnetDbPoller;
 
         private bool disposedValue = false;
 
@@ -39,15 +47,13 @@ namespace RestService.DataFetchingService
 
         private QuerierOptions snmpQuerierOptions = QuerierOptions.Default;
 
-        private object multiTimerLockingObject = new object();
-
-        private object databaseLockingObject = new object();
-
         private TimeSpan refreshInterval;
 
         private QueryResultDatabaseContext resultDatabaseContext;
 
         private List<Regex> filterRegexList = null;
+
+        private bool usePenaltySystem = false;
 
         private int maxParallelQueries;
 
@@ -56,23 +62,20 @@ namespace RestService.DataFetchingService
         /// </summary>
         /// <param name="logger">The logger to use.</param>
         /// <param name="configuration">The service configuration.</param>
-        public BgpAquisitionService(ILogger<BgpAquisitionService> logger, IConfiguration configuration)
+        /// <param name="hamnetDbAccess">The singleton instance of the HamnetDB access handler.</param>
+        /// <param name="retryFeasibleHandler">The handler to check whether retry is feasible.</param>
+        public BgpAquisitionService(ILogger<BgpAquisitionService> logger, IConfiguration configuration, IHamnetDbAccess hamnetDbAccess, IFailureRetryFilteringDataHandler retryFeasibleHandler)
         {
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger), "The logger is null when creating a BgpAquisitionService");
-            }
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger), "The logger has not been provided by DI engine");
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "The configuration has not been provided by DI engine");
+            this.retryFeasibleHandler = retryFeasibleHandler ?? throw new ArgumentNullException(nameof(retryFeasibleHandler), "The retry feasible handler singleton has not been provided by DI engine");
 
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration), "The configuration is null when creating a BgpAquisitionService");
-            }
+            this.hamnetDbPoller = new HamnetDbPoller(this.configuration, hamnetDbAccess ?? throw new ArgumentNullException(nameof(hamnetDbAccess), "The HamnetDB accessor singleton has not been provided by DI engine"));
 
-            this.logger = logger;
-            this.configuration = configuration;
-
-            this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration));
-            this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration));
+            this.dataHandlers.Add(this.retryFeasibleHandler);
+            this.dataHandlers.Add(new ResultDatabaseDataHandler(configuration, this.retryFeasibleHandler));
+            this.dataHandlers.Add(new InfluxDatabaseDataHandler(configuration, this.hamnetDbPoller));
+            this.dataHandlers = this.dataHandlers.OrderBy(h => h.Name).ToList();
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -86,6 +89,10 @@ namespace RestService.DataFetchingService
         public Task StartAsync(CancellationToken cancellationToken)
         {
             IConfigurationSection aquisisionServiceSection = this.configuration.GetSection(Program.BgpAquisitionServiceSectionKey);
+
+            this.usePenaltySystem = aquisisionServiceSection.GetValue<bool>(Program.PenaltySystemEnablingKey);
+
+            this.logger.LogInformation($"Penality system for BGP aquisition: {(this.usePenaltySystem ? "enabled" : "disabled")}");
 
             // configure thread pool for number of parallel queries
             this.maxParallelQueries = aquisisionServiceSection.GetValue<int>("MaximumParallelQueries");
@@ -118,7 +125,9 @@ namespace RestService.DataFetchingService
                 this.snmpQuerierOptions = this.snmpQuerierOptions.WithPassword(loginPassword);
             }
 
-            this.snmpQuerierOptions = this.snmpQuerierOptions.WithCaching(aquisisionServiceSection.GetValue<bool>("UseQueryCaching"));
+            this.snmpQuerierOptions = this.snmpQuerierOptions
+                .WithCaching(aquisisionServiceSection.GetValue<bool>("UseQueryCaching"))
+                .WithTimeout(TimeSpan.FromSeconds(2));
 
             var hamnetDbConfig = this.configuration.GetSection(HamnetDbProvider.HamnetDbSectionName);
 
@@ -190,15 +199,15 @@ namespace RestService.DataFetchingService
 
                     foreach (var item in this.dataHandlers)
                     {
-                        if (item != null)
-                        {
-                            item.Dispose();
-                        }
+                        item?.Dispose();
                     }
 
                     this.dataHandlers.Clear();
 
                     this.DisposeDatabaseContext();
+
+                    this.hamnetDbPoller?.Dispose();
+                    this.hamnetDbPoller = null;
                 }
 
                 // TODO: nicht verwaltete Ressourcen (nicht verwaltete Objekte) freigeben und Finalizer weiter unten überschreiben.
@@ -276,10 +285,9 @@ namespace RestService.DataFetchingService
 
             Program.RequestStatistics.BgpPollings++;
 
-            HamnetDbPoller hamnetDbPoller = new HamnetDbPoller(this.configuration);
-            List<IHamnetDbHost> hostsSlicedAccordingToConfiguration = hamnetDbPoller.FetchBgpRoutersFromHamnetDb();
+            List<IHamnetDbHost> hostsSlicedAccordingToConfiguration = this.hamnetDbPoller.FetchBgpRoutersFromHamnetDb();
 
-            this.logger.LogDebug($"SNMP querying {hostsSlicedAccordingToConfiguration.Count} entries");
+            this.logger.LogDebug($"API querying {hostsSlicedAccordingToConfiguration.Count} entries");
 
             this.SendPrepareToDataHandlers();
 
@@ -359,6 +367,12 @@ namespace RestService.DataFetchingService
         /// <param name="host">The host to query BGP peers from.</param>
         private void QueryPeersForSingleHost(IHamnetDbHost host)
         {
+            if (this.usePenaltySystem && !this.retryFeasibleHandler.IsRetryFeasible(QueryType.BgpQuery, host.Address).GetValueOrDefault(true))
+            {
+                this.logger.LogInformation($"Skipping BGP peers for host {host.Address} ({host.Name}): Retry not yet due.");
+                return;
+            }
+
             this.logger.LogInformation($"Querying BGP peers for host {host.Address} ({host.Name})");
 
             Exception hitException = null;

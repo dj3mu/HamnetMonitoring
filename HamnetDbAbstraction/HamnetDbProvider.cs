@@ -25,6 +25,16 @@ namespace HamnetDbAbstraction
         public static readonly string ConnectionStringKey = "ConnectionString";
 
         /// <summary>
+        /// The configuration key for getting the cache refresh interval value.
+        /// </summary>
+        public static readonly string CacheRefreshIntervalKey = "CacheRefreshInterval";
+
+        /// <summary>
+        /// The configuration key for getting the the flag whether to refresh cache preemtively.
+        /// </summary>
+        public static readonly string PreemptiveCacheRefreshKey = "PreemtiveCacheRefresh";
+
+        /// <summary>
         /// The configuration key for getting the API URL for obtaining the hosts of HamnetDB.
         /// </summary>
         public static readonly string HostsUrlKey = "Hosts";
@@ -33,6 +43,11 @@ namespace HamnetDbAbstraction
         /// The configuration key for getting the API URL for obtaining the subnets of HamnetDB.
         /// </summary>
         public static readonly string SubnetsUrlKey = "Subnets";
+
+        /// <summary>
+        /// The configuration key for getting the API URL for obtaining the sites of HamnetDB.
+        /// </summary>
+        public static readonly string SitesUrlKey = "Sites";
 
         /// <summary>
         /// The configuration key for getting the database API URLs.
@@ -68,14 +83,36 @@ namespace HamnetDbAbstraction
                 throw new ArgumentNullException(nameof(configurationSection), "The configuration section is null");
             }
 
+            var cacheRefreshIntervalString = configurationSection.GetValue<string>(HamnetDbProvider.CacheRefreshIntervalKey);
+            TimeSpan cacheRefreshInterval = TimeSpan.Zero;
+            if (string.IsNullOrWhiteSpace(cacheRefreshIntervalString) || !TimeSpan.TryParse(cacheRefreshIntervalString, out cacheRefreshInterval))
+            {
+                // by default do not cache
+                cacheRefreshInterval = TimeSpan.Zero;
+            }
+
+            var cachePreemptiveRefreshString = configurationSection.GetValue<string>(HamnetDbProvider.PreemptiveCacheRefreshKey);
+            bool cacheRefreshPreemptive = true;
+            if (string.IsNullOrWhiteSpace(cachePreemptiveRefreshString) || !Boolean.TryParse(cachePreemptiveRefreshString, out cacheRefreshPreemptive))
+            {
+                // by default use preemtive cache refresh
+                cacheRefreshPreemptive = true;
+            }
+
             if (configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() == "MYSQL")
             {
-                return this.InstantiateMySqlAccessor(configurationSection.GetValue<string>(HamnetDbProvider.ConnectionStringKey));
+                var accessor = this.InstantiateMySqlAccessor(configurationSection.GetValue<string>(HamnetDbProvider.ConnectionStringKey));
+                return (cacheRefreshInterval != TimeSpan.Zero)
+                    ? new CachingHamnetDbAccessor(cacheRefreshInterval, accessor, cacheRefreshPreemptive)
+                    : accessor;
             }
             
             if (configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() == "JSONURL")
             {
-                return this.InstantiateJsonUrlAccessor(configurationSection.GetSection(HamnetDbProvider.DatabaseUrlsKey));
+                var accessor = this.InstantiateJsonUrlAccessor(configurationSection.GetSection(HamnetDbProvider.DatabaseUrlsKey));
+                return (cacheRefreshInterval != TimeSpan.Zero)
+                    ? new CachingHamnetDbAccessor(cacheRefreshInterval, accessor, cacheRefreshPreemptive)
+                    : accessor;
             }
 
             throw new InvalidOperationException($"Only MySQL or JsonUrl is currently supported for the HamentDB interface but found '{configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey)}'");
@@ -131,6 +168,7 @@ namespace HamnetDbAbstraction
             return new JsonHamnetDbAccessor(
                 configurationSection.GetValue<string>(HamnetDbProvider.HostsUrlKey),
                 configurationSection.GetValue<string>(HamnetDbProvider.SubnetsUrlKey),
+                configurationSection.GetValue<string>(HamnetDbProvider.SitesUrlKey),
                 null
                 );
         }

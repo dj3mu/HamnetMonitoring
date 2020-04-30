@@ -5,7 +5,10 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
+using RestService.DataFetchingService;
 using RestService.Model;
+using SnmpAbstraction;
 
 namespace RestService.Database
 {
@@ -14,6 +17,41 @@ namespace RestService.Database
     /// </summary>
     public class QueryResultDatabaseContext : DbContext
     {
+        /// <summary>
+        /// JSON serialization / deserialization settings for all data.
+        /// </summary>
+        private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
+        {
+            CheckAdditionalContent = false,
+            ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+            DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            DateParseHandling = DateParseHandling.DateTimeOffset,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            DefaultValueHandling = DefaultValueHandling.Include,
+            FloatFormatHandling = FloatFormatHandling.String,
+            FloatParseHandling = FloatParseHandling.Double,
+#if DEBUG
+            Formatting = Formatting.Indented,
+#else
+            Formatting = Formatting.None,
+#endif
+            MissingMemberHandling = MissingMemberHandling.Error,
+            NullValueHandling = NullValueHandling.Include,
+            ObjectCreationHandling = ObjectCreationHandling.Auto,
+            PreserveReferencesHandling = PreserveReferencesHandling.None,
+            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            StringEscapeHandling = StringEscapeHandling.Default,
+            TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
+            TypeNameHandling = TypeNameHandling.None,
+
+            Converters = new JsonConverter[]
+            {
+                // full converters
+                new IpAddressJsonConverter(),
+                new SemanticVersionJsonConverter()
+            }
+        };
+
         /// <summary>
         /// Handle to the logger.
         /// </summary>
@@ -151,12 +189,68 @@ namespace RestService.Database
                     affectedHostsObject => string.Join(',', affectedHostsObject),
                     affectedHostsString => affectedHostsString.Split(',', StringSplitOptions.RemoveEmptyEntries));
 
+            modelBuilder.Entity<RssiFailingQuery>()
+                .Property(e => e.PenaltyInfo)
+                .HasConversion(
+                    penaltyInfoObject => JsonConvert.SerializeObject(penaltyInfoObject, SerializerSettings),
+                    penaltyInfoString => JsonConvert.DeserializeObject<SingleFailureInfoContainer>(penaltyInfoString, SerializerSettings));
+
             modelBuilder.Entity<MonitoringPerstistence>()
                 .Property(p => p.Id)
                 .ValueGeneratedOnAdd();
 
             modelBuilder.Entity<BgpPeerData>()
                 .HasIndex(p => new { p.RemoteAddress, p.LocalAddress }).IsUnique();
+
+            modelBuilder.Entity<BgpFailingQuery>()
+                .Property(e => e.PenaltyInfo)
+                .HasConversion(
+                    penaltyInfoObject => JsonConvert.SerializeObject(penaltyInfoObject, SerializerSettings),
+                    penaltyInfoString => JsonConvert.DeserializeObject<SingleFailureInfoContainer>(penaltyInfoString, SerializerSettings));
+        }
+
+        /// <summary>
+        /// Simple container for deserialization of an <see cref="ISingleFailureInfo" />.
+        /// </summary>
+        private class SingleFailureInfoContainer : ISingleFailureInfo
+        {
+            /// <inheritdoc />
+            [JsonProperty(Order = 1)]
+            public uint OccuranceCount { get; set; }
+
+            /// <inheritdoc />
+            [JsonProperty(Order = 3)]
+            public DateTime LastOccurance { get; set; }
+
+            /// <inheritdoc />
+            [JsonProperty(Order = 2)]
+            public DateTime FirsOccurance { get; set; }
+
+            /// <inheritdoc />
+            [JsonProperty(Order = 4)]
+            public TimeSpan CurrentPenalty { get; set; }
+
+            /// <inheritdoc />
+            [JsonProperty(Order = 5)]
+            public bool IsRetryFeasible
+            {
+                get
+                {
+                    var retryFeasible = ((DateTime.UtcNow - this.LastOccurance) > this.CurrentPenalty);
+                    return retryFeasible;
+                }
+
+                set
+                {
+                    // NOP - we ignore the stored value and always recompute in getter
+                }
+            }
+
+            /// <inheritdoc />
+            public override string ToString()
+            {
+                return $"occurance count = {this.OccuranceCount}, retry interval = {this.CurrentPenalty}, first occurance = {this.FirsOccurance}, last occurance = {this.LastOccurance}";
+            }
         }
     }
 }

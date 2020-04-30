@@ -66,7 +66,7 @@ namespace SnmpAbstraction
                     {
                         detectionDuration.Stop();
 
-                        log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
+                        log.Debug($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
 
                         deviceToUse = currentDevice;
                     }
@@ -74,7 +74,7 @@ namespace SnmpAbstraction
                     {
                         detectionDuration.Stop();
 
-                        log.Info($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
+                        log.Debug($"Device detection of '{this.lowerLayer.Address}' took {detectionDuration.ElapsedMilliseconds} ms");
 
                         deviceToUse = currentDevice;
                     }
