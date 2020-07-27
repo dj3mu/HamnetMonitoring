@@ -75,7 +75,7 @@ namespace SnmpAbstraction
             DeviceSpecificOid singleOid;
             if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthImmediateOid, out singleOid) && !singleOid.Oid.IsNull)
             {
-                this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid, "RSSI single value");
+                this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid, "RSSI single value (RxSignalStrengthImmediateOid)");
                 this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
             }
             else
@@ -104,11 +104,28 @@ namespace SnmpAbstraction
 
                 var queryResults = this.LowerSnmpLayer.QueryAsInt(clientSpecificOids, "wireless peer info, RX signal strength");
 
-                this.RecordCachableOids(CachableValueMeanings.WirelessRxSignalStrength, clientSpecificOids);
-
                 // Note: As the SNMP cannot return -infinity MikroTik devices return 0.
                 //       Hence we effectively skip 0 values here assuming that stream is not in use.
-                this.RxSignalStrengthBacking = queryResults.Values.Where(v => v != 0).DecibelLogSum();
+                var valueToSet = queryResults.Values.Where(v => v != 0).DecibelLogSum();
+
+                if (double.IsNegativeInfinity(valueToSet))
+                {
+                    // if the device didn't return anyhting useful until here, we do a final try with RxSignalStrengthApAppendMacAndInterfaceId
+                    if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthApAppendMacAndInterfaceId, out singleOid) && !singleOid.Oid.IsNull)
+                    {
+                        var interfaceTypeOid = singleOid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
+
+                        valueToSet = this.LowerSnmpLayer.QueryAsInt(interfaceTypeOid, "RSSI single value (SignalStrengthApAppendMacAndInterfaceId)");
+                        this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
+                    }
+                }
+                else
+                {
+                    // we have valid per-stream values
+                    this.RecordCachableOids(CachableValueMeanings.WirelessRxSignalStrength, clientSpecificOids);
+                }
+
+                this.RxSignalStrengthBacking = valueToSet;
             }
 
             durationWatch.Stop();
