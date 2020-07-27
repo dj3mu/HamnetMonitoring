@@ -204,8 +204,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void IpLinkTestTest()
         {
-            var ip1UnderTest = new IpAddress("44.224.20.29");
-            var ip2UnderTest = new IpAddress("44.224.20.26");
+            var ip1UnderTest = new IpAddress("44.224.18.42");
+            var ip2UnderTest = new IpAddress("44.224.18.43");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 

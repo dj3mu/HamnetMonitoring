@@ -7,6 +7,7 @@ using System.Net;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
 using HamnetDbRest;
+using HamnetMonitoringService;
 using InfluxDB.LineProtocol.Client;
 using InfluxDB.LineProtocol.Payload;
 using Microsoft.Extensions.Configuration;
@@ -44,11 +45,11 @@ namespace RestService.DataFetchingService
         private const string InfluxSubnetTagName = "subnet";
 
         private const string InfluxCallTagName = "call";
-        
+
         private const string InfluxRemoteAsTagName = "remoteAs";
-        
+
         private const string InfluxPeeringNameTagName = "peering";
-        
+
         private const string InfluxCall2TagName = "call2";
 
         private const string InfluxDescriptionTagName = "desc";
@@ -143,7 +144,7 @@ namespace RestService.DataFetchingService
                             InfluxRssiDatapointName,
                             new Dictionary<string, object>
                             {
-                                { InfluxValueKey, item.RxLevel1at2 }
+                                { InfluxValueKey, item.RxLevel1at2.ToInfluxValidDouble() }
                             },
                             new Dictionary<string, string>
                             {
@@ -159,7 +160,7 @@ namespace RestService.DataFetchingService
                             InfluxRssiDatapointName,
                             new Dictionary<string, object>
                             {
-                                { InfluxValueKey, item.RxLevel2at1 }
+                                { InfluxValueKey, item.RxLevel2at1.ToInfluxValidDouble() }
                             },
                             new Dictionary<string, string>
                             {
@@ -177,7 +178,7 @@ namespace RestService.DataFetchingService
                                 InfluxCcqHostDatapointName,
                                 new Dictionary<string, object>
                                 {
-                                    { InfluxValueKey, item.Ccq1.Value }
+                                    { InfluxValueKey, item.Ccq1.ToInfluxValidDouble() }
                                 },
                                 new Dictionary<string, string>
                                 {
@@ -195,7 +196,7 @@ namespace RestService.DataFetchingService
                                 InfluxCcqHostDatapointName,
                                 new Dictionary<string, object>
                                 {
-                                    { InfluxValueKey, item.Ccq2.Value }
+                                    { InfluxValueKey, item.Ccq2.ToInfluxValidDouble() }
                                 },
                                 new Dictionary<string, string>
                                 {
@@ -415,7 +416,7 @@ namespace RestService.DataFetchingService
                         log.Error($"Cannot find address {item.DeviceAddress} in HamnetDB. Hence cannot provide call for that address. Skipping this device for recording of device uptime in InfluxDB");
                         continue;
                     }
-        
+
                     string hostCall = itemDbHost.Callsign.ToUpperInvariant();
 
                     this.currentPayload.Add(
@@ -530,7 +531,7 @@ namespace RestService.DataFetchingService
 
             this.influxClient = new LineProtocolClient(new Uri(databaseUri), databaseName, databaseUser, databasePassword);
         }
- 
+
          private void CreateNewPayload()
         {
             this.SendCurrentPayload();

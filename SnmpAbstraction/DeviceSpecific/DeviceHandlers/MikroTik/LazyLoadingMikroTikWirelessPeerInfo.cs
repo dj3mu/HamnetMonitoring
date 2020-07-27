@@ -116,7 +116,7 @@ namespace SnmpAbstraction
                         var interfaceTypeOid = singleOid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
 
                         valueToSet = this.LowerSnmpLayer.QueryAsInt(interfaceTypeOid, "RSSI single value (SignalStrengthApAppendMacAndInterfaceId)");
-                        this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
+                        this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, interfaceTypeOid);
                     }
                 }
                 else
