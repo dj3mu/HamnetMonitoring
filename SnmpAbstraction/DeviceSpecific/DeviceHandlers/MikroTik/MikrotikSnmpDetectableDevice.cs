@@ -10,7 +10,7 @@ namespace SnmpAbstraction
     /// </summary>
     internal class MikrotikSnmpDetectableDevice : DetectableDeviceBase
     {
-        private static readonly Regex OsVersionExtractionRegex = new Regex(RouterOsDetectionString + @"\s+([0-9.]+)\s+", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex OsVersionExtractionRegex = new Regex(RouterOsDetectionString + @"\s+([0-9.]+).*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -62,7 +62,7 @@ namespace SnmpAbstraction
             }
 
             log.Info($"Device '{snmpLowerLayer.Address}' seems to be a MikroTik device");
-            
+
             return true;
         }
 
@@ -113,7 +113,7 @@ namespace SnmpAbstraction
                 catch(Exception ex)
                 {
                     this.CollectException("MtikSnmp: OID table lookup", ex);
-                    
+
                     // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                     // device (i.e. IP address) the exception is for
                     throw new HamnetSnmpException($"Failed to create MikroTik handler for device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer.Address?.ToString());
