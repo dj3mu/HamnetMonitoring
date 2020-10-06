@@ -16,7 +16,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// String in system description to detect Alix devices
         /// </summary>
-        private static readonly string[] AlixDetectionStrings = { "H4L HAMNET", "ALIX", "adult playground" };
+        private static readonly string[] AlixDetectionStrings = { "H4L HAMNET", "ALIX", "adult playground", "HB9RF" };
 
         private static readonly Regex OsVersionExtractionRegex = new Regex(@"\s+([0-9.]+)\s+");
 
@@ -48,7 +48,7 @@ namespace SnmpAbstraction
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
             {
-                var info = $"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a MikroTik device";
+                var info = $"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not an Alix device";
                 this.CollectException("AlixSnmp: No device description", new HamnetSnmpException(info));
                 log.Warn(info);
                 return false;
@@ -63,7 +63,7 @@ namespace SnmpAbstraction
             }
 
             log.Info($"Device '{snmpLowerLayer.Address}' seems to be an ALIX device");
-            
+
             return true;
         }
 
@@ -92,7 +92,7 @@ namespace SnmpAbstraction
                 catch(Exception ex)
                 {
                     this.CollectException("AlixSnmp: OID table lookup", ex);
-                    
+
                     // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                     // device (i.e. IP address) the exception is for
                     throw new HamnetSnmpException($"Failed to create ALIX handler for device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer?.Address?.ToString());
