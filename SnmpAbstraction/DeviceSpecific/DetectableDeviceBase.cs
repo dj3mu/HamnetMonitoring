@@ -11,7 +11,7 @@ namespace SnmpAbstraction
     internal abstract class DetectableDeviceBase : IDetectableDevice
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        
+
         private int circularCreateHandler = 0;
 
         private List<InfoAndException> collectedExceptions = new List<InfoAndException>();
@@ -34,7 +34,7 @@ namespace SnmpAbstraction
                 this.CollectException("CreateHandler(ISnmpLowerLayer, IQuerierOptions) circular call", ex);
                 throw ex;
             }
-            
+
             return this.CreateHandler(lowerLayer.Address, options);
         }
 
@@ -47,7 +47,7 @@ namespace SnmpAbstraction
                 this.CollectException("CreateHandler(IpAddress, IQuerierOptions) circular call", ex);
                 throw ex;
             }
-            
+
             var lowerLayer = new SnmpLowerLayer(address, options);
             return this.CreateHandler(lowerLayer, options);
         }
@@ -165,7 +165,7 @@ namespace SnmpAbstraction
                     }
 
                     IDeviceSpecificOidLookup foundLookup = null;
-                    if (!database.TryFindDeviceSpecificOidLookup(intId, deviceVersion.MaximumSupportedSnmpVersion.ToSnmpVersion(), out foundLookup))
+                    if (!database.TryFindDeviceSpecificOidLookup(intId, deviceVersion.MinimumSupportedSnmpVersion?.ToSnmpVersion() ?? SnmpVersion.Ver1, deviceVersion.MaximumSupportedSnmpVersion.ToSnmpVersion(), out foundLookup))
                     {
                         var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}': Cannot find OID mapping ID table of ID {intId} in device database", deviceAddress?.ToString());
                         log.Error(exception.Message);

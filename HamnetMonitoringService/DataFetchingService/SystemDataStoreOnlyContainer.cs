@@ -36,6 +36,8 @@ namespace SnmpAbstraction
             this.DeviceModel = inputSystemData.DeviceModel;
             this.SupportedFeatures = inputSystemData.SupportedFeatures;
             this.Oids = inputSystemData.Oids;
+            this.MinimumSnmpVersion = inputSystemData.MinimumSnmpVersion;
+            this.MaximumSnmpVersion = inputSystemData.MaximumSnmpVersion;
 
             // we intentionally do not copy the query duration as after deserializting it will have no more meaning
             // because there was in fact no query. So Zero seems much more correct in this context.
@@ -91,6 +93,9 @@ namespace SnmpAbstraction
         public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids { get; }
 
         /// <inheritdoc />
+        public SnmpVersion MinimumSnmpVersion { get; }
+
+        /// <inheritdoc />
         public void ForceEvaluateAll()
         {
             // Nothing to be done here
@@ -110,6 +115,7 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - System admin      : ").AppendLine(this.Contact);
             returnBuilder.Append("  - System uptime     : ").AppendLine(this.Uptime?.ToString());
             returnBuilder.Append("  - System root OID   : ").Append(this.EnterpriseObjectId?.ToString());
+            returnBuilder.Append("  - Min. SNMP version : ").Append(this.MinimumSnmpVersion);
             returnBuilder.Append("  - Max. SNMP version : ").Append(this.MaximumSnmpVersion);
 
             return returnBuilder.ToString();

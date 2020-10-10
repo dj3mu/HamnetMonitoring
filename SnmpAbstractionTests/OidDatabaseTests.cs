@@ -128,10 +128,10 @@ namespace Tests
             {
                 IDeviceSpecificOidLookup foundLookup = null;
 
-                Assert.IsTrue(context.TryFindDeviceSpecificOidLookup(goodOidLookupId, SnmpSharpNet.SnmpVersion.Ver1, out foundLookup), $"Cannot find OID lookup ID for 'good' lookup ID '{goodOidLookupId}'");
+                Assert.IsTrue(context.TryFindDeviceSpecificOidLookup(goodOidLookupId, SnmpSharpNet.SnmpVersion.Ver1, SnmpSharpNet.SnmpVersion.Ver1, out foundLookup), $"Cannot find OID lookup ID for 'good' lookup ID '{goodOidLookupId}'");
                 Assert.GreaterOrEqual(foundLookup.Count, 1, $"Empty lookup for for 'good' lookup ID '{goodOidLookupId}'");
 
-                Assert.IsFalse(context.TryFindDeviceSpecificOidLookup(badOidLookupId, SnmpSharpNet.SnmpVersion.Ver1, out foundLookup), $"Found lookup for 'bad' lookup ID '{badOidLookupId}'");
+                Assert.IsFalse(context.TryFindDeviceSpecificOidLookup(badOidLookupId, SnmpSharpNet.SnmpVersion.Ver1, SnmpSharpNet.SnmpVersion.Ver1, out foundLookup), $"Found lookup for 'bad' lookup ID '{badOidLookupId}'");
             }
         }
 

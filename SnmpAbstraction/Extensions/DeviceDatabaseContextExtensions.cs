@@ -129,10 +129,11 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="context">The device database context to extend.</param>
         /// <param name="oidLookupId">The OID mapping lookup ID to get.</param>
+        /// <param name="minimumSupportedSnmpVersion">The minimum supported SNMP version (to put into returned lookup)</param>
         /// <param name="maximumSupportedSnmpVersion">The maximum supported SNMP version (to put into returned lookup)</param>
         /// <param name="oidLookup">Returns the OID lookup, if found.</param>
         /// <returns><c>true</c> if a lookup of the given lookup ID has been found and the ID returned. Otherwise <c>false</c>.</returns>
-        public static bool TryFindDeviceSpecificOidLookup(this DeviceDatabaseContext context, int oidLookupId, SnmpVersion maximumSupportedSnmpVersion, out IDeviceSpecificOidLookup oidLookup)
+        public static bool TryFindDeviceSpecificOidLookup(this DeviceDatabaseContext context, int oidLookupId, SnmpVersion minimumSupportedSnmpVersion, SnmpVersion maximumSupportedSnmpVersion, out IDeviceSpecificOidLookup oidLookup)
         {
             if (context == null)
             {
@@ -148,7 +149,7 @@ namespace SnmpAbstraction
                 return false;
             }
 
-            oidLookup = new DeviceSpecificOidLookup(result, maximumSupportedSnmpVersion);
+            oidLookup = new DeviceSpecificOidLookup(result, minimumSupportedSnmpVersion, maximumSupportedSnmpVersion);
 
             return true;
         }

@@ -17,6 +17,11 @@ namespace SnmpAbstraction
         bool TryGetValues(out DeviceSpecificOid[] oidValues, params RetrievableValuesEnum[] valuesToQuery);
 
         /// <summary>
+        /// Gets the device's minium supported SNMP version.
+        /// </summary>
+        SnmpVersion MinimumSupportedSnmpVersion { get; }
+
+        /// <summary>
         /// Gets the device's maximum supported SNMP version.
         /// </summary>
         SnmpVersion MaximumSupportedSnmpVersion { get; }

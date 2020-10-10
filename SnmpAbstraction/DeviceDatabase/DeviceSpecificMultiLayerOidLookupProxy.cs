@@ -34,7 +34,7 @@ namespace SnmpAbstraction
             }
 
             this.layers = layers as IReadOnlyList<IDeviceSpecificOidLookup> ?? layers?.ToList();
-            
+
             if (this.layers.Count == 0)
             {
                 this.localLookup = new Dictionary<RetrievableValuesEnum, DeviceSpecificOid>();
@@ -47,6 +47,7 @@ namespace SnmpAbstraction
                 var concatenatedDicts = this.layers.Aggregate(Enumerable.Empty<KeyValuePair<RetrievableValuesEnum, DeviceSpecificOid>>(), (a, c) => a.Concat(c));
                 var groupedDicts = concatenatedDicts.GroupBy(e => e.Key, e => e.Value);
                 this.localLookup = groupedDicts.ToDictionary(g => g.Key, v => v.First()); // this actually does the trick of taking the hierachically first entry only
+                this.MinimumSupportedSnmpVersion = layers.Max(l => l.MinimumSupportedSnmpVersion);
                 this.MaximumSupportedSnmpVersion = layers.Min(l => l.MaximumSupportedSnmpVersion);
             }
         }
@@ -65,6 +66,9 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public SnmpVersion MaximumSupportedSnmpVersion { get; }
+
+        /// <inheritdoc />
+        public SnmpVersion MinimumSupportedSnmpVersion { get; }
 
         /// <inheritdoc />
         public bool ContainsKey(RetrievableValuesEnum key)

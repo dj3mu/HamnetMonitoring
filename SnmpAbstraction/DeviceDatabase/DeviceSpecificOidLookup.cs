@@ -8,7 +8,7 @@ namespace SnmpAbstraction
 {
 
     /// <summary>
-    /// Data container representing the OID lookup for the values according to <see cref="RetrievableValuesEnum" />. 
+    /// Data container representing the OID lookup for the values according to <see cref="RetrievableValuesEnum" />.
     /// </summary>
     internal class DeviceSpecificOidLookup : IDeviceSpecificOidLookup
     {
@@ -21,8 +21,9 @@ namespace SnmpAbstraction
         /// Construct from a list of lookup containers.
         /// </summary>
         /// <param name="deviceSpecificOids">The list to construct from.</param>
+        /// <param name="minimumSupportedSnmpVersion">The minimum supported SNMP version.</param>
         /// <param name="maximumSupportedSnmpVersion">The maximum supported SNMP version.</param>
-        public DeviceSpecificOidLookup(IEnumerable<DeviceSpecificOid> deviceSpecificOids, SnmpVersion maximumSupportedSnmpVersion)
+        public DeviceSpecificOidLookup(IEnumerable<DeviceSpecificOid> deviceSpecificOids, SnmpVersion minimumSupportedSnmpVersion, SnmpVersion maximumSupportedSnmpVersion)
         {
             if (deviceSpecificOids == null)
             {
@@ -31,6 +32,7 @@ namespace SnmpAbstraction
 
             this.localLookup = deviceSpecificOids.ToDictionary(doid => (RetrievableValuesEnum)doid.RetrievableValueId, doid => doid);
             this.MaximumSupportedSnmpVersion = maximumSupportedSnmpVersion;
+            this.MinimumSupportedSnmpVersion = minimumSupportedSnmpVersion;
         }
 
         /// <inheritdoc />
@@ -47,6 +49,9 @@ namespace SnmpAbstraction
 
         /// <inheritdoc />
         public SnmpVersion MaximumSupportedSnmpVersion { get; }
+
+        /// <inheritdoc />
+        public SnmpVersion MinimumSupportedSnmpVersion { get; }
 
         /// <inheritdoc />
         public bool ContainsKey(RetrievableValuesEnum key)

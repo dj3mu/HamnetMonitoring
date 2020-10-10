@@ -104,7 +104,7 @@ namespace SnmpAbstraction
         /// Backup of current SNMP version when forcing V1.
         /// </summary>
         private SnmpVersion snmpVersionBackup;
-        
+
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
         /// </summary>
@@ -193,6 +193,9 @@ namespace SnmpAbstraction
         public SemanticVersion Version => this.ModifyableVersion;
 
         /// <inheritdoc />
+        public SnmpVersion MinimumSnmpVersion => this.ModifyableMinimumSnmpVersion;
+
+        /// <inheritdoc />
         public SnmpVersion MaximumSnmpVersion => this.ModifyableMaximumSnmpVersion;
 
         /// <summary>
@@ -212,6 +215,15 @@ namespace SnmpAbstraction
         /// As this object is never passed out anywhere to our API users it seems a feasible trade-off to far more complex implementation.
         /// </remarks>
         internal string ModifyableModel { get; set; }
+
+        /// <summary>
+        /// Backing property for a minimum SNMP Version that is settable from outside (by Device Detector).
+        /// </summary>
+        /// <remarks>This seems kind of violation of immutability. But the Model and Version retrieval
+        /// unfortunately is device-specific and hence done in DetectableDevice only.
+        /// As this object is never passed out anywhere to our API users it seems a feasible trade-off to far more complex implementation.
+        /// </remarks>
+        internal SnmpVersion ModifyableMinimumSnmpVersion { get; set; }
 
         /// <summary>
         /// Backing property for a maximum SNMP Version that is settable from outside (by Device Detector).
@@ -263,7 +275,7 @@ namespace SnmpAbstraction
             {
                 return;
             }
-            
+
             this.BackupSnmpVersionAndSetV1();
 
             this.AddQueryDuration( () => {
@@ -305,7 +317,7 @@ namespace SnmpAbstraction
             {
                 return;
             }
-            
+
             this.BackupSnmpVersionAndSetV1();
 
             this.AddQueryDuration( () => {
@@ -416,7 +428,7 @@ namespace SnmpAbstraction
             this.RecordCachableOid(CachableValueMeanings.SystemUptime, SystemUptimeOid);
 
             this.RestoreSnmpVersion();
-            
+
             this.uptimeQueried = true;
         }
     }

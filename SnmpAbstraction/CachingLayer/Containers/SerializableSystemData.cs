@@ -38,6 +38,8 @@ namespace SnmpAbstraction
             this.DeviceModel = inputSystemData.DeviceModel;
             this.SupportedFeatures = inputSystemData.SupportedFeatures;
             this.Oids = inputSystemData.Oids;
+            this.MinimumSnmpVersion = inputSystemData.MinimumSnmpVersion;
+            this.MaximumSnmpVersion = inputSystemData.MaximumSnmpVersion;
 
             // we intentionally do not copy the query duration as after deserializting it will have no more meaning
             // because there was in fact no query. So Zero seems much more correct in this context.
@@ -84,6 +86,9 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         [JsonIgnore]
         public TimeSpan QueryDuration { get; set; } = TimeSpan.Zero;
+
+        /// <inheritdoc />
+        public SnmpVersion MinimumSnmpVersion { get; set; }
 
         /// <inheritdoc />
         public SnmpVersion MaximumSnmpVersion { get; set; }

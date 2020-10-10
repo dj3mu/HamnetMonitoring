@@ -60,9 +60,15 @@ namespace SnmpAbstraction
 
         /// <summary>
         /// Walk root for detecting AirFiber -> should actually return the OS version if it's an AirFiber device
-        /// Rroot OID of AirFiber is: .1.3.6.1.4.1.41112.1.3 according to UBNT-MIB-airfiber.txt.
+        /// Root OID of AirFiber is: .1.3.6.1.4.1.41112.1.3 according to UBNT-MIB-airfiber.txt.
         /// </summary>
         Oid AirFiberDetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.3.2.1.40");
+
+        /// <summary>
+        /// Walk root for detecting AirFiber AFLTU -> should actually return the OS version if it's an AirFiber device
+        /// Root OID of AirFiber AFLTU is: .1.3.6.1.4.1.41112.1.10 according to UBNT-AFLTU-MIB.txt.
+        /// </summary>
+        Oid AirFiberAfltuDetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.10.1.3");
 
         /// <summary>
         /// Field to store an already detect OS version (during IsApplicable) for later use by CreateHandler.
@@ -125,7 +131,7 @@ namespace SnmpAbstraction
             this.detectionId = manufacturer.Oid[manufacturer.Oid.Length - 1];
 
             log.Info($"Device '{snmpLowerLayer.Address}' seems to be a Ubiquiti device (detection ID {this.detectionId})");
-            
+
             return true;
         }
 
@@ -202,7 +208,7 @@ namespace SnmpAbstraction
             catch(Exception ex)
             {
                 this.CollectException("UbntSnmp: Model detection and OID lookup", ex);
-                
+
                 // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                 // device (i.e. IP address) the exception is for
                 throw new HamnetSnmpException($"Failed to create handler for Ubiquiti device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer?.Address?.ToString());
@@ -217,20 +223,31 @@ namespace SnmpAbstraction
         private bool DetectAirFiber(ISnmpLowerLayer snmpLowerLayer)
         {
             var mibInfo41112 = snmpLowerLayer.DoWalk(AirFiberDetectionWalkRootOid);
-            if (mibInfo41112.Count == 0)
+            if (mibInfo41112.Count > 0)
             {
-                // it's also not an AirFiber device
-                log.Info($"Reading of OS version of device '{snmpLowerLayer.Address}' via AirFiber OID {AirFiberDetectionWalkRootOid} didn't reveal anything: Assuming the device is not an Ubiquiti AirFiber device");
-                return false;
+                // never seen AirFiber returning more than one
+                var firstValue = mibInfo41112.First();
+                this.osDetectedVersion = firstValue.Value.ToString();
+                this.detectionId = firstValue.Oid.Last();
+                this.detectedModel = AirFiberFakeModelString;
+
+                return true;
             }
 
-            // never seen AirFiber returning more than one
-            var firstValue = mibInfo41112.First();
-            this.osDetectedVersion = firstValue.Value.ToString();
-            this.detectionId = firstValue.Oid.Last();
-            this.detectedModel = AirFiberFakeModelString;
+            mibInfo41112 = snmpLowerLayer.DoWalk(AirFiberAfltuDetectionWalkRootOid);
+            if (mibInfo41112.Count > 0)
+            {
+                // never seen AirFiber returning more than one
+                this.osDetectedVersion = mibInfo41112[3].Value.ToString();
+                this.detectionId = 0; // not used for this device
+                this.detectedModel = mibInfo41112[1].Value.ToString();
 
-            return true;
+                return true;
+            }
+
+            // it's also not an AirFiber device
+            log.Info($"Reading of OS version of device '{snmpLowerLayer.Address}' via AirFiber OID {AirFiberDetectionWalkRootOid} didn't reveal anything: Assuming the device is not an Ubiquiti AirFiber device");
+            return false;
         }
     }
 }

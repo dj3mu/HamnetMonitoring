@@ -98,6 +98,7 @@ namespace SnmpAbstractionTests
             QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, false);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1, false);
             QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirFiberSide1, SnmpVersion.Ver1, false);
+            QueryAndPrintWirelessPeers(new IpAddress("44.142.42.210"), SnmpVersion.Ver2, false); // HB9RF
         }
 
         /// <summary>
@@ -184,7 +185,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AllForSingleIpTest()
         {
-            var ipUnderTest = new IpAddress("44.148.57.125");
+            var ipUnderTest = new IpAddress("44.142.42.210");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
@@ -204,8 +205,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void IpLinkTestTest()
         {
-            var ip1UnderTest = new IpAddress("44.148.34.162");
-            var ip2UnderTest = new IpAddress("44.148.34.165");
+            var ip1UnderTest = new IpAddress("44.142.42.210");
+            var ip2UnderTest = new IpAddress("44.142.42.213");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
