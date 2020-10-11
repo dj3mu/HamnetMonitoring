@@ -43,8 +43,8 @@
   </ItemGroup>
   <ItemGroup>
     <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*"/>
-    <_DeleteItems1 Include="$(PublishDir)/appsettings*.*"/>
-    <_DeleteItems2 Include="$(PublishDir)/log4net*.*"/>
+    <_DeleteItems1 Include="$(PublishDir)/appsettings*.json"/>
+    <_DeleteItems2 Include="$(PublishDir)/log4net*.config"/>
   </ItemGroup>
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high"/>
