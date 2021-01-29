@@ -30,7 +30,7 @@
     <PackageReference Include="Microsoft.AspNetCore.App"/>
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All"/>
     <PackageReference Include="IPNetwork2" Version="2.4.0.133"/>
-    <PackageReference Include="log4net" Version="2.0.8"/>
+    <PackageReference Include="log4net" Version="2.0.10"/>
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="2.2.12"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6"/>
