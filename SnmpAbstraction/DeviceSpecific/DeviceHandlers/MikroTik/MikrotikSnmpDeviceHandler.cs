@@ -61,7 +61,7 @@ namespace SnmpAbstraction
             {
                 if (this.tikConnectionBacking == null)
                 {
-                    this.tikConnectionBacking = ConnectionFactory.CreateConnection((this.OsVersion < ApiV2MinimumVersion) ? TikConnectionType.Api : TikConnectionType.Api_v2);
+                    this.tikConnectionBacking = ConnectionFactory.CreateConnection((this.OsVersion < ApiV2MinimumVersion) ? TikConnectionType.Api : TikConnectionType.Api);
                 }
 
                 if (!this.tikConnectionBacking.IsOpened)
@@ -91,7 +91,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public override ITracerouteResult Traceroute(IpAddress remoteIp, uint count, TimeSpan timeout, int maxHops)
         {
-            return new MikrotikApiTracerouteOperation(this.LowerLayer.Address, this.TikConnection, remoteIp, count, timeout, maxHops).Execute(); 
+            return new MikrotikApiTracerouteOperation(this.LowerLayer.Address, this.TikConnection, remoteIp, count, timeout, maxHops).Execute();
         }
 
         /// <inheritdoc />

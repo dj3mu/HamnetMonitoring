@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 
 namespace HamnetDbAbstraction
 {
@@ -67,7 +67,7 @@ namespace HamnetDbAbstraction
             }
 
             this.connection = new MySqlConnection(this.ConnectionString);
-            
+
             this.connection.Open();
 
             return this.connection;
@@ -96,7 +96,7 @@ namespace HamnetDbAbstraction
         {
             throw new NotImplementedException("Querying sites from HamnetDB via MySQL is not yet implemented (was not needed up to now)");
         }
-        
+
         /// <inheritdoc />
         public IHamnetDbSubnets QuerySubnets()
         {
@@ -104,10 +104,10 @@ namespace HamnetDbAbstraction
             List<IHamnetDbSubnet> subnets = new List<IHamnetDbSubnet>();
             using(MySqlCommand cmd = new MySqlCommand("SELECT ip FROM hamnet_subnet;", this.connection))
             {
-                using (MySqlDataReader reader = cmd.ExecuteReader())  
-                {  
-                    while (reader.Read())  
-                    {  
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
                         var networkCidr = reader.GetString("ip");
                         IPNetwork ipNet;
                         if (!IPNetwork.TryParse(networkCidr, out ipNet))
@@ -117,7 +117,7 @@ namespace HamnetDbAbstraction
                         }
 
                         subnets.Add(new HamnetDbSubnet(ipNet));
-                    }  
+                    }
                 }
             }
 
@@ -166,7 +166,7 @@ namespace HamnetDbAbstraction
                 this.disposedValue = true;
             }
         }
- 
+
         private List<IHamnetDbHost> ReadHostsForSqlCommand(string hostSelectCommand)
         {
             List<IHamnetDbHost> hosts = new List<IHamnetDbHost>();

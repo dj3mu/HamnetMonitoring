@@ -94,7 +94,7 @@ namespace SnmpAbstraction
             this.Disabled = bgpPeer.Disabled;
         }
 
-        
+
         public string Id { get; private set; }
 
         /// <inheritdoc />
@@ -198,7 +198,7 @@ namespace SnmpAbstraction
         {
             // NOP here - we have assigned from input for now - but later we might want to re-get the values (so uptime gets refreshed)
         }
- 
+
         /// <summary>
         /// Tries to convert the MTik-formatted time (e.g. &quot;8w6d8h51m16s&quot;) to a TimeSpan object.
         /// </summary>

@@ -25,7 +25,7 @@ namespace SnmpAbstraction
 
         private ITikConnection tikConnection = null;
 
-        private TikConnectionType apiInUse = TikConnectionType.Api_v2;
+        private TikConnectionType apiInUse = TikConnectionType.Api;
 
         private SystemResource sysResource = null;
 
@@ -147,7 +147,7 @@ namespace SnmpAbstraction
                     this.tikConnection.Dispose();
                     this.tikConnection = null;
                 }
-                
+
                 return false;
             }
             catch(TikConnectionException tikConnectionException)
@@ -161,7 +161,7 @@ namespace SnmpAbstraction
                     this.tikConnection.Dispose();
                     this.tikConnection = null;
                 }
-                
+
                 return false;
             }
         }

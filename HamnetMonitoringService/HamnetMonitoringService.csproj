@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <RootNamespace>HamnetDbRest</RootNamespace>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
@@ -16,26 +16,24 @@
     <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Hamnet Monitoring REST service</PackageTags>
-    <PublishTrimmed>true</PublishTrimmed>
-    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
     <PublishSingleFile>false</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.0.1">
+    <PackageReference Include="GitVersionTask" Version="5.5.*">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.App"/>
-    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All"/>
-    <PackageReference Include="IPNetwork2" Version="2.4.0.133"/>
-    <PackageReference Include="log4net" Version="2.0.10"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="2.2.12"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6"/>
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0"/>
-    <PackageReference Include="SharpKml.Core" Version="5.1.0"/>
+    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.*"/>
+    <PackageReference Include="IPNetwork2" Version="2.5.*" />
+    <PackageReference Include="log4net" Version="2.0.*"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="5.0-*"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.*"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.*"/>
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0-*"/>
+    <PackageReference Include="SharpKml.Core" Version="5.2.*"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj"/>
