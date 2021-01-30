@@ -184,7 +184,7 @@ namespace RestService.DataFetchingService
                     // for maintenance we lock down any aquisition
                     this.rssiMutex.WaitOne();
                     this.bgpMutex.WaitOne();
-                    
+
                     // make sure to change back the due time of the timer
                     if (this.timerReAdjustmentNeeded)
                     {
@@ -234,7 +234,7 @@ namespace RestService.DataFetchingService
                     this.logger.LogInformation($"SKIPPING: Maintenance not yet due: Last aquisition started {status.LastMaintenanceStart} ({sinceLastScan} ago, hysteresis {Hysteresis}), configured interval {this.maintenanceInterval}");
                     return;
                 }
-        
+
                 this.logger.LogInformation($"STARTING: Data maintenance - last run: Started {status.LastMaintenanceStart} ({sinceLastScan} ago)");
 
                 status.LastMaintenanceStart = DateTime.UtcNow;
@@ -295,25 +295,25 @@ namespace RestService.DataFetchingService
             double currentUnixTimeStamp = (nowItIs - Program.UnixTimeStampBase).TotalSeconds;
             using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
             {
-                var outdatedRssis = this.resultDatabaseContext.RssiValues.Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
+                var outdatedRssis = this.resultDatabaseContext.RssiValues.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedRssis)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI entry for host {item.ForeignId} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
                 }
 
-                var outdatedRssiFailures = this.resultDatabaseContext.RssiFailingQueries.Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
+                var outdatedRssiFailures = this.resultDatabaseContext.RssiFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedRssiFailures)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI failing query entry for host {item.Subnet} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
                 }
 
-                var outdatedBgpPeers = this.resultDatabaseContext.BgpPeers.Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
+                var outdatedBgpPeers = this.resultDatabaseContext.BgpPeers.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedBgpPeers)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP peer entry from host {item.LocalAddress} to {item.RemoteAddress} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
                 }
 
-                var outdatedBgpPeerFailures = this.resultDatabaseContext.BgpFailingQueries.Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
+                var outdatedBgpPeerFailures = this.resultDatabaseContext.BgpFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedBgpPeerFailures)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP failing peer entry from host {item.Host} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
