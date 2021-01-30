@@ -18,8 +18,8 @@
     <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Hamnet Monitoring Commandline</PackageTags>
-    <PublishTrimmed>true</PublishTrimmed>
-    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
     <PublishSingleFile>false</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
