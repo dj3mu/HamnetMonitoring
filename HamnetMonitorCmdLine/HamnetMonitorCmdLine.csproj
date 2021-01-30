@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -25,13 +25,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.0.1">
+    <PackageReference Include="GitVersionTask" Version="5.5.*">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="IPNetwork2" Version="2.4.0.133" />
-    <PackageReference Include="CommandLineParser" Version="2.6.0" />
-    <PackageReference Include="log4net" Version="2.0.10" />
+    <PackageReference Include="IPNetwork2" Version="2.5.*" />
+    <PackageReference Include="CommandLineParser" Version="2.8.*" />
+    <PackageReference Include="log4net" Version="2.0.*" />
   </ItemGroup>
 
   <ItemGroup>

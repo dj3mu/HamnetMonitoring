@@ -4,7 +4,6 @@ using System.Net;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using SnmpSharpNet;
 
@@ -80,7 +79,7 @@ namespace SnmpAbstraction
 
                 var databaseDefaultPath = Path.Combine(Environment.CurrentDirectory, "Config/CacheDatabase.sqlite");
                 connStringBuilder.DataSource = databaseDefaultPath;
-                
+
                 this.DatabaseType = "SQLITE";
                 this.ConnectionString = connStringBuilder.ToString();
             }
@@ -105,7 +104,7 @@ namespace SnmpAbstraction
             SqliteConnectionStringBuilder connStringBuilder = new SqliteConnectionStringBuilder();
 
             connStringBuilder.DataSource = databaseFilePath;
-            
+
             this.ConnectionString = connStringBuilder.ToString();
         }
 
@@ -142,8 +141,7 @@ namespace SnmpAbstraction
 
                 case "MYSQL":
                     {
-                        var connection = new MySqlConnection(this.ConnectionString);
-                        optionsBuilder.UseMySql(connection);
+                        optionsBuilder.UseMySql(this.ConnectionString, ServerVersion.AutoDetect(this.ConnectionString));
                     }
                     break;
 

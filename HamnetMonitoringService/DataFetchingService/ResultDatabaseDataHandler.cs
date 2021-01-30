@@ -30,11 +30,11 @@ namespace RestService.DataFetchingService
         private static readonly log4net.ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly IConfiguration configuration;
-        
+
         private readonly IFailureRetryFilteringDataHandler failureRetryFilteringDataHandler;
 
         private readonly IConfigurationSection hamnetDbConfig;
-        
+
         private bool disposedValue = false;
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace RestService.DataFetchingService
                 {
                     using (var transaction = databaseContext.Database.BeginTransaction())
                     {
-                        databaseContext.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
+                        databaseContext.Database.ExecuteSqlRaw("DELETE FROM RssiFailingQueries");
                         databaseContext.SaveChanges();
                         transaction.Commit();
                     }
@@ -92,7 +92,7 @@ namespace RestService.DataFetchingService
                     this.DoRecordRssiDetailsInDatabase(databaseContext, inputData, linkDetails, DateTime.UtcNow);
 
                     this.DoDeleteFailingRssiQuery(databaseContext, inputData.Key);
-            
+
                     databaseContext.SaveChanges();
 
                     transaction.Commit();
@@ -132,7 +132,7 @@ namespace RestService.DataFetchingService
                 }
             }
         }
- 
+
         /// <inheritdoc />
         public Task RecordFailingRssiQueryAsync(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
         {
@@ -182,7 +182,7 @@ namespace RestService.DataFetchingService
                 }
             });
         }
- 
+
         /// <inheritdoc />
         public void RecordDetailsInDatabase(IHamnetDbHost host, IBgpPeers peers, DateTime queryTime)
         {
@@ -193,7 +193,7 @@ namespace RestService.DataFetchingService
                     this.DoRecordBgpDetailsInDatabase(databaseContext, host, peers, DateTime.UtcNow);
 
                     this.DoDeleteFailingBgpQuery(databaseContext, host);
-            
+
                     databaseContext.SaveChanges();
 
                     transaction.Commit();
@@ -278,7 +278,7 @@ namespace RestService.DataFetchingService
                 this.SetNewRssiForLink(databaseContext, inputData.Key, queryTime, item, item.Address2.ToString(), item.RxLevel2at1 , host2call, $"{host2call} at {host1call}");
             }
         }
- 
+
         /// <summary>
         /// Records the BGP results in the database.
         /// </summary>
@@ -316,7 +316,7 @@ namespace RestService.DataFetchingService
                 peerEntry.UnixTimeStamp = (ulong)queryTime.ToUniversalTime().Subtract(Program.UnixTimeStampBase).TotalSeconds;
             }
         }
- 
+
         /// <summary>
         /// Deletes an entry in the failing query table.
         /// </summary>
@@ -388,8 +388,8 @@ namespace RestService.DataFetchingService
             adressEntry.TimeStampString = queryTime.ToUniversalTime().ToString("yyyy-MM-ddTHH\\:mm\\:sszzz");
             adressEntry.UnixTimeStamp = (ulong)queryTime.ToUniversalTime().Subtract(Program.UnixTimeStampBase).TotalSeconds;
         }
- 
- 
+
+
         /// <summary>
         /// Records a failing query.
         /// </summary>

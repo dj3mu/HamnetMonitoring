@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using RestService.Database;
 using RestService.DataFetchingService;
 using SnmpAbstraction;
@@ -39,7 +40,7 @@ namespace HamnetDbRest
         /// <param name="services">The service collection to receive more services.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
 
             var rssiSection = this.Configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
             if ((rssiSection == null) || rssiSection.GetValue<bool>("Enabled"))
@@ -85,7 +86,8 @@ namespace HamnetDbRest
                     break;
 
                 case "MYSQL":
-                    services.AddDbContext<QueryResultDatabaseContext>(opt => opt.UseMySql(this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName).GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey)));
+                    var connectionString = this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName).GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey);
+                    services.AddDbContext<QueryResultDatabaseContext>(opt => opt.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
                     break;
 
                 default:
@@ -100,10 +102,10 @@ namespace HamnetDbRest
         /// </summary>
         /// <param name="app">The application builder.</param>
         /// <param name="env">The hosting environment.</param>
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseStatusCodePages();
-            
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -111,7 +113,7 @@ namespace HamnetDbRest
             else
             {
                 app.UseExceptionHandler("/Error");
-                
+
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 //app.UseHsts();
             }
@@ -124,12 +126,15 @@ namespace HamnetDbRest
                 var retryHandler = serviceScope.ServiceProvider.GetRequiredService<IFailureRetryFilteringDataHandler>();
                 retryHandler.InitializeData(QueryType.BgpQuery, context.BgpFailingQueries.Where(bfq => bfq.PenaltyInfo != null).Select(bfq => new SingleFailureInfoWithEntity(EntityType.Host, bfq.Host, bfq.PenaltyInfo)));
                 retryHandler.InitializeData(QueryType.RssiQuery, context.RssiFailingQueries.Where(rfq => rfq.PenaltyInfo != null).Select(rfq => new SingleFailureInfoWithEntity(EntityType.Subnet, rfq.Subnet, rfq.PenaltyInfo)));
-                retryHandler.InitializeData(QueryType.RssiQuery, context.RssiFailingQueries.Where(rfq => rfq.PenaltyInfo != null).SelectMany(rfq => rfq.AffectedHosts.Select(afh => new SingleFailureInfoWithEntity(EntityType.Host, afh, rfq.PenaltyInfo))));
+                retryHandler.InitializeData(QueryType.RssiQuery, context.RssiFailingQueries.Where(rfq => rfq.PenaltyInfo != null).AsEnumerable().SelectMany(rfq => rfq.AffectedHosts.Select(afh => new SingleFailureInfoWithEntity(EntityType.Host, afh, rfq.PenaltyInfo))));
             }
 
             //app.UseHttpsRedirection();
-            
-            app.UseMvc();
+
+            app.UseRouting();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
+            });
         }
     }
 }

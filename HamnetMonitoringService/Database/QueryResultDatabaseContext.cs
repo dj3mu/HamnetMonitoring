@@ -4,7 +4,7 @@ using HamnetDbRest;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Newtonsoft.Json;
 using RestService.DataFetchingService;
 using RestService.Model;
@@ -99,7 +99,7 @@ namespace RestService.Database
                         LastRssiQueryEnd = DateTime.MinValue,
                         LastRssiQueryStart = DateTime.MinValue
                     };
-                    
+
                     this.MonitoringStatus.Add(status);
                     this.SaveChanges();
                 }
@@ -150,7 +150,7 @@ namespace RestService.Database
             {
                 return;
             }
-            
+
             var databaseType = this.Configuration.GetValue<string>(QueryResultDatabaseProvider.DatabaseTypeKey)?.ToUpperInvariant();
 
             switch(databaseType)
@@ -165,18 +165,17 @@ namespace RestService.Database
 
                 case "MYSQL":
                     {
-                        var connection = new MySqlConnection(this.ConnectionString);
-                        optionsBuilder.UseMySql(connection);
+                        optionsBuilder.UseMySql(this.ConnectionString, ServerVersion.AutoDetect(this.ConnectionString));
                     }
-                    
+
                     break;
 
                 default:
                     throw new ArgumentOutOfRangeException($"The configured database type '{databaseType}' is not supported for the query result database");
             }
 
-        }  
-        
+        }
+
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
