@@ -41,6 +41,7 @@ namespace HamnetDbRest
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
+            services.AddControllers().AddNewtonsoftJson();
 
             var rssiSection = this.Configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
             if ((rssiSection == null) || rssiSection.GetValue<bool>("Enabled"))

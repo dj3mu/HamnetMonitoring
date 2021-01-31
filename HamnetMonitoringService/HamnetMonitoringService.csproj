@@ -29,7 +29,8 @@
     <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.*"/>
     <PackageReference Include="IPNetwork2" Version="2.5.*" />
     <PackageReference Include="log4net" Version="2.0.*"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="5.0-*"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="5.0.*"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.*"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.*"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.*"/>
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0-*"/>
