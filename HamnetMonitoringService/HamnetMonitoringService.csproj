@@ -8,8 +8,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>HamnetMonitor.RestService</PackageId>
     <AssemblyTitle>REST service for Hamnet Monitoring.</AssemblyTitle>
-    <PackageDescription>&#xD;
-    The application is the REST service providing access to Hamnet Monitoring data.&#xD;
+    <PackageDescription>
+    The application is the REST service providing access to Hamnet Monitoring data.
     </PackageDescription>
     <Authors>DJ3MU</Authors>
     <Product>Hamnet Monitoring REST service</Product>
@@ -26,36 +26,37 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.*"/>
+    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.*" />
     <PackageReference Include="IPNetwork2" Version="2.5.*" />
-    <PackageReference Include="log4net" Version="2.0.*"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="5.0.*"/>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.*"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.*"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.*"/>
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0-*"/>
-    <PackageReference Include="SharpKml.Core" Version="5.2.*"/>
+    <PackageReference Include="log4net" Version="2.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="5.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.*" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0-*" />
+    <PackageReference Include="SharpKml.Core" Version="5.2.*" />
+    <PackageReference Include="System.Linq.Async" Version="5.0.*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj"/>
-    <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj"/>
+    <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
+    <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*"/>
-    <_DeleteItems1 Include="$(PublishDir)/appsettings*.json"/>
-    <_DeleteItems2 Include="$(PublishDir)/log4net*.config"/>
+    <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
+    <_DeleteItems1 Include="$(PublishDir)/appsettings*.json" />
+    <_DeleteItems2 Include="$(PublishDir)/log4net*.config" />
   </ItemGroup>
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
-    <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high"/>
-    <Copy SourceFiles="$(ProjectDir)log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config"/>
-    <Copy SourceFiles="$(ProjectDir)/appsettings-$(Configuration).json" DestinationFiles="$(OutDir)$(ConfigDir)/appsettings.json.template"/>
-    <Copy SourceFiles="$(ProjectDir)../SnmpAbstraction/DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)"/>
+    <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
+    <Copy SourceFiles="$(ProjectDir)log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
+    <Copy SourceFiles="$(ProjectDir)/appsettings-$(Configuration).json" DestinationFiles="$(OutDir)$(ConfigDir)/appsettings.json.template" />
+    <Copy SourceFiles="$(ProjectDir)../SnmpAbstraction/DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
   </Target>
   <Target Name="PublishCustomContent" AfterTargets="Publish">
-    <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high"/>
-    <MakeDir Directories="$(PublishDir)$(ConfigDir)"/>
-    <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)"/>
-    <Delete Files="@(_DeleteItems1)"/>
-    <Delete Files="@(_DeleteItems2)"/>
+    <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high" />
+    <MakeDir Directories="$(PublishDir)$(ConfigDir)" />
+    <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)" />
+    <Delete Files="@(_DeleteItems1)" />
+    <Delete Files="@(_DeleteItems2)" />
   </Target>
 </Project>

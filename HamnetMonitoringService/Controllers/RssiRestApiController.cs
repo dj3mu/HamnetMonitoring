@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using RestService.Database;
 using RestService.DataFetchingService;
 using RestService.Model;
@@ -23,7 +22,7 @@ namespace HamnetDbRest.Controllers
         private readonly ILogger logger;
 
         private readonly QueryResultDatabaseContext dbContext;
-        
+
         private readonly IFailureRetryFilteringDataHandler retryFeasibleHandler;
 
         /// <summary>
@@ -47,7 +46,7 @@ namespace HamnetDbRest.Controllers
         public async Task<ActionResult<IEnumerable<Rssi>>> GetRssi(string host)
         {
             Program.RequestStatistics.ApiV1RssiRequests++;
-            return await this.dbContext.RssiValues.ToListAsync();
+            return await this.dbContext.RssiValues.AsQueryable().ToListAsync();
         }
 
         /// <summary>
@@ -58,7 +57,7 @@ namespace HamnetDbRest.Controllers
         public async Task<ActionResult<IEnumerable<RssiFailingQueryWithPenaltyInfo>>> GetFailingRssiQueries()
         {
             Program.RequestStatistics.ApiV1RssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries
+            return await this.dbContext.RssiFailingQueries.AsAsyncEnumerable()
                 .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
                 .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
@@ -75,8 +74,9 @@ namespace HamnetDbRest.Controllers
         public async Task<ActionResult<IEnumerable<RssiFailingQueryWithPenaltyInfo>>> GetTimeoutFailingRssiQueries()
         {
             Program.RequestStatistics.ApiV1RssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries
+            return await this.dbContext.RssiFailingQueries.AsQueryable()
                 .Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries"))
+                .AsAsyncEnumerable()
                 .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
                 .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
@@ -93,8 +93,9 @@ namespace HamnetDbRest.Controllers
         public async Task<ActionResult<IEnumerable<RssiFailingQueryWithPenaltyInfo>>> GetNonTimeoutFailingRssiQueries()
         {
             Program.RequestStatistics.ApiV1RssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries
+            return await this.dbContext.RssiFailingQueries.AsQueryable()
                 .Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries"))
+                .AsAsyncEnumerable()
                 .Select(ds => new RssiFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.RssiQuery, IPNetwork.Parse(ds.Subnet))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
                 .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)

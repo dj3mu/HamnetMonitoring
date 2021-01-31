@@ -273,8 +273,7 @@ namespace RestService.DataFetchingService
         /// <param name="cacheMaintenance">The cache maintenance object that supports deletion of entries.</param>
         private void RemoveCacheEntriesForFailures(CacheMaintenance cacheMaintenance)
         {
-            var failures = this.resultDatabaseContext.RssiFailingQueries;
-            var affectedHosts = failures.Select(q => q.AffectedHosts);
+            var affectedHosts = this.resultDatabaseContext.RssiFailingQueries.AsQueryable().Select(q => q.AffectedHosts);
             List<IPAddress> toDelete = new List<IPAddress>();
             foreach (IReadOnlyCollection<string> item in affectedHosts)
             {
