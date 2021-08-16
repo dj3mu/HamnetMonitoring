@@ -43,15 +43,24 @@ namespace SnmpAbstraction
             var valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressWalkRoot;
             DeviceSpecificOid interfaceIdRootOid;
             bool singlePeerGet = false;
+            bool useFirst = false;
             if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressAppendInterfaceId;
-                if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+                if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
                 {
-                    return false;
-                }
+                    valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressUseFirstSubdigit;
+                    if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+                    {
+                        return false;
+                    }
 
-                singlePeerGet = true;
+                    useFirst = true;
+                }
+                else
+                {
+                    singlePeerGet = true;
+                }
             }
 
             var interfaceVbs = singlePeerGet ? this.LowerSnmpLayer.Query(interfaceIdRootOid.Oid) : this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid);
@@ -66,6 +75,8 @@ namespace SnmpAbstraction
             {
                 IEnumerable<uint> macOidFragments = null;
                 int interfaceId = int.MinValue;
+                bool? isAccessPoint = null;
+                int? numberOfClients = null;
                 if (singlePeerGet)
                 {
                     macOidFragments = item.Value.ToString().HexStringToByteArray(' ').Select(b => Convert.ToUInt32(b));
@@ -73,11 +84,21 @@ namespace SnmpAbstraction
                 }
                 else
                 {
-                    macOidFragments = item.Oid.Skip(interfaceIdRootOid.Oid.Length).Take(6);
-                    interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 1]);
+                    if (useFirst)
+                    {
+                        macOidFragments = item.Value.ToString().HexStringToByteArray(' ').Select(b => Convert.ToUInt32(b));
+                        interfaceId = Convert.ToInt32(item.Oid.Last());
+                        isAccessPoint = interfaceId == 1;
+                        numberOfClients = (isAccessPoint ?? false) ? 1 : 0;
+                    }
+                    else
+                    {
+                        macOidFragments = item.Oid.Skip(interfaceIdRootOid.Oid.Length).Take(6);
+                        interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 1]);
+                    }
                 }
 
-                var isAccessPoint = this.CheckIsAccessPoint(interfaceId, out int? numberOfClients);
+                isAccessPoint ??= this.CheckIsAccessPoint(interfaceId, out numberOfClients);
                 this.PeerInfosBacking.Add(
                     new LazyLoadingMikroTikWirelessPeerInfo(
                         this.LowerSnmpLayer,
@@ -138,7 +159,7 @@ namespace SnmpAbstraction
                 {
                     return false;
                 }
-                
+
                 numberOfClients = snmpNumberOfClients;
 
                 return snmpNumberOfClients > 0;

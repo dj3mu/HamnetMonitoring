@@ -78,19 +78,24 @@ namespace SnmpAbstraction
                 this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid, "RSSI single value (RxSignalStrengthImmediateOid)");
                 this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
             }
+            else if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendInterfaceId, out singleOid) && !singleOid.Oid.IsNull)
+            {
+                this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid + new Oid(new int[] { this.InterfaceId.Value }), "RSSI single value with Interface ID (RxSignalStrengthCh0AppendInterfaceId)");
+                this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
+            }
             else
             {
-                RetrievableValuesEnum[] valuesToQuery =
+                DeviceSpecificOid[] oidValues;
+                var valuesToQuery = new []
                 {
                     RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId,
                     RetrievableValuesEnum.RxSignalStrengthCh1AppendMacAndInterfaceId,
                     RetrievableValuesEnum.RxSignalStrengthCh2AppendMacAndInterfaceId
                 };
 
-                DeviceSpecificOid[] deviceSpecificOids = new DeviceSpecificOid[valuesToQuery.Length];
-                DeviceSpecificOid[] oidValues;
                 if (!this.OidLookup.TryGetValues(out oidValues, valuesToQuery))
                 {
+
                     log.Warn($"Not even one supported OID has been found for getting the stream-specific RX level. RxSignalStrength for device '{this.DeviceAddress}', interface ID {this.InterfaceId}, cannot be retrieved.");
                     this.RxSignalStrengthBacking = double.NegativeInfinity;
                     return true;

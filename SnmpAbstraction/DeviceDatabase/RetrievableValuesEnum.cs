@@ -134,6 +134,16 @@
         /// Root OID to get the overall CCQ value of the interface.<br/>
         /// The Interface ID needs to be appended.
         /// </summary>
-        OverallCcqAppendInterfaceId = 18
+        OverallCcqAppendInterfaceId = 18,
+
+        /// <summary>
+        /// Root OID to get the wireless remote peer MAC address from the first found sub-digit
+        /// </summary>
+        WlanRemoteMacAddressUseFirstSubdigit = 19,
+
+        /// <summary>
+        /// Root OID to get the RX signal strength from given OID with interface ID appended
+        /// </summary>
+        RxSignalStrengthCh0AppendInterfaceId = 20
     }
 }
