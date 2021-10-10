@@ -16,7 +16,7 @@ namespace HamnetDbRest.Controllers
         private string host;
 
         private string remotePeerAddress;
-        
+
         private readonly FromUrlQueryQuerierOptions querierOptions;
 
         /// <summary>
@@ -52,12 +52,9 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                using(var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions))
-                {
-                    IBgpPeers bgpPeers = querier.FetchBgpPeers(this.remotePeerAddress);
-
-                    return new BgpPeersResult(bgpPeers);
-                }
+                using var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions);
+                IBgpPeers bgpPeers = querier.FetchBgpPeers(this.remotePeerAddress);
+                return new BgpPeersResult(bgpPeers);
             }
             catch(Exception ex)
             {

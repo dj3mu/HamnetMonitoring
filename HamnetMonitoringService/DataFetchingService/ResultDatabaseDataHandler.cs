@@ -68,16 +68,21 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void PrepareForNewAquisition()
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+
+            if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
             {
-                if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
+                using var transaction = databaseContext.Database.BeginTransaction();
+                try
                 {
-                    using (var transaction = databaseContext.Database.BeginTransaction())
-                    {
-                        databaseContext.Database.ExecuteSqlRaw("DELETE FROM RssiFailingQueries");
-                        databaseContext.SaveChanges();
-                        transaction.Commit();
-                    }
+                    databaseContext.Database.ExecuteSqlRaw("DELETE FROM RssiFailingQueries");
+                    databaseContext.SaveChanges();
+                    transaction.Commit();
+                }
+                catch(Exception e)
+                {
+                    log.Error("Failed to delete RssiFailingQuery", e);
+                    transaction.Rollback();
                 }
             }
         }
@@ -85,18 +90,22 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordRssiDetailsInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+            using var transaction = databaseContext.Database.BeginTransaction();
+            try
             {
-                using (var transaction = databaseContext.Database.BeginTransaction())
-                {
-                    this.DoRecordRssiDetailsInDatabase(databaseContext, inputData, linkDetails, DateTime.UtcNow);
+                this.DoRecordRssiDetailsInDatabase(databaseContext, inputData, linkDetails, DateTime.UtcNow);
 
-                    this.DoDeleteFailingRssiQuery(databaseContext, inputData.Key);
+                this.DoDeleteFailingRssiQuery(databaseContext, inputData.Key);
 
-                    databaseContext.SaveChanges();
+                databaseContext.SaveChanges();
 
-                    transaction.Commit();
-                }
+                transaction.Commit();
+            }
+            catch(Exception e)
+            {
+                log.Error("Failed to record RSSI details in database", e);
+                transaction.Rollback();
             }
         }
 
@@ -120,16 +129,20 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordFailingRssiQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+            using var transaction = databaseContext.Database.BeginTransaction();
+            try
             {
-                using (var transaction = databaseContext.Database.BeginTransaction())
-                {
-                    this.DoRecordFailingRssiQueryEntry(databaseContext, exception, inputData);
+                this.DoRecordFailingRssiQueryEntry(databaseContext, exception, inputData);
 
-                    databaseContext.SaveChanges();
+                databaseContext.SaveChanges();
 
-                    transaction.Commit();
-                }
+                transaction.Commit();
+            }
+            catch(Exception e)
+            {
+                log.Error("Failed to record RSSI failing query in database", e);
+                transaction.Rollback();
             }
         }
 
@@ -153,16 +166,20 @@ namespace RestService.DataFetchingService
        /// <inheritdoc />
         public void RecordFailingBgpQuery(Exception exception, IHamnetDbHost host)
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+            using var transaction = databaseContext.Database.BeginTransaction();
+            try
             {
-                using (var transaction = databaseContext.Database.BeginTransaction())
-                {
-                    this.DoRecordFailingBgpQueryEntry(databaseContext, exception, host);
+                this.DoRecordFailingBgpQueryEntry(databaseContext, exception, host);
 
-                    databaseContext.SaveChanges();
+                databaseContext.SaveChanges();
 
-                    transaction.Commit();
-                }
+                transaction.Commit();
+            }
+            catch(Exception e)
+            {
+                log.Error("Failed to record BGP failing query in database", e);
+                transaction.Rollback();
             }
         }
 
@@ -186,18 +203,22 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordDetailsInDatabase(IHamnetDbHost host, IBgpPeers peers, DateTime queryTime)
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+            using var transaction = databaseContext.Database.BeginTransaction();
+            try
             {
-                using (var transaction = databaseContext.Database.BeginTransaction())
-                {
-                    this.DoRecordBgpDetailsInDatabase(databaseContext, host, peers, DateTime.UtcNow);
+                this.DoRecordBgpDetailsInDatabase(databaseContext, host, peers, DateTime.UtcNow);
 
-                    this.DoDeleteFailingBgpQuery(databaseContext, host);
+                this.DoDeleteFailingBgpQuery(databaseContext, host);
 
-                    databaseContext.SaveChanges();
+                databaseContext.SaveChanges();
 
-                    transaction.Commit();
-                }
+                transaction.Commit();
+            }
+            catch(Exception e)
+            {
+                log.Error("Failed to record BGP details in database", e);
+                transaction.Rollback();
             }
         }
 

@@ -90,7 +90,6 @@ namespace SnmpAbstraction
 
             List<IHamnetQuerier> remoteQueriers = remoteHostNamesOrIps.Select(remoteHostNamesOrIp =>
             {
-
                 if (!remoteHostNamesOrIp.TryGetResolvedConnecionIPAddress(out IPAddress outAddress))
                 {
                     log.Error($"Cannot resolve host name or IP string '{remoteHostNamesOrIp}' to a valid IPAddress. Skipping that remote for link detail fetching");
@@ -104,7 +103,16 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"No remote IP address available at all after resolving {remoteHostNamesOrIps.Length} host name or address string to IP addresses");
             }
 
-            return FetchLinkDetails(remoteQueriers.ToArray());
+            var linkDetails = FetchLinkDetails(remoteQueriers.ToArray());
+
+            foreach (var querier in remoteQueriers)
+            {
+                querier.Dispose();
+            }
+
+            remoteQueriers.Clear();
+
+            return linkDetails;
         }
 
         /// <inheritdoc />

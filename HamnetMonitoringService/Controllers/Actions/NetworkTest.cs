@@ -20,7 +20,7 @@ namespace HamnetDbRest.Controllers
         private readonly ILogger logger;
 
         private readonly IHamnetDbAccess hamnetDbAccess;
-        
+
         private IQuerierOptions querierOptions;
 
         /// <summary>
@@ -103,12 +103,9 @@ namespace HamnetDbRest.Controllers
             IPAddress address1 = pair.Value.First().Address;
             IPAddress address2 = pair.Value.Last().Address;
 
-            using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.querierOptions))
-            {
-                var linkDetails = querier.FetchLinkDetails(address2.ToString());
-
-                return new LinkDetailsReply(linkDetails);
-            }
+            using var querier = SnmpQuerierFactory.Instance.Create(address1, this.querierOptions);
+            var linkDetails = querier.FetchLinkDetails(address2.ToString());
+            return new LinkDetailsReply(linkDetails);
         }
     }
 }

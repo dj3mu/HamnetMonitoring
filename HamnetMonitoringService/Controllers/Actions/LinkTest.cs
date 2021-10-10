@@ -11,7 +11,7 @@ namespace HamnetDbRest.Controllers
     internal class LinkTest
     {
         private string host1;
-        
+
         private string host2;
 
         private IQuerierOptions querierOptions;
@@ -52,12 +52,9 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                using(var querier = SnmpQuerierFactory.Instance.Create(this.host1, this.querierOptions))
-                {
-                    var linkDetails = querier.FetchLinkDetails(this.host2);
-
-                    return new LinkDetailsReply(linkDetails);
-                }
+                using var querier = SnmpQuerierFactory.Instance.Create(this.host1, this.querierOptions);
+                var linkDetails = querier.FetchLinkDetails(this.host2);
+                return new LinkDetailsReply(linkDetails);
             }
             catch(Exception ex)
             {

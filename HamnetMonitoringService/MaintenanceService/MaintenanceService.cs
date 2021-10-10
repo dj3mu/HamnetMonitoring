@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RestService.Database;
-using RestService.Model;
 using SnmpAbstraction;
 
 namespace RestService.DataFetchingService
@@ -41,8 +40,6 @@ namespace RestService.DataFetchingService
 
         private object lockObject = new object();
 
-        private QueryResultDatabaseContext resultDatabaseContext;
-
         private TimeSpan maintenanceInterval;
 
         private bool timerReAdjustmentNeeded = false;
@@ -58,8 +55,6 @@ namespace RestService.DataFetchingService
         {
             this.logger = logger;
             this.configuration = configuration;
-
-            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -80,7 +75,8 @@ namespace RestService.DataFetchingService
             TimeSpan timeToFirstMaintenance = TimeSpan.FromSeconds(7);
 
             // by default waiting a couple of secs before first Hamnet scan
-            var status = this.resultDatabaseContext.Status;
+            using var resultDatabase = QueryResultDatabaseProvider.Instance.CreateContext();
+            var status = resultDatabase.Status;
             var nowItIs = DateTime.UtcNow;
             var timeSinceLastMaintenanceStart = (nowItIs - status.LastMaintenanceStart);
             if (status.LastMaintenanceStart > status.LastMaintenanceEnd)
@@ -222,11 +218,11 @@ namespace RestService.DataFetchingService
         {
             var configurationSection = this.configuration.GetSection(MaintenanceServiceSectionKey);
 
-            this.NewDatabaseContext();
+            using var resultDatabase = QueryResultDatabaseProvider.Instance.CreateContext();
 
-            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+            using (var transaction = resultDatabase.Database.BeginTransaction())
             {
-                var status = resultDatabaseContext.Status;
+                var status = resultDatabase.Status;
                 var nowItIs = DateTime.UtcNow;
                 var sinceLastScan = nowItIs - status.LastMaintenanceStart;
                 if ((sinceLastScan < this.maintenanceInterval - Hysteresis) && (status.LastMaintenanceStart <= status.LastMaintenanceEnd))
@@ -239,41 +235,40 @@ namespace RestService.DataFetchingService
 
                 status.LastMaintenanceStart = DateTime.UtcNow;
 
-                resultDatabaseContext.SaveChanges();
+                resultDatabase.SaveChanges();
                 transaction.Commit();
             }
 
             Program.RequestStatistics.MaintenanceRuns++;
 
-            this.RemoveOutdatedResults(configurationSection);
+            this.RemoveOutdatedResults(resultDatabase, configurationSection);
 
             var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
             cacheMaintenance.RemoveFromCacheIfModificationOlderThan(configurationSection.GetValue<TimeSpan>("CacheInvalidAfter"));
 
-            this.RemoveCacheEntriesForFailures(cacheMaintenance);
+            this.RemoveCacheEntriesForFailures(resultDatabase, cacheMaintenance);
 
-            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+            using (var transaction = resultDatabase.Database.BeginTransaction())
             {
-                var status = resultDatabaseContext.Status;
+                var status = resultDatabase.Status;
 
                 status.LastMaintenanceEnd = DateTime.UtcNow;
 
                 this.logger.LogInformation($"COMPLETED: Database maintenance at {status.LastMaintenanceEnd}, duration {status.LastMaintenanceEnd - status.LastMaintenanceStart}");
 
-                resultDatabaseContext.SaveChanges();
+                resultDatabase.SaveChanges();
                 transaction.Commit();
             }
-
-            this.DisposeDatabaseContext();
         }
 
         /// <summary>
         /// Removes the cache entries for failures recorded in the result database
         /// </summary>
+        /// <param name="resultDatabase">The database context to work on.</param>
         /// <param name="cacheMaintenance">The cache maintenance object that supports deletion of entries.</param>
-        private void RemoveCacheEntriesForFailures(CacheMaintenance cacheMaintenance)
+        private void RemoveCacheEntriesForFailures(QueryResultDatabaseContext resultDatabase, CacheMaintenance cacheMaintenance)
         {
-            var affectedHosts = this.resultDatabaseContext.RssiFailingQueries.AsQueryable().Select(q => q.AffectedHosts);
+            var affectedHosts = resultDatabase.RssiFailingQueries.AsQueryable().Select(q => q.AffectedHosts);
             List<IPAddress> toDelete = new List<IPAddress>();
             foreach (IReadOnlyCollection<string> item in affectedHosts)
             {
@@ -286,33 +281,35 @@ namespace RestService.DataFetchingService
         /// <summary>
         /// Removes results (in result database) for which we didn't see an update for a configured amount of time.
         /// </summary>
-        private void RemoveOutdatedResults(IConfigurationSection configuration)
+        /// <param name="resultDatabase">The database context to work on.</param>
+        /// <param name="configuration">The configuration to use.</param>
+        private void RemoveOutdatedResults(QueryResultDatabaseContext resultDatabase, IConfigurationSection configuration)
         {
             TimeSpan resultsOutdatedAfter = configuration.GetValue<TimeSpan>("ResultsOutdatedAfter");
 
             DateTime nowItIs = DateTime.UtcNow;
             double currentUnixTimeStamp = (nowItIs - Program.UnixTimeStampBase).TotalSeconds;
-            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+            using (var transaction = resultDatabase.Database.BeginTransaction())
             {
-                var outdatedRssis = this.resultDatabaseContext.RssiValues.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
+                var outdatedRssis = resultDatabase.RssiValues.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedRssis)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI entry for host {item.ForeignId} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
                 }
 
-                var outdatedRssiFailures = this.resultDatabaseContext.RssiFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
+                var outdatedRssiFailures = resultDatabase.RssiFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedRssiFailures)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI failing query entry for host {item.Subnet} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
                 }
 
-                var outdatedBgpPeers = this.resultDatabaseContext.BgpPeers.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
+                var outdatedBgpPeers = resultDatabase.BgpPeers.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedBgpPeers)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP peer entry from host {item.LocalAddress} to {item.RemoteAddress} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
                 }
 
-                var outdatedBgpPeerFailures = this.resultDatabaseContext.BgpFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
+                var outdatedBgpPeerFailures = resultDatabase.BgpFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
                 foreach (var item in outdatedBgpPeerFailures)
                 {
                     this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP failing peer entry from host {item.Host} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
@@ -326,40 +323,18 @@ namespace RestService.DataFetchingService
 
                 if (!this.dryRunMode)
                 {
-                    this.resultDatabaseContext.RemoveRange(outdatedRssis);
-                    this.resultDatabaseContext.RemoveRange(outdatedRssiFailures);
-                    this.resultDatabaseContext.RemoveRange(outdatedBgpPeers);
-                    this.resultDatabaseContext.RemoveRange(outdatedBgpPeerFailures);
+                    resultDatabase.RemoveRange(outdatedRssis);
+                    resultDatabase.RemoveRange(outdatedRssiFailures);
+                    resultDatabase.RemoveRange(outdatedBgpPeers);
+                    resultDatabase.RemoveRange(outdatedBgpPeerFailures);
 
-                    this.resultDatabaseContext.SaveChanges();
+                    resultDatabase.SaveChanges();
                     transaction.Commit();
                 }
                 else
                 {
                     transaction.Rollback();
                 }
-            }
-        }
-
-        /// <summary>
-        /// Creates a new database context for the result database.
-        /// </summary>
-        private void NewDatabaseContext()
-        {
-            this.DisposeDatabaseContext();
-
-            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
-        }
-
-        /// <summary>
-        /// Disposes off the result database context.
-        /// </summary>
-        private void DisposeDatabaseContext()
-        {
-            if (this.resultDatabaseContext != null)
-            {
-                this.resultDatabaseContext.Dispose();
-                this.resultDatabaseContext = null;
             }
         }
     }

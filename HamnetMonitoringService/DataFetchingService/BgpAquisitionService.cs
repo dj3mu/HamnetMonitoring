@@ -21,18 +21,18 @@ namespace RestService.DataFetchingService
     public class BgpAquisitionService : IHostedService, IDisposable
     {
         private static readonly TimeSpan Hysteresis = TimeSpan.FromSeconds(10);
-        
+
         /// <summary>
         /// The list of receivers for the data that we aquired.
         /// </summary>
         private readonly List<IAquiredDataHandler> dataHandlers = new List<IAquiredDataHandler>();
-        
+
         private readonly IFailureRetryFilteringDataHandler retryFeasibleHandler;
-        
+
         private readonly ILogger<BgpAquisitionService> logger;
 
         private readonly IConfiguration configuration;
-        
+
         private readonly Mutex bgpMutex = new Mutex(false, Program.BgpRunningMutexName);
 
         private readonly object multiTimerLockingObject = new object();
@@ -48,8 +48,6 @@ namespace RestService.DataFetchingService
         private QuerierOptions snmpQuerierOptions = QuerierOptions.Default;
 
         private TimeSpan refreshInterval;
-
-        private QueryResultDatabaseContext resultDatabaseContext;
 
         private List<Regex> filterRegexList = null;
 
@@ -142,9 +140,9 @@ namespace RestService.DataFetchingService
             // by default waiting a couple of secs before first Hamnet scan
             TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(17);
 
-            this.NewDatabaseContext();
+            using var resultDatabase = QueryResultDatabaseProvider.Instance.CreateContext();
 
-            var status = this.resultDatabaseContext.Status;
+            var status = resultDatabase.Status;
             var nowItIs = DateTime.UtcNow;
             var timeSinceLastAquisitionStart = (nowItIs - status.LastBgpQueryStart);
             if (status.LastBgpQueryStart > status.LastBgpQueryEnd)
@@ -204,8 +202,6 @@ namespace RestService.DataFetchingService
 
                     this.dataHandlers.Clear();
 
-                    this.DisposeDatabaseContext();
-
                     this.hamnetDbPoller?.Dispose();
                     this.hamnetDbPoller = null;
                 }
@@ -260,10 +256,12 @@ namespace RestService.DataFetchingService
         {
             IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.BgpAquisitionServiceSectionKey);
 
+            using var resultDatabase = QueryResultDatabaseProvider.Instance.CreateContext();
+
             // detect if we're due to run and, if we are, record the start of the run
-            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+            using (var transaction = resultDatabase.Database.BeginTransaction())
             {
-                var status = resultDatabaseContext.Status;
+                var status = resultDatabase.Status;
                 var nowItIs = DateTime.UtcNow;
                 var sinceLastScan = nowItIs - status.LastBgpQueryStart;
                 if ((sinceLastScan < this.refreshInterval - Hysteresis) && (status.LastBgpQueryStart <= status.LastBgpQueryEnd))
@@ -272,14 +270,14 @@ namespace RestService.DataFetchingService
                     return;
                 }
 
-                // we restart the timer so that in case we've been blocked by Mutexes etc. the interval really starts from scratch        
+                // we restart the timer so that in case we've been blocked by Mutexes etc. the interval really starts from scratch
                 this.timer.Change(this.refreshInterval, this.refreshInterval);
 
                 this.logger.LogInformation($"STARTING: Retrieving BGP monitoring data as configured in HamnetDB - last run: Started {status.LastBgpQueryStart} ({sinceLastScan} ago)");
 
                 status.LastBgpQueryStart = DateTime.UtcNow;
 
-                resultDatabaseContext.SaveChanges();
+                resultDatabase.SaveChanges();
                 transaction.Commit();
             }
 
@@ -326,38 +324,16 @@ namespace RestService.DataFetchingService
             this.SendFinishedToDataHandlers();
 
             // record the regular end of the run
-            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+            using (var transaction = resultDatabase.Database.BeginTransaction())
             {
-                var status = resultDatabaseContext.Status;
+                var status = resultDatabase.Status;
 
                 status.LastBgpQueryEnd = DateTime.UtcNow;
 
                 this.logger.LogInformation($"COMPLETED: Retrieving BGP monitoring data as configured in HamnetDB at {status.LastBgpQueryEnd}, duration {status.LastBgpQueryEnd - status.LastBgpQueryStart}");
 
-                resultDatabaseContext.SaveChanges();
+                resultDatabase.SaveChanges();
                 transaction.Commit();
-            }
-        }
-
-        /// <summary>
-        /// Creates a new database context for the result database.
-        /// </summary>
-        private void NewDatabaseContext()
-        {
-            this.DisposeDatabaseContext();
-
-            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
-        }
-
-        /// <summary>
-        /// Disposes off the result database context.
-        /// </summary>
-        private void DisposeDatabaseContext()
-        {
-            if (this.resultDatabaseContext != null)
-            {
-                this.resultDatabaseContext.Dispose();
-                this.resultDatabaseContext = null;
             }
         }
 
@@ -378,17 +354,15 @@ namespace RestService.DataFetchingService
             Exception hitException = null;
             try
             {
-                using(var querier = SnmpQuerierFactory.Instance.Create(host.Address, this.snmpQuerierOptions))
-                {
-                    // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
-                    //       Else the lazy-loading containers might fail to lazy-query the required values.
+                using var querier = SnmpQuerierFactory.Instance.Create(host.Address, this.snmpQuerierOptions);
+                // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
+                //       Else the lazy-loading containers might fail to lazy-query the required values.
 
-                    var bgpPeers = querier.FetchBgpPeers(null);
+                var bgpPeers = querier.FetchBgpPeers(null);
 
-                    var storeOnlyDetailsClone = new BgpPeersStoreOnlyContainer(bgpPeers);
+                var storeOnlyDetailsClone = new BgpPeersStoreOnlyContainer(bgpPeers);
 
-                    this.SendResultsToDataHandlers(host, storeOnlyDetailsClone, DateTime.UtcNow);
-                }
+                this.SendResultsToDataHandlers(host, storeOnlyDetailsClone, DateTime.UtcNow);
             }
             catch (HamnetSnmpException ex)
             {

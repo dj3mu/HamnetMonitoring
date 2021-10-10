@@ -205,8 +205,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void IpLinkTestTest()
         {
-            var ip1UnderTest = new IpAddress("44.148.44.122");
-            var ip2UnderTest = new IpAddress("44.148.44.125");
+            var ip1UnderTest = new IpAddress("44.148.57.234");
+            var ip2UnderTest = new IpAddress("44.148.57.237");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
@@ -239,7 +239,7 @@ namespace SnmpAbstractionTests
         /// <param name="allowedApis">The list of allowed APIs</param>
         private static void QueryAndPrintTraceroute(IpAddress address, string target, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.VendorSpecific)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
+            using var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             var systemData = querier.SystemData;
             systemData.ForceEvaluateAll();
@@ -263,7 +263,7 @@ namespace SnmpAbstractionTests
         /// <param name="allowedApis">The list of allowed APIs</param>
         private static void QueryAndPrintBgpPeers(IpAddress address, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.VendorSpecific)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
+            using var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             var systemData = querier.SystemData;
             systemData.ForceEvaluateAll();
@@ -290,7 +290,7 @@ namespace SnmpAbstractionTests
         /// <param name="allowedApis">The list of allowed APIs</param>
         private static void QueryAndPrintLinkDetails(IpAddress address1, IpAddress address2, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.Snmp)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address1.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
+            using var querier = SnmpQuerierFactory.Instance.Create(address1.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -314,7 +314,7 @@ namespace SnmpAbstractionTests
         /// <param name="allowedApis">The list of allowed APIs</param>
         private static void QueryAndPrintSystemData(IpAddress address, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.Snmp)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
+            using var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -337,7 +337,7 @@ namespace SnmpAbstractionTests
         /// <param name="allowedApis">The list of allowed APIs</param>
         private static void QueryAndPrintWirelessPeers(IpAddress address, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.Snmp)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
+            using var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             Assert.NotNull(querier, "Create(...) returned null");
 
@@ -363,7 +363,7 @@ namespace SnmpAbstractionTests
         /// <param name="allowedApis">The list of allowed APIs</param>
         private static void QueryAndPrintInterfaces(IpAddress address, SnmpVersion snmpVersion, bool useCache = false, QueryApis allowedApis = QueryApis.Snmp)
         {
-            var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
+            using var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
             Assert.NotNull(querier, "Create(...) returned null");
 

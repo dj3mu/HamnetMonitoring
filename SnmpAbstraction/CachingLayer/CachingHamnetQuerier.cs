@@ -171,7 +171,16 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"No remote IP address available at all after resolving {remoteHostNamesOrIps.Length} host name or address string to IP addresses");
             }
 
-            return this.FetchLinkDetails(remoteQueriers.ToArray());
+            var linkDetails = this.FetchLinkDetails(remoteQueriers.ToArray());
+
+            foreach (var querier in remoteQueriers)
+            {
+                querier.Dispose();
+            }
+
+            remoteQueriers.Clear();
+
+            return linkDetails;
         }
 
         /// <inheritdoc />

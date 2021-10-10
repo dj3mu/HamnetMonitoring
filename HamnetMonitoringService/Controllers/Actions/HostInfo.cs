@@ -17,7 +17,7 @@ namespace HamnetDbRest.Controllers
         private readonly ILogger logger;
 
         private readonly IConfiguration configuration;
-        
+
         private IQuerierOptions querierOptions;
 
         /// <summary>
@@ -53,12 +53,9 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                using(var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions))
-                {
-                    var systemData = querier.SystemData;
-
-                    return new HostInfoReply(querier.Address, systemData, querier.Api, null);
-                }
+                using var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions);
+                var systemData = querier.SystemData;
+                return new HostInfoReply(querier.Address, systemData, querier.Api, null);
             }
             catch(Exception ex)
             {

@@ -21,7 +21,7 @@ namespace RestService.DataFetchingService
     public class RssiAquisitionService : IHostedService, IDisposable
     {
         private static readonly TimeSpan Hysteresis = TimeSpan.FromSeconds(10);
-        
+
         /// <summary>
         /// The list of receivers for the data that we aquired.
         /// </summary>
@@ -30,7 +30,7 @@ namespace RestService.DataFetchingService
         private readonly ILogger<RssiAquisitionService> logger;
 
         private readonly IConfiguration configuration;
-        
+
         private readonly IFailureRetryFilteringDataHandler retryFeasibleHandler;
 
         private readonly Mutex rssiMutex = new Mutex(false, Program.RssiRunningMutexName);
@@ -48,8 +48,6 @@ namespace RestService.DataFetchingService
         private QuerierOptions snmpQuerierOptions = QuerierOptions.Default;
 
         private TimeSpan refreshInterval;
-
-        private QueryResultDatabaseContext resultDatabaseContext;
 
         private bool usePenaltySystem = false;
 
@@ -143,9 +141,9 @@ namespace RestService.DataFetchingService
             // by default waiting a couple of secs before first Hamnet scan
             TimeSpan timeToFirstAquisition = TimeSpan.FromSeconds(11);
 
-            this.NewDatabaseContext();
+            using var resultDatabase = QueryResultDatabaseProvider.Instance.CreateContext();
 
-            var status = this.resultDatabaseContext.Status;
+            var status = resultDatabase.Status;
             var nowItIs = DateTime.UtcNow;
             var timeSinceLastAquisitionStart = (nowItIs - status.LastRssiQueryStart);
             if (status.LastRssiQueryStart > status.LastRssiQueryEnd)
@@ -205,8 +203,6 @@ namespace RestService.DataFetchingService
 
                     this.dataHandlers.Clear();
 
-                    this.DisposeDatabaseContext();
-
                     this.hamnetDbPoller?.Dispose();
                     this.hamnetDbPoller = null;
                 }
@@ -261,10 +257,12 @@ namespace RestService.DataFetchingService
         {
             IConfigurationSection hamnetDbConfig = this.configuration.GetSection(Program.RssiAquisitionServiceSectionKey);
 
+            using var resultDatabase = QueryResultDatabaseProvider.Instance.CreateContext();
+
             // detect if we're due to run and, if we are, record the start of the run
-            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+            using (var transaction = resultDatabase.Database.BeginTransaction())
             {
-                var status = resultDatabaseContext.Status;
+                var status = resultDatabase.Status;
                 var nowItIs = DateTime.UtcNow;
                 var sinceLastScan = nowItIs - status.LastRssiQueryStart;
                 if ((sinceLastScan < this.refreshInterval - Hysteresis) && (status.LastRssiQueryStart <= status.LastRssiQueryEnd))
@@ -272,15 +270,15 @@ namespace RestService.DataFetchingService
                     this.logger.LogInformation($"SKIPPING: RSSI aquisition not yet due: Last aquisition started {status.LastRssiQueryStart} ({sinceLastScan} ago, hysteresis {Hysteresis}), configured interval {this.refreshInterval}");
                     return;
                 }
-        
-                // we restart the timer so that in case we've been blocked by Mutexes etc. the interval really starts from scratch        
+
+                // we restart the timer so that in case we've been blocked by Mutexes etc. the interval really starts from scratch
                 this.timer.Change(this.refreshInterval, this.refreshInterval);
 
                 this.logger.LogInformation($"STARTING: Retrieving RSSI monitoring data as configured in HamnetDB - last run: Started {status.LastRssiQueryStart} ({sinceLastScan} ago)");
 
                 status.LastRssiQueryStart = DateTime.UtcNow;
 
-                resultDatabaseContext.SaveChanges();
+                resultDatabase.SaveChanges();
                 transaction.Commit();
             }
 
@@ -319,38 +317,16 @@ namespace RestService.DataFetchingService
             this.SendFinishedToDataHandlers();
 
             // record the regular end of the run
-            using (var transaction = this.resultDatabaseContext.Database.BeginTransaction())
+            using (var transaction = resultDatabase.Database.BeginTransaction())
             {
-                var status = resultDatabaseContext.Status;
+                var status = resultDatabase.Status;
 
                 status.LastRssiQueryEnd = DateTime.UtcNow;
 
                 this.logger.LogInformation($"COMPLETED: Retrieving RSSI monitoring data as configured in HamnetDB at {status.LastRssiQueryEnd}, duration {status.LastRssiQueryEnd - status.LastRssiQueryStart}");
 
-                resultDatabaseContext.SaveChanges();
+                resultDatabase.SaveChanges();
                 transaction.Commit();
-            }
-        }
-
-        /// <summary>
-        /// Creates a new database context for the result database.
-        /// </summary>
-        private void NewDatabaseContext()
-        {
-            this.DisposeDatabaseContext();
-
-            this.resultDatabaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
-        }
-
-        /// <summary>
-        /// Disposes off the result database context.
-        /// </summary>
-        private void DisposeDatabaseContext()
-        {
-            if (this.resultDatabaseContext != null)
-            {
-                this.resultDatabaseContext.Dispose();
-                this.resultDatabaseContext = null;
             }
         }
 
@@ -374,18 +350,16 @@ namespace RestService.DataFetchingService
             Exception hitException = null;
             try
             {
-                using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.snmpQuerierOptions))
-                using(var querier2 = SnmpQuerierFactory.Instance.Create(address2, this.snmpQuerierOptions))
-                {
-                    // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
-                    //       Else the lazy-loading containers might fail to lazy-query the required values.
+                using var querier = SnmpQuerierFactory.Instance.Create(address1, this.snmpQuerierOptions);
+                using var querier2 = SnmpQuerierFactory.Instance.Create(address2, this.snmpQuerierOptions);
+                // NOTE: Do not Dispose the querier until ALL data has been copied to other containers!
+                //       Else the lazy-loading containers might fail to lazy-query the required values.
 
-                    var linkDetails = querier.FetchLinkDetails(querier2);
+                var linkDetails = querier.FetchLinkDetails(querier2);
 
-                    var storeOnlyDetailsClone = new LinkDetailsStoreOnlyContainer(linkDetails);
+                var storeOnlyDetailsClone = new LinkDetailsStoreOnlyContainer(linkDetails);
 
-                    this.SendResultsToDataHandlers(pair, storeOnlyDetailsClone, new IDeviceSystemData[] { new SystemDataStoreOnlyContainer(querier.SystemData), new SystemDataStoreOnlyContainer(querier2.SystemData) }, DateTime.UtcNow);
-                }
+                this.SendResultsToDataHandlers(pair, storeOnlyDetailsClone, new IDeviceSystemData[] { new SystemDataStoreOnlyContainer(querier.SystemData), new SystemDataStoreOnlyContainer(querier2.SystemData) }, DateTime.UtcNow);
             }
             catch (HamnetSnmpException ex)
             {

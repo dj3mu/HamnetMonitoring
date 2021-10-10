@@ -178,7 +178,7 @@
 
                 try
                 {
-                    var querier = SnmpQuerierFactory.Instance.Create(pair.Value.First().Address, querierOptions);
+                    using var querier = SnmpQuerierFactory.Instance.Create(pair.Value.First().Address, querierOptions);
 
                     var linkDetails = querier.FetchLinkDetails(pair.Value.Last().Address.ToString());
 
@@ -208,7 +208,7 @@
 
             var querierOptions = CreateQuerierOptions(opts);
 
-            var querier = SnmpQuerierFactory.Instance.Create(opts.HostsOrAddresses.First(), querierOptions);
+            using var querier = SnmpQuerierFactory.Instance.Create(opts.HostsOrAddresses.First(), querierOptions);
 
             var wirelessPeerInfos = querier.FetchLinkDetails(opts.HostsOrAddresses.Skip(1).ToArray());
 
@@ -230,7 +230,7 @@
 
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
+                using var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var wirelessPeerInfos = querier.WirelessPeerInfos;
 
@@ -270,7 +270,7 @@
 
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
+                using var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var systemData = querier.SystemData;
 
@@ -293,7 +293,7 @@
 
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
+                using var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var interfaceData = querier.NetworkInterfaceDetails;
 
