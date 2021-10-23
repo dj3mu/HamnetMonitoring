@@ -105,6 +105,8 @@ namespace SnmpAbstraction
 
             var linkDetails = FetchLinkDetails(remoteQueriers.ToArray());
 
+            linkDetails.ForceEvaluateAll();
+
             foreach (var querier in remoteQueriers)
             {
                 querier.Dispose();
