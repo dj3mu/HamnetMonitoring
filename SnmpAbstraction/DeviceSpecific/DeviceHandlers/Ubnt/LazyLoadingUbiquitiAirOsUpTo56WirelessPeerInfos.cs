@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -53,15 +54,31 @@ namespace SnmpAbstraction
 
             log.Debug($"RetrievePeerInfo: Received peer MAC addresses from '{this.DeviceAddress}' using OID {interfaceIdRootOid}");
 
-            int interfaceId = Convert.ToInt32(interfaceVbs[0].Oid.Last());
-            this.PeerInfosBacking.Add(
-                new LazyLoadingUbiquitiAirOs4WirelessPeerInfo(
-                    this.LowerSnmpLayer,
-                    this.OidLookup,
-                    interfaceId, // last element of OID contains the interface ID on which this peer is connected
-                    interfaceVbs,
-                    interfaceVbs.Count
-                ));
+            HashSet<string> handledMacs = new HashSet<string>(interfaceVbs.Count);
+
+            foreach (var interfaceVb in interfaceVbs)
+            {
+                IEnumerable<uint> macOidFragments = interfaceVb.Oid.Skip(interfaceVb.Oid.Length - 7).Take(6);
+                var macAddress = macOidFragments.ToHexString();
+
+                if (handledMacs.Contains(macAddress))
+                {
+                    continue;
+                }
+
+                int interfaceId = Convert.ToInt32(interfaceVb.Oid.Last());
+                this.PeerInfosBacking.Add(
+                    new LazyLoadingUbiquitiAirOs4WirelessPeerInfo(
+                        this.LowerSnmpLayer,
+                        this.OidLookup,
+                        macAddress,
+                        interfaceId, // last element of OID contains the interface ID on which this peer is connected
+                        interfaceVbs,
+                        interfaceVbs.Count
+                    ));
+
+                handledMacs.Add(macAddress);
+            }
 
             return true;
         }

@@ -185,7 +185,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AllForSingleIpTest()
         {
-            var ipUnderTest = new IpAddress("44.148.22.38");
+            var ipUnderTest = new IpAddress("44.168.4.131");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
