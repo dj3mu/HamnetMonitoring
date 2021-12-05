@@ -176,7 +176,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void MtikTracerouteTest()
         {
-            QueryAndPrintTraceroute(TestConstants.TestAddressMikrotikRouter1, TestConstants.TestAddressAlix1.ToString(), SnmpVersion.Ver2, false);
+            QueryAndPrintTraceroute(new IpAddress("44.148.90.122"), "44.148.90.125", SnmpVersion.Ver1, false);
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AllForSingleIpTest()
         {
-            var ipUnderTest = new IpAddress("44.148.44.125");
+            var ipUnderTest = new IpAddress("44.148.22.38");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
@@ -205,8 +205,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void IpLinkTestTest()
         {
-            var ip1UnderTest = new IpAddress("44.148.57.234");
-            var ip2UnderTest = new IpAddress("44.148.57.237");
+            var ip1UnderTest = new IpAddress("44.148.90.101");
+            var ip2UnderTest = new IpAddress("44.148.90.125");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
