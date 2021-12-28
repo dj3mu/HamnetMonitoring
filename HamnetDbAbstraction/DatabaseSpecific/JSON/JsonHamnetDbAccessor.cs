@@ -208,6 +208,7 @@ namespace HamnetDbAbstraction
         {
             using (HttpClient client = new HttpClient())
             {
+                client.Timeout = TimeSpan.FromMinutes(3);
                 client.BaseAddress = uri;
 
                 // Add an Accept header for JSON format.

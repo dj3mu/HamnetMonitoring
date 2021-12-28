@@ -9,7 +9,7 @@ namespace SnmpAbstraction
 {
     /// <summary>
     /// Implementation of the lower layer SNMP parts.<br/>
-    /// Mainly encapsulates the necessary 
+    /// Mainly encapsulates the necessary
     /// /// </summary>
     internal class SnmpLowerLayer : ISnmpLowerLayer, IDisposable
     {
@@ -207,7 +207,7 @@ namespace SnmpAbstraction
                 pdu.VbList.Add(item);
             }
 
-            log.Debug($"Using request ID '{requestId}' for PDU with {pdu.VbCount} elements to {this.Address}");
+            log.Debug($"Using request ID '{requestId}' for PDU with {pdu.VbCount} elements to {this.Address} - VBs are:{Environment.NewLine}{string.Join(Environment.NewLine, pdu.VbList.Select(vb => vb.Oid))}");
 
             using(var target = new UdpTarget((IPAddress)this.Address, this.Options.Port, Convert.ToInt32(this.Options.Timeout.TotalMilliseconds), this.Options.Retries))
             {
@@ -262,19 +262,19 @@ namespace SnmpAbstraction
         {
             // This Oid represents last Oid returned by the SNMP agent
             Oid lastOid = (Oid)interfaceIdWalkRootOid.Clone();
- 
+
             Interlocked.CompareExchange(ref nextRequestId, 0, int.MaxValue); // wrap the request ID
             var requestId = Interlocked.Increment(ref nextRequestId);
 
             // Pdu class used for all requests
             Pdu pdu = new Pdu(PduType.GetBulk);
- 
+
             // In this example, set NonRepeaters value to 0
             pdu.NonRepeaters = this.Options.Ver2cMaximumValuesPerRequest;
 
             // MaxRepetitions tells the agent how many Oid/Value pairs to return in the response.
             pdu.MaxRepetitions = this.Options.Ver2cMaximumRequests;
- 
+
             VbCollection returnCollection = new VbCollection();
 
             // Loop through results
@@ -310,12 +310,12 @@ namespace SnmpAbstraction
                 // If result is null then agent didn't reply or we couldn't parse the reply.
                 if (result != null)
                 {
-                    // ErrorStatus other then 0 is an error returned by 
+                    // ErrorStatus other then 0 is an error returned by
                     // the Agent - see SnmpConstants for error definitions
                     if (result.Pdu.ErrorStatus != 0)
                     {
                         // agent reported an error with the request
-                        log.Warn($"Error in SNMP reply of device '{this.Address}': Error status {result.Pdu.ErrorStatus} at index {result.Pdu.ErrorIndex}");
+                        log.Warn($"Error in SNMP bulk walk reply of device '{this.Address}': Error status {result.Pdu.ErrorStatus} at index {result.Pdu.ErrorIndex}");
                         lastOid = null;
                         break;
                     }
@@ -352,7 +352,7 @@ namespace SnmpAbstraction
                     throw new HamnetSnmpException($"No response received from SNMP agent for device '{this.Address}'", this.Address?.ToString());
                 }
             }
-            
+
             return returnCollection;
         }
 
@@ -367,10 +367,10 @@ namespace SnmpAbstraction
             // This Oid represents last Oid returned by
             //  the SNMP agent
             Oid lastOid = (Oid)interfaceIdWalkRootOid.Clone();
- 
+
             // Pdu class used for all requests
             Pdu pdu = new Pdu(PduType.GetNext);
- 
+
             VbCollection returnCollection = new VbCollection();
 
             // Loop through results
@@ -404,12 +404,12 @@ namespace SnmpAbstraction
                 // If result is null then agent didn't reply or we couldn't parse the reply.
                 if (result != null)
                 {
-                    // ErrorStatus other then 0 is an error returned by 
+                    // ErrorStatus other then 0 is an error returned by
                     // the Agent - see SnmpConstants for error definitions
                     if (result.Pdu.ErrorStatus != 0)
                     {
                         // agent reported an error with the request
-                        log.Warn($"Error in SNMP reply of device '{this.Address}': Error status {result.Pdu.ErrorStatus} at index {result.Pdu.ErrorIndex}");
+                        log.Warn($"Error in SNMP GetNextWalk reply of device '{this.Address}': Error status {result.Pdu.ErrorStatus} at index {result.Pdu.ErrorIndex}");
                         lastOid = null;
                         break;
                     }

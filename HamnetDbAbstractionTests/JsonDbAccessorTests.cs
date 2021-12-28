@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 using HamnetDbAbstraction;
+using System.Linq;
+using System.Net;
 
 namespace HamnetDbAbstractionTests
 {
@@ -36,7 +38,7 @@ namespace HamnetDbAbstractionTests
         public void QueryRouterHostsTest()
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
-            
+
             Assert.NotNull(accessor, "The accessor returned by provider is null");
 
             var routerHosts = accessor.QueryBgpRouters();
@@ -52,7 +54,7 @@ namespace HamnetDbAbstractionTests
         public void QuerySitesTest()
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SitesUrl, TestConstants.SitesUrl, null);
-            
+
             Assert.NotNull(accessor, "The accessor returned by provider is null");
 
             var sites = accessor.QuerySites();
@@ -68,7 +70,7 @@ namespace HamnetDbAbstractionTests
         public void QueryMonitoredHostsTest()
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
-            
+
             Assert.NotNull(accessor, "The accessor returned by provider is null");
 
             var monitoredHosts = accessor.QueryMonitoredHosts();
@@ -84,10 +86,13 @@ namespace HamnetDbAbstractionTests
         public void QuerySubnetsTest()
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
-            
+
             Assert.NotNull(accessor, "The accessor returned by provider is null");
 
             var subnets = accessor.QuerySubnets();
+
+            var wantedSubnet = IPNetwork.Parse("44.148.46.48/29");
+            var ciriticalNet = subnets.FirstOrDefault(s => s.Subnet == wantedSubnet);
 
             Assert.NotNull(subnets, "The subnets return data is null");
             Assert.Greater(subnets.Count, 0, "No subnets returned at all");

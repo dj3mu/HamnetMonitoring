@@ -154,10 +154,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntFetchLinkDetailsTest()
         {
-            QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs4side1, TestConstants.TestAddressUbntAirOs4side2, SnmpVersion.Ver1);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs6side1, TestConstants.TestAddressUbntAirOs6side2, SnmpVersion.Ver1);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs8side1, TestConstants.TestAddressUbntAirOs8side2, SnmpVersion.Ver1);
-            QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirFiberSide1, TestConstants.TestAddressUbntAirFiberSide2, SnmpVersion.Ver1);
+            QueryAndPrintLinkDetails(new IpAddress("44.148.35.106"), new IpAddress("44.148.35.109"), SnmpVersion.Ver1, true);
+            //QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs6side1, TestConstants.TestAddressUbntAirOs6side2, SnmpVersion.Ver1);
+            //QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs8side1, TestConstants.TestAddressUbntAirOs8side2, SnmpVersion.Ver1);
+            //QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirFiberSide1, TestConstants.TestAddressUbntAirFiberSide2, SnmpVersion.Ver1);
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AllForSingleIpTest()
         {
-            var ipUnderTest = new IpAddress("44.168.4.131");
+            var ipUnderTest = new IpAddress("44.148.35.106");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 

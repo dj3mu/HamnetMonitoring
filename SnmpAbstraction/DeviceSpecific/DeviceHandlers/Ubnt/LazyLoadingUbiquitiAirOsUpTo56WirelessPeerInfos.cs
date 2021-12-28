@@ -58,6 +58,13 @@ namespace SnmpAbstraction
 
             foreach (var interfaceVb in interfaceVbs)
             {
+                if (interfaceVb.Oid.Length != 20)
+                {
+                    // the OIDs resulting from SNMPWalk are not only those with MAC-address inside
+                    // but we can safely detect the correct ones by its length (20 vs 14 segments)
+                    continue;
+                }
+
                 IEnumerable<uint> macOidFragments = interfaceVb.Oid.Skip(interfaceVb.Oid.Length - 7).Take(6);
                 var macAddress = macOidFragments.ToHexString();
 
