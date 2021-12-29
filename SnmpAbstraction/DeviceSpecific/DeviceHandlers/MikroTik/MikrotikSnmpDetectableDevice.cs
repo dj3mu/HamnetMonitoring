@@ -98,7 +98,7 @@ namespace SnmpAbstraction
 
             SemanticVersion osVersion = match.Success ? match.Groups[1].Value.ToSemanticVersion() : null;
 
-            var model = lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Trim();
+            var model = lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Replace("RB ", string.Empty).Trim();
 
             log.Info($"Detected device '{lowerLayer.Address}' as MikroTik '{model}' v '{osVersion}'");
 
