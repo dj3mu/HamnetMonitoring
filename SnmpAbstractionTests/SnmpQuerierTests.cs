@@ -24,9 +24,9 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQuerySystemDataTest()
         {
-            QueryAndPrintSystemData(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, false);
-            QueryAndPrintSystemData(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, true);
-            QueryAndPrintSystemData(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, true);
+            QueryAndPrintSystemData(new IpAddress("44.148.68.21"), SnmpVersion.Ver1, false);
+            //QueryAndPrintSystemData(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, true);
+            //QueryAndPrintSystemData(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, true);
         }
 
         /// <summary>
@@ -82,10 +82,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQueryInterfaceDataTest()
         {
-            QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver1, false);
-            QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver2, false); // Ver2 should cause a fallback to V1 for UBNT
-            QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1, false);
-            QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirFiberSide2, SnmpVersion.Ver1, false);
+            QueryAndPrintInterfaces(new IpAddress("44.148.68.21"), SnmpVersion.Ver1, false);
+            //QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver2, false); // Ver2 should cause a fallback to V1 for UBNT
+            //QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1, false);
+            //QueryAndPrintInterfaces(TestConstants.TestAddressUbntAirFiberSide2, SnmpVersion.Ver1, false);
         }
 
         /// <summary>
@@ -94,11 +94,11 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQueryWirelessPeersTest()
         {
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs4side1, SnmpVersion.Ver2, false); // Ver2 should cause a fallback to V1 for UBNT
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, false);
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1, false);
-            QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirFiberSide1, SnmpVersion.Ver1, false);
-            QueryAndPrintWirelessPeers(new IpAddress("44.142.42.210"), SnmpVersion.Ver2, false); // HB9RF
+            QueryAndPrintWirelessPeers(new IpAddress("44.148.68.21"), SnmpVersion.Ver1, true); // Ver2 should cause a fallback to V1 for UBNT
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, false);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirOs8side1, SnmpVersion.Ver1, false);
+            //QueryAndPrintWirelessPeers(TestConstants.TestAddressUbntAirFiberSide1, SnmpVersion.Ver1, false);
+            //QueryAndPrintWirelessPeers(new IpAddress("44.142.42.210"), SnmpVersion.Ver2, false); // HB9RF
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntFetchLinkDetailsTest()
         {
-            QueryAndPrintLinkDetails(new IpAddress("44.148.35.106"), new IpAddress("44.148.35.109"), SnmpVersion.Ver1, true);
+            QueryAndPrintLinkDetails(new IpAddress("44.148.68.18"), new IpAddress("44.148.68.21"), SnmpVersion.Ver1, false);
             //QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs6side1, TestConstants.TestAddressUbntAirOs6side2, SnmpVersion.Ver1);
             //QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirOs8side1, TestConstants.TestAddressUbntAirOs8side2, SnmpVersion.Ver1);
             //QueryAndPrintLinkDetails(TestConstants.TestAddressUbntAirFiberSide1, TestConstants.TestAddressUbntAirFiberSide2, SnmpVersion.Ver1);
@@ -185,7 +185,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AllForSingleIpTest()
         {
-            var ipUnderTest = new IpAddress("44.148.42.77");
+            var ipUnderTest = new IpAddress("44.148.68.21");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 

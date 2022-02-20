@@ -71,6 +71,12 @@ namespace SnmpAbstraction
         Oid AirFiberAfltuDetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.10.1.3");
 
         /// <summary>
+        /// Walk root for detecting AirFiber airFiber 60 -> should actually return the OS version if it's an AirFiber device
+        /// Root OID of AirFiber airFiber 60 is: .1.3.6.1.4.1.41112.1.11 according to UBNT-AFLTU-MIB.txt.
+        /// </summary>
+        Oid AirFiber60DetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.11");
+
+        /// <summary>
         /// Field to store an already detect OS version (during IsApplicable) for later use by CreateHandler.
         /// </summary>
         private string osDetectedVersion = null;
@@ -242,6 +248,16 @@ namespace SnmpAbstraction
                 this.detectionId = 0; // not used for this device
                 this.detectedModel = mibInfo41112[1].Value.ToString();
 
+                return true;
+            }
+
+            mibInfo41112 = snmpLowerLayer.DoWalk(AirFiber60DetectionWalkRootOid);
+            if (mibInfo41112.Count > 0)
+            {
+                // never seen AirFiber returning more than one
+                this.detectionId = 0; // not used for this device
+                this.detectedModel = mibInfo41112[AirFiber60DetectionWalkRootOid + "1.2.2.1"].Value.ToString();
+                this.osDetectedVersion = mibInfo41112[8].Value.ToString();
                 return true;
             }
 
