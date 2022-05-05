@@ -205,25 +205,25 @@ namespace SnmpAbstractionTests
         [Test]
         public void IpLinkTestTest()
         {
-            var ip1UnderTest = new IpAddress("44.148.62.2");
-            var ip2UnderTest = new IpAddress("44.148.62.5");
+            var ip1UnderTest = new IpAddress("44.148.44.122");
+            var ip2UnderTest = new IpAddress("44.148.44.125");
             var snmpVersion = SnmpVersion.Ver1;
-            var useCache = false;
+            var useCache = true;
 
-            Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) SYSTEM DATA:");
-            QueryAndPrintSystemData(ip1UnderTest, snmpVersion, useCache);
-            Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) SYSTEM DATA:");
-            QueryAndPrintSystemData(ip2UnderTest, snmpVersion, useCache);
-
-            Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) INTERFACES:");
-            QueryAndPrintInterfaces(ip1UnderTest, snmpVersion, useCache);
-            Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) INTERFACES:");
-            QueryAndPrintInterfaces(ip2UnderTest, snmpVersion, useCache);
-
-            Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) WIRELESS PEERS:");
-            QueryAndPrintWirelessPeers(ip1UnderTest, snmpVersion, useCache);
-            Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) WIRELESS PEERS:");
-            QueryAndPrintWirelessPeers(ip2UnderTest, snmpVersion, useCache);
+            //Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) SYSTEM DATA:");
+            //QueryAndPrintSystemData(ip1UnderTest, snmpVersion, useCache);
+            //Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) SYSTEM DATA:");
+            //QueryAndPrintSystemData(ip2UnderTest, snmpVersion, useCache);
+//
+            //Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) INTERFACES:");
+            //QueryAndPrintInterfaces(ip1UnderTest, snmpVersion, useCache);
+            //Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) INTERFACES:");
+            //QueryAndPrintInterfaces(ip2UnderTest, snmpVersion, useCache);
+//
+            //Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) WIRELESS PEERS:");
+            //QueryAndPrintWirelessPeers(ip1UnderTest, snmpVersion, useCache);
+            //Console.WriteLine($"{Environment.NewLine}{ip2UnderTest} (side #2) WIRELESS PEERS:");
+            //QueryAndPrintWirelessPeers(ip2UnderTest, snmpVersion, useCache);
 
             Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) <-> {ip2UnderTest} (side #2) LINK DETAILS:");
             QueryAndPrintLinkDetails(ip1UnderTest, ip2UnderTest, snmpVersion, useCache);

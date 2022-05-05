@@ -80,8 +80,9 @@ namespace SnmpAbstraction
             }
             else if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendInterfaceId, out singleOid) && !singleOid.Oid.IsNull)
             {
-                this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid + new Oid(new int[] { this.InterfaceId.Value }), "RSSI single value with Interface ID (RxSignalStrengthCh0AppendInterfaceId)");
-                this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
+                var queryOid = singleOid.Oid + new Oid(new int[] { this.InterfaceId.Value });
+                this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(queryOid, "RSSI single value with Interface ID (RxSignalStrengthCh0AppendInterfaceId)");
+                this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, queryOid);
             }
             else
             {
