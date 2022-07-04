@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <CodeAnalysisRuleSet>../codeanalysis.ruleset</CodeAnalysisRuleSet>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -19,23 +20,9 @@
     <PackageTags>Hamnet Monitoring HamnetDB</PackageTags>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.5.*">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="IPNetwork2" Version="2.5.*" />
-    <PackageReference Include="log4net" Version="2.0.*" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.*" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.*" />
-    <PackageReference Include="MySqlConnector" Version="1.2.*" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.*" />
-  </ItemGroup>
-
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
     <Copy SourceFiles="$(ProjectDir)../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
   </Target>
-
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

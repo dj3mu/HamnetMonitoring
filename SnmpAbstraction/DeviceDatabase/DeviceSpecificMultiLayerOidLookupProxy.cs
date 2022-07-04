@@ -95,8 +95,7 @@ namespace SnmpAbstraction
             oidValues = new DeviceSpecificOid[valuesToQuery.Length];
             for (int i = 0; i < valuesToQuery.Length; i++)
             {
-                DeviceSpecificOid value;
-                if (this.localLookup.TryGetValue(valuesToQuery[i], out value))
+                if (this.localLookup.TryGetValue(valuesToQuery[i], out DeviceSpecificOid value))
                 {
                     atLeastOneFound = true;
                     oidValues[i] = value;

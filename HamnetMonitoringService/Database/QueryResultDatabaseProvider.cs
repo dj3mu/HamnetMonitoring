@@ -15,7 +15,9 @@ namespace RestService.Database
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// The configuration section name for the result database configuration.
@@ -31,7 +33,7 @@ namespace RestService.Database
         /// The configuration key for getting the database connection string.
         /// </summary>
         public static readonly string ConnectionStringKey = "ConnectionString";
-        
+
         /// <summary>
         /// Remember whether we've already called Migrate on the DB.
         /// </summary>
@@ -61,7 +63,7 @@ namespace RestService.Database
         public QueryResultDatabaseContext CreateContext()
         {
             QueryResultDatabaseContext context = new QueryResultDatabaseContext(this.Configuration.GetSection(QueryResultDatabaseProvider.ResultDatabaseSectionName));
-            
+
             if (!this.migrateCalled)
             {
                 context.Database.Migrate();
@@ -77,12 +79,7 @@ namespace RestService.Database
         /// <param name="configuration">The configuration section to configure for.</param>
         public void SetConfiguration(IConfiguration configuration)
         {
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration), "configuration to set result database from is null");
-            }
-            
-            this.Configuration = configuration;
+            this.Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "configuration to set result database from is null");
         }
     }
 
@@ -113,7 +110,7 @@ namespace RestService.Database
                 .AddJsonFile(configFile, optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
-            
+
             QueryResultDatabaseProvider.Instance.SetConfiguration(configuration);
 
             return QueryResultDatabaseProvider.Instance.CreateContext() as QueryResultDatabaseContext;

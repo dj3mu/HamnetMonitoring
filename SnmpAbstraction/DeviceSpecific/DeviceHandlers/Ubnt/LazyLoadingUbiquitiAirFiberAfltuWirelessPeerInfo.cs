@@ -20,7 +20,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The OID fragment that identifies the interface that this peer info is for.
         /// </summary>
-        private Oid interfaceOidFragment;
+        private readonly Oid interfaceOidFragment;
 
         /// <summary>
         /// Backing field for the <see cref="IsAccessPoint" /> property.
@@ -109,8 +109,7 @@ namespace SnmpAbstraction
             };
 
             DeviceSpecificOid[] deviceSpecificOids = new DeviceSpecificOid[valuesToQuery.Length];
-            DeviceSpecificOid[] oidValues;
-            if (!this.OidLookup.TryGetValues(out oidValues, valuesToQuery))
+            if (!this.OidLookup.TryGetValues(out DeviceSpecificOid[] oidValues, valuesToQuery))
             {
                 log.Warn($"Not even one supported OID has been found for getting the stream-specific RX level. RxSignalStrength for device '{this.DeviceAddress}', interface OID {this.interfaceOidFragment}, cannot be retrieved.");
                 this.RxSignalStrengthBacking = double.NegativeInfinity;
@@ -144,8 +143,7 @@ namespace SnmpAbstraction
         protected override bool RetrieveLinkUptime()
         {
             var valueToQuery = RetrievableValuesEnum.LinkUptimeAppendMacAndInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.LinkUptimeBacking = TimeSpan.Zero;
@@ -188,8 +186,7 @@ namespace SnmpAbstraction
             }
 
             var valueToQuery = RetrievableValuesEnum.WirelessMode;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.LinkUptimeBacking = TimeSpan.Zero;
@@ -209,7 +206,7 @@ namespace SnmpAbstraction
             //      ap  (0),
             //      cpe (1)
             // }
-            this.isAccessPointBacking = wirelessMode == 0 ? true : false;
+            this.isAccessPointBacking = wirelessMode == 0;
 
             durationWatch.Stop();
 
@@ -228,8 +225,7 @@ namespace SnmpAbstraction
             }
 
             var valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressAppendInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.peerMacBacking = null;

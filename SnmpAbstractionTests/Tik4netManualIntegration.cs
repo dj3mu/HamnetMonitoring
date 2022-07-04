@@ -49,16 +49,14 @@ namespace SnmpAbstractionTests
         [Test]
         public void TikConnectionTest()
         {
-            using (ITikConnection connection = ConnectionFactory.CreateConnection(TikConnectionType.Api))
-            {
-                connection.Open("44.224.10.78", "monitoring", "");
-                var traceroute = connection.HamnetTraceroute("44.137.62.114");
-                //var advertisements = connection.LoadAll<BgpAdvertisement>();
-                //var instances = connection.LoadAll<BgpInstance>();
-                //var peers = connection.LoadAll<BgpPeer>();
-                //var networks = connection.LoadAll<BgpNetwork>();
-                //var routes = connection.LoadAll<IpRoute>();
-            }
+            using ITikConnection connection = ConnectionFactory.CreateConnection(TikConnectionType.Api);
+            connection.Open("44.224.10.78", "monitoring", "");
+            var traceroute = connection.HamnetTraceroute("44.137.62.114");
+            //var advertisements = connection.LoadAll<BgpAdvertisement>();
+            //var instances = connection.LoadAll<BgpInstance>();
+            //var peers = connection.LoadAll<BgpPeer>();
+            //var networks = connection.LoadAll<BgpNetwork>();
+            //var routes = connection.LoadAll<IpRoute>();
         }
     }
 }

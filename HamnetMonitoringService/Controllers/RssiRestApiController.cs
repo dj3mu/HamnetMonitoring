@@ -19,7 +19,9 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class RestController : ControllerBase
     {
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
+#pragma warning restore
 
         private readonly QueryResultDatabaseContext dbContext;
 
@@ -43,7 +45,9 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         /// <returns>The results of the get request.</returns>
         [HttpGet]
+#pragma warning disable IDE0060 // REST API definition
         public async Task<ActionResult<IEnumerable<Rssi>>> GetRssi(string host)
+#pragma warning restore
         {
             Program.RequestStatistics.ApiV1RssiRequests++;
             return await this.dbContext.RssiValues.AsQueryable().ToListAsync();

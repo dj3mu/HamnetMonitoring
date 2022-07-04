@@ -9,7 +9,7 @@ namespace RestService.DataFetchingService
 {
     internal class BgpPeersStoreOnlyContainer : IBgpPeers
     {
-        private List<IBgpPeer> detailsBacking;
+        private readonly List<IBgpPeer> detailsBacking;
 
         /// <summary>
         /// Copy-construct from an IBgpPeers.

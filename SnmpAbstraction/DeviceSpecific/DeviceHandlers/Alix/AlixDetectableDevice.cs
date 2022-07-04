@@ -20,18 +20,6 @@ namespace SnmpAbstraction
 
         private static readonly Regex OsVersionExtractionRegex = new Regex(@"\s+([0-9.]+)\s+");
 
-        /// <summary>
-        /// The OID to obtain the string including the OS version.<br/>
-        /// Example: "RouterOS 6.45.3 (stable) on RB711-5Hn-MMCX"
-        /// </summary>
-        private readonly Oid OsVersionOid = new Oid(".1.3.6.1.2.1.47.1.1.1.1.2.65536");
-
-        /// <summary>
-        /// A second OID to obtain the string including the OS version.<br/>
-        /// Example: "RouterOS v6.45.3 Jul/29/2019 12:11:49"
-        /// </summary>
-        private readonly Oid OsVersionOid2 = new Oid(".1.3.6.1.4.1.14988.1.1.17.1.1.4.1");
-
         /// <inheritdoc />
         public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
 
@@ -81,8 +69,7 @@ namespace SnmpAbstraction
 
             log.Info($"Detected device '{lowerLayer.Address}' as ALIX '{model}' v '{osVersion}'");
 
-            DeviceVersion deviceVersion;
-            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion, lowerLayer.Address);
+            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out DeviceVersion deviceVersion, lowerLayer.Address);
             if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
             {
                 try

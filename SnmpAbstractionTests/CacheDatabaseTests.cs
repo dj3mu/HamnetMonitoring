@@ -34,10 +34,8 @@ namespace Tests
         [Test]
         public void DbContextTest()
         {
-            using (var context = new CacheDatabaseContext(this.database))
-            {
-                Assert.NotNull(context, "The database context is null");
-            }
+            using var context = new CacheDatabaseContext(this.database);
+            Assert.NotNull(context, "The database context is null");
         }
 
         /// <summary>
@@ -164,8 +162,8 @@ namespace Tests
 
                 Assert.AreEqual(testPeerInfos.Details.Count, retrievedPeerInfos.Details.Count, "Wrong count of peer infos");
 
-                var firstPeerExpected = testPeerInfos.Details.First();
-                var firstPeerRetrieved = retrievedPeerInfos.Details.First();
+                var firstPeerExpected = testPeerInfos.Details[0];
+                var firstPeerRetrieved = retrievedPeerInfos.Details[0];
 
                 Assert.AreEqual(firstPeerExpected.DeviceAddress, firstPeerRetrieved.DeviceAddress, "Error in DeviceAddress");
                 Assert.AreEqual(firstPeerExpected.DeviceModel, firstPeerRetrieved.DeviceModel, "Error in DeviceModel");
@@ -239,8 +237,8 @@ namespace Tests
 
                 Assert.AreEqual(testInterfaceDetails.Details.Count, retrievedInterfaceDetails.Details.Count, "Wrong count of peer infos");
 
-                var firstPeerExpected = testInterfaceDetails.Details.First();
-                var firstPeerRetrieved = retrievedInterfaceDetails.Details.First();
+                var firstPeerExpected = testInterfaceDetails.Details[0];
+                var firstPeerRetrieved = retrievedInterfaceDetails.Details[0];
 
                 Assert.AreEqual(firstPeerExpected.DeviceAddress, firstPeerRetrieved.DeviceAddress, "Error in DeviceAddress");
                 Assert.AreEqual(firstPeerExpected.DeviceModel, firstPeerRetrieved.DeviceModel, "Error in DeviceModel");

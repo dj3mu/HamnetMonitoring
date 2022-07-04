@@ -16,7 +16,9 @@ namespace SnmpAbstraction
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// The version to use for fallback for MinimumVersion fields.
@@ -80,7 +82,7 @@ namespace SnmpAbstraction
 
                 var databaseDefaultPath = Path.Combine(Environment.CurrentDirectory, "Config/DeviceDatabase.sqlite");
                 connStringBuilder.DataSource = databaseDefaultPath;
-                
+
                 this.ConnectionString = connStringBuilder.ToString();
             }
             else
@@ -104,12 +106,12 @@ namespace SnmpAbstraction
             {
                 throw new ArgumentNullException(nameof(databasePathAndFile), "The specified database is null, empty or white-space-only");
             }
-            
+
             SqliteConnectionStringBuilder connStringBuilder = new SqliteConnectionStringBuilder();
 
             var databaseDefaultPath = Path.Combine(Environment.CurrentDirectory, databasePathAndFile);
             connStringBuilder.DataSource = databaseDefaultPath;
-            
+
             this.ConnectionString = connStringBuilder.ToString();
         }
 

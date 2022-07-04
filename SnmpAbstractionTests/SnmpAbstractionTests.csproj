@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <CodeAnalysisRuleSet>../codeanalysis.ruleset</CodeAnalysisRuleSet>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -18,27 +19,13 @@
     <PackageTags>Hamnet Monitoring SNMP Tests</PackageTags>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.5.*">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="nunit" Version="3.12.*" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.*" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.*" />
-    <PackageReference Include="SnmpSharpNetStandard" Version="0.10.0" />
-    <PackageReference Include="tik4net" Version="3.5.*" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
   </ItemGroup>
-
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying database and config files to $(OutDir)$(ConfigDir)" Importance="high" />
     <Copy SourceFiles="$(ProjectDir)/../SnmpAbstraction/DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
     <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
   </Target>
-
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

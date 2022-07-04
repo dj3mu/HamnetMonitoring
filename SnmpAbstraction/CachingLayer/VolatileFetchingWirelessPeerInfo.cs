@@ -17,7 +17,7 @@ namespace SnmpAbstraction
 
         private readonly ISnmpLowerLayer lowerLayer;
 
-        private TimeSpan queryDurationBacking = TimeSpan.Zero;
+        private readonly TimeSpan queryDurationBacking = TimeSpan.Zero;
 
         public VolatileFetchingWirelessPeerInfo(IWirelessPeerInfo underlyingPeerInfo, ISnmpLowerLayer lowerLayer)
         {
@@ -37,13 +37,12 @@ namespace SnmpAbstraction
             get
             {
                 var neededValue = CachableValueMeanings.WirelessTxSignalStrength;
-                ICachableOid queryOid = null;
-                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out ICachableOid queryOid))
                 {
                     log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <NaN> for TxSignalStrength");
                     return double.NaN;
                 }
-                
+
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
                 {
                     // value is not available for this device
@@ -66,13 +65,12 @@ namespace SnmpAbstraction
             get
             {
                 var neededValue = CachableValueMeanings.WirelessRxSignalStrength;
-                ICachableOid queryOid = null;
-                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out ICachableOid queryOid))
                 {
                     log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <NaN> for RxSignalStrength");
                     return double.NaN;
                 }
-                
+
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
                 {
                     // value is not available for this device
@@ -95,13 +93,12 @@ namespace SnmpAbstraction
             get
             {
                 var neededValue = CachableValueMeanings.WirelessLinkUptime;
-                ICachableOid queryOid = null;
-                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out ICachableOid queryOid))
                 {
                     log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <Zero> for link uptime");
                     return TimeSpan.Zero;
                 }
-                
+
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
                 {
                     // value is not available for this device
@@ -138,13 +135,12 @@ namespace SnmpAbstraction
             get
             {
                 var neededValue = CachableValueMeanings.Ccq;
-                ICachableOid queryOid = null;
-                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out queryOid))
+                if (!this.underlyingPeerInfo.Oids.TryGetValue(neededValue, out ICachableOid queryOid))
                 {
                     log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <null> for CCQ");
                     return null;
                 }
-                
+
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
                 {
                     // value is not available for this device

@@ -12,9 +12,9 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class TracerouteAction
     {
-        private string host;
+        private readonly string host;
 
-        private string remotePeerAddress;
+        private readonly string remotePeerAddress;
         private readonly int count;
         private readonly FromUrlQueryQuerierOptions querierOptions;
         private readonly TimeSpan timeout;
@@ -74,7 +74,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         private class TracerouteWebResult : ITracerouteWebResult
         {
-            List<ITracerouteWebHop> hopResultsBacking = null;
+            readonly List<ITracerouteWebHop> hopResultsBacking = null;
 
             /// <summary>
             /// Construct from the querier interface container.

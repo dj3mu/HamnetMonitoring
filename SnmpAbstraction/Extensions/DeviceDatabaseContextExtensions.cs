@@ -190,8 +190,7 @@ namespace SnmpAbstraction
             // check if we have an enum for each database entry
             foreach (DataType item in databaseTypes)
             {
-                DataTypesEnum parsedEnum;
-                bool parseSuccessful = Enum.TryParse<DataTypesEnum>(item.TypeName, out parsedEnum);
+                bool parseSuccessful = Enum.TryParse<DataTypesEnum>(item.TypeName, out DataTypesEnum parsedEnum);
                 if (!parseSuccessful)
                 {
                     returnValue = false;
@@ -264,8 +263,7 @@ namespace SnmpAbstraction
             // check if we have an enum for each database entry
             foreach (RetrievableValue item in retrievableValues)
             {
-                RetrievableValuesEnum parsedEnum;
-                bool parseSuccessful = Enum.TryParse<RetrievableValuesEnum>(item.ValueMeaning, out parsedEnum);
+                bool parseSuccessful = Enum.TryParse<RetrievableValuesEnum>(item.ValueMeaning, out RetrievableValuesEnum parsedEnum);
                 if (!parseSuccessful)
                 {
                     returnValue = false;

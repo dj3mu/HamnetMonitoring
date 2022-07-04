@@ -15,12 +15,12 @@ namespace SnmpAbstraction
                 return true;
             }
 
-            if (object.ReferenceEquals(x, null))
+            if (x is null)
             {
-                return object.ReferenceEquals(y, null);
+                return y is null;
             }
 
-            if (object.ReferenceEquals(y, null))
+            if (y is null)
             {
                 return false;
             }
@@ -31,7 +31,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public int GetHashCode(IInterfaceDetail obj)
         {
-            if (object.ReferenceEquals(obj, null))
+            if (obj is null)
             {
                 return 0;
             }

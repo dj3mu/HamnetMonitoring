@@ -81,7 +81,7 @@ namespace HamnetMonitoringService
         {
             Document document = this.StartDocument(out Kml rootElement);
 
-            this.AddSharedStyles(document);
+            AddSharedStyles(document);
             this.AddLocationsFolder(document);
             this.AddLinksFolder(document);
 
@@ -152,7 +152,7 @@ namespace HamnetMonitoringService
            return document;
         }
 
-        private void AddSharedStyles(Document document)
+        private static void AddSharedStyles(Document document)
         {
             document.AddStyle(new Style
             {

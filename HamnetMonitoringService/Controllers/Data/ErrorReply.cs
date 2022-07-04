@@ -8,7 +8,7 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class ErrorReply : IStatusReply
     {
-        List<string> errorDetailsBacking = new List<string>();
+        private readonly List<string> errorDetailsBacking = new List<string>();
 
         /// <summary>
         /// Construct from an exception.

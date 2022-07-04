@@ -17,11 +17,13 @@ namespace HamnetDbRest.Controllers
     {
         private readonly IPNetwork network;
 
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
+#pragma warning restore
 
         private readonly IHamnetDbAccess hamnetDbAccess;
 
-        private IQuerierOptions querierOptions;
+        private readonly IQuerierOptions querierOptions;
 
         /// <summary>
         /// Construct for a specific host.
@@ -37,8 +39,7 @@ namespace HamnetDbRest.Controllers
                 throw new ArgumentNullException(nameof(network), "Network to test is null, empty or white-space-only");
             }
 
-            IPNetwork subnet = null;
-            if (!IPNetwork.TryParse(network, out subnet))
+            if (!IPNetwork.TryParse(network, out IPNetwork subnet))
             {
                 throw new ArgumentException($"Specified network '{network}' is not a valid IP network specification", nameof(network));
             }

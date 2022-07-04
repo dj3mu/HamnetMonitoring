@@ -18,7 +18,7 @@ namespace RestService.DataFetchingService
         /// Backing field for the llist of networks that have been parsed.
         /// </summary>
         private List<IPNetwork> parsedNetworksBacking = null;
-        
+
         /// <summary>
         /// Counter for the current line (and at the end of parsing the number of lines in file).
         /// </summary>
@@ -97,7 +97,7 @@ namespace RestService.DataFetchingService
         {
             this.parsedNetworksBacking = new List<IPNetwork>();
 
-            if (string.IsNullOrWhiteSpace(this.FileToParse))            
+            if (string.IsNullOrWhiteSpace(this.FileToParse))
             {
                 // if the file is null or empty the parsed list is also empty.
                 return;
@@ -109,7 +109,7 @@ namespace RestService.DataFetchingService
             }
 
             var lines = File.ReadAllLines(this.FileToParse);
-             
+
             foreach (string line in lines)
             {
                 this.currentLine++;
@@ -137,8 +137,7 @@ namespace RestService.DataFetchingService
                 return;
             }
 
-            IPNetwork parsedNetwork = null;
-            if (!IPNetwork.TryParse(splitLine[0], out parsedNetwork))
+            if (!IPNetwork.TryParse(splitLine[0], out IPNetwork parsedNetwork))
             {
                 log.Warn($"'{this.FileToParse}' line #{this.currentLine}: Is not a comment or empty but cannot be parsed as valid IP network. It will be ignored. Line content '{line}'");
             }

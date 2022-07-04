@@ -21,7 +21,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The OID to get the system uptime (a quite standard OID that works for 99% of the devices)
         /// </summary>
-        private static Oid SystemUptimeOid = new Oid(".1.3.6.1.2.1.1.3.0");
+        private static readonly Oid SystemUptimeOid = new Oid(".1.3.6.1.2.1.1.3.0");
 
         /// <summary>
         /// The cache field for the system description.
@@ -401,7 +401,7 @@ namespace SnmpAbstraction
 
             durationWatch.ToString();
 
-            this.queryDurationBacking = this.queryDurationBacking + durationWatch.Elapsed;
+            this.queryDurationBacking += durationWatch.Elapsed;
         }
 
         /// <summary>

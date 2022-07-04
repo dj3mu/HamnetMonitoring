@@ -36,7 +36,7 @@ namespace HamnetDbAbstraction
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                throw new ArgumentNullException($"The connection string is null, empty or white-space-only");
+                throw new ArgumentNullException(nameof(connectionString), "The connection string is null, empty or white-space-only");
             }
 
             this.ConnectionString = connectionString;
@@ -104,20 +104,17 @@ namespace HamnetDbAbstraction
             List<IHamnetDbSubnet> subnets = new List<IHamnetDbSubnet>();
             using(MySqlCommand cmd = new MySqlCommand("SELECT ip FROM hamnet_subnet;", this.connection))
             {
-                using (MySqlDataReader reader = cmd.ExecuteReader())
+                using MySqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    var networkCidr = reader.GetString("ip");
+                    if (!IPNetwork.TryParse(networkCidr, out IPNetwork ipNet))
                     {
-                        var networkCidr = reader.GetString("ip");
-                        IPNetwork ipNet;
-                        if (!IPNetwork.TryParse(networkCidr, out ipNet))
-                        {
-                            log.Error($"Cannot convert retrieved string '{networkCidr}' to a valid IP network. This entry will be skipped.");
-                            continue;
-                        }
-
-                        subnets.Add(new HamnetDbSubnet(ipNet));
+                        log.Error($"Cannot convert retrieved string '{networkCidr}' to a valid IP network. This entry will be skipped.");
+                        continue;
                     }
+
+                    subnets.Add(new HamnetDbSubnet(ipNet));
                 }
             }
 
@@ -173,20 +170,17 @@ namespace HamnetDbAbstraction
 
             using (MySqlCommand cmd = new MySqlCommand(hostSelectCommand, this.connection))
             {
-                using (MySqlDataReader reader = cmd.ExecuteReader())
+                using MySqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    var addressString = reader.GetString("ip");
+                    if (!IPAddress.TryParse(addressString, out IPAddress address))
                     {
-                        var addressString = reader.GetString("ip");
-                        IPAddress address;
-                        if (!IPAddress.TryParse(addressString, out address))
-                        {
-                            log.Error($"Cannot convert retrieved string '{addressString}' to a valid IP address. This entry will be skipped.");
-                            continue;
-                        }
-
-                        hosts.Add(new HamnetDbHost(address, reader.GetString("site"), reader.GetString("name"), reader.GetString("typ")));
+                        log.Error($"Cannot convert retrieved string '{addressString}' to a valid IP address. This entry will be skipped.");
+                        continue;
                     }
+
+                    hosts.Add(new HamnetDbHost(address, reader.GetString("site"), reader.GetString("name"), reader.GetString("typ")));
                 }
             }
 

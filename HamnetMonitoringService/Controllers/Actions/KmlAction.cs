@@ -7,19 +7,21 @@ using HamnetMonitoringService;
 namespace HamnetDbRest.Controllers
 {
     /// <summary>
-    /// Action for 
+    /// Action for
     /// </summary>
     internal class KmlAction
     {
-        private string fromCall;
-        
-        private ToolController.ToLocationFromQuery toLocation;
+        private readonly string fromCall;
 
-        private ToolController.FromLocationFromQuery fromLocation;
-        
-        private string toCall;
+        private readonly ToolController.ToLocationFromQuery toLocation;
 
-        private FromUrlQueryQuerierOptions fromUrlQueryQuerierOptions;
+        private readonly ToolController.FromLocationFromQuery fromLocation;
+
+        private readonly string toCall;
+
+#pragma warning disable IDE0052 // API parameter
+        private readonly FromUrlQueryQuerierOptions fromUrlQueryQuerierOptions;
+#pragma warning restore
 
         private readonly IHamnetDbAccess hamnetDbAccess;
 
@@ -86,7 +88,7 @@ namespace HamnetDbRest.Controllers
                 ? new RawSiteFromFromQuery(this.fromLocation)
                 : this.GetSiteForCall(this.fromCall);
 
-            IHamnetDbSite toSite = string.IsNullOrWhiteSpace(this.toCall) 
+            IHamnetDbSite toSite = string.IsNullOrWhiteSpace(this.toCall)
                 ? new RawSiteFromToQuery(this.toLocation)
                 : this.GetSiteForCall(this.toCall);
 
@@ -122,7 +124,7 @@ namespace HamnetDbRest.Controllers
     /// </remarks>
     internal class RawSiteFromToQuery : IHamnetDbSite
     {
-        private ToolController.ToLocationFromQuery locationFromQuery;
+        private readonly ToolController.ToLocationFromQuery locationFromQuery;
 
         /// <inheritdoc />
         public RawSiteFromToQuery(ToolController.ToLocationFromQuery toLocation)
@@ -192,7 +194,7 @@ namespace HamnetDbRest.Controllers
     /// </remarks>
     internal class RawSiteFromFromQuery : IHamnetDbSite
     {
-        private ToolController.FromLocationFromQuery locationFromQuery;
+        private readonly ToolController.FromLocationFromQuery locationFromQuery;
 
         /// <inheritdoc />
         public RawSiteFromFromQuery(ToolController.FromLocationFromQuery fromLocation)

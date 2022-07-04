@@ -18,7 +18,7 @@ namespace SnmpAbstraction
 
         private readonly ISnmpLowerLayer lowerLayer;
 
-        private TimeSpan queryDurationBacking = TimeSpan.Zero;
+        private readonly TimeSpan queryDurationBacking = TimeSpan.Zero;
 
         public VolatileFetchingSystemData(IDeviceSystemData underlyingSystemData, ISnmpLowerLayer lowerLayer)
         {
@@ -47,8 +47,7 @@ namespace SnmpAbstraction
             get
             {
                 var neededValue = CachableValueMeanings.SystemUptime;
-                ICachableOid queryOid = null;
-                if (!this.underlyingSystemData.Oids.TryGetValue(neededValue, out queryOid))
+                if (!this.underlyingSystemData.Oids.TryGetValue(neededValue, out ICachableOid queryOid))
                 {
                     log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <null> for uptime");
                     return null;

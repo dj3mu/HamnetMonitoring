@@ -49,7 +49,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void QuerySuccessTest()
         {
-            Oid testOid = new Oid("1.3.6.1.2.1.1.1.0"); 
+            Oid testOid = new Oid("1.3.6.1.2.1.1.1.0");
 
             // test a (hopefully) successful query to a MikroTik
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
@@ -62,7 +62,7 @@ namespace SnmpAbstractionTests
 
                 Assert.NotNull(result[0], "result[0] is null");
                 Assert.AreEqual(testOid, result[0].Oid, "result[0] is of wrong OID");
-                
+
                 Console.WriteLine($"Result for OID {result[0].Oid} is of type '{SnmpConstants.GetTypeName(result[0].Value.Type)}' with value '{result[0].Value}'");
             }
 
@@ -77,7 +77,7 @@ namespace SnmpAbstractionTests
 
                 Assert.NotNull(result[0], "result[0] is null");
                 Assert.AreEqual(testOid, result[0].Oid, "result[0] is of wrong OID");
-                
+
                 Console.WriteLine($"Result for OID {result[0].Oid} is of type '{SnmpConstants.GetTypeName(result[0].Value.Type)}' with value '{result[0].Value}'");
             }
         }
@@ -88,16 +88,14 @@ namespace SnmpAbstractionTests
         [Test]
         public void QueryFailTest()
         {
-            Oid testOid = new Oid("1.3.6.1.2.1.1.1.0"); 
+            Oid testOid = new Oid("1.3.6.1.2.1.1.1.0");
 
             // Query to a host that has (hopefully) no SNMP service running on it.
-            using(var snmpll = new SnmpLowerLayer(TestConstants.TestAddressNotResponding))
-            {
-                Assert.Throws<SnmpNetworkException>(
-                    () => { VbCollection result = snmpll.Query(testOid); },
-                    "Network error: connection reset by peer."
-                );
-            }
+            using var snmpll = new SnmpLowerLayer(TestConstants.TestAddressNotResponding);
+            Assert.Throws<SnmpNetworkException>(
+                () => { VbCollection result = snmpll.Query(testOid); },
+                "Network error: connection reset by peer."
+            );
         }
 
         /// <summary>
@@ -107,7 +105,7 @@ namespace SnmpAbstractionTests
         public void QueryAsStringTest()
         {
             // system name should be supported by most devices
-            Oid testOid = new Oid("1.3.6.1.2.1.1.1.0"); 
+            Oid testOid = new Oid("1.3.6.1.2.1.1.1.0");
 
             // test a (hopefully) successful query.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"
@@ -139,7 +137,7 @@ namespace SnmpAbstractionTests
         public void QueryAsOidTest()
         {
             // system enterprise OID should be supported by most devices
-            Oid testOid = new Oid(".1.3.6.1.2.1.1.2.0"); 
+            Oid testOid = new Oid(".1.3.6.1.2.1.1.2.0");
 
             // test a (hopefully) successful query.
             // THIS CAN FAIL IF THE DEVICE HOLDING THE address specified by "testAddress"

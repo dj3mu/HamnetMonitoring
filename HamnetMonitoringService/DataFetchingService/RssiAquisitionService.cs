@@ -37,8 +37,6 @@ namespace RestService.DataFetchingService
 
         private readonly object multiTimerLockingObject = new object();
 
-        private readonly object databaseLockingObject = new object();
-
         private HamnetDbPoller hamnetDbPoller;
 
         private bool disposedValue = false;
@@ -180,8 +178,7 @@ namespace RestService.DataFetchingService
         {
             this.Dispose(true);
 
-            // TODO: Uncomment if finalized is implemented above.
-            // GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -232,7 +229,7 @@ namespace RestService.DataFetchingService
                 }
                 catch(Exception ex)
                 {
-                    this.logger.LogError($"Excpetion caught and ignored in timer-called data aquisition thread: {ex.ToString()}");
+                    this.logger.LogError($"Excpetion caught and ignored in timer-called data aquisition thread: {ex}");
                 }
                 finally
                 {
@@ -310,7 +307,7 @@ namespace RestService.DataFetchingService
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError($"Exception caught and ignored in RSSI arallel data aquisition thread: {ex.ToString()}");
+                    this.logger.LogError($"Exception caught and ignored in RSSI arallel data aquisition thread: {ex}");
                 }
             });
 

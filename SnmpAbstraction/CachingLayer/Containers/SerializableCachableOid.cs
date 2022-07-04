@@ -13,7 +13,7 @@ namespace SnmpAbstraction
     internal class SerializableCachableOid : ICachableOid
     {
         [JsonProperty("Oids")]
-        private List<Oid> oidsBacking;
+        private readonly List<Oid> oidsBacking;
 
         public SerializableCachableOid()
         {

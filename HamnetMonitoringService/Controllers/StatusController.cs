@@ -30,7 +30,9 @@ namespace HamnetDbRest.Controllers
 
         private static readonly PropertyInfo[] StatsProperties = typeof(RequestStatisticsContainer).GetProperties(BindingFlags.Default | BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
 
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
+#pragma warning restore
 
         private readonly IConfiguration configuration;
 

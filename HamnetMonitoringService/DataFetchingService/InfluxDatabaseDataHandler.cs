@@ -58,17 +58,19 @@ namespace RestService.DataFetchingService
 
         private readonly HamnetDbPoller hamnetDbPoller;
 
-        private IConfiguration configuration;
+#pragma warning disable IDE0052 // for future use
+        private readonly IConfiguration configuration;
+#pragma warning restore
 
-        private IConfigurationSection influxConfiguration;
+        private readonly IConfigurationSection influxConfiguration;
+
+        private readonly object recordingLock = new object();
 
         private LineProtocolClient influxClient = null;
 
         private LineProtocolPayload currentPayload = null;
 
         private bool disposedValue = false;
-
-        private object recordingLock = new object();
 
         /// <summary>
         /// Construct for the given configuration.
@@ -108,6 +110,12 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordRssiDetailsInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
+            if (linkDetails.Details.Count == 0)
+            {
+                log.Warn("Received and ignored linkDetails with empty Details list");
+                return;
+            }
+
             lock(this.recordingLock)
             {
                 this.CreateNewPayload();
@@ -121,7 +129,7 @@ namespace RestService.DataFetchingService
                         InfluxLinkUptimeDatapointName,
                         new Dictionary<string, object>
                         {
-                            { InfluxValueKey, linkDetails.Details.First().LinkUptime }
+                            { InfluxValueKey, linkDetails.Details[0].LinkUptime }
                         },
                         new Dictionary<string, string>
                         {
@@ -379,6 +387,12 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordUptimesInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, IEnumerable<IDeviceSystemData> systemDatas, DateTime queryTime)
         {
+            if (linkDetails.Details.Count == 0)
+            {
+                log.Warn("Received and ignored linkDetails with empty Details list");
+                return;
+            }
+
             lock(this.recordingLock)
             {
                 this.CreateNewPayload();
@@ -392,7 +406,7 @@ namespace RestService.DataFetchingService
                         InfluxLinkUptimeDatapointName,
                         new Dictionary<string, object>
                         {
-                            { InfluxValueKey, linkDetails.Details.First().LinkUptime }
+                            { InfluxValueKey, linkDetails.Details[0].LinkUptime }
                         },
                         new Dictionary<string, string>
                         {

@@ -209,14 +209,12 @@ namespace SnmpAbstraction
 
             log.Debug($"Using request ID '{requestId}' for PDU with {pdu.VbCount} elements to {this.Address} - VBs are:{Environment.NewLine}{string.Join(Environment.NewLine, pdu.VbList.Select(vb => vb.Oid))}");
 
-            using(var target = new UdpTarget((IPAddress)this.Address, this.Options.Port, Convert.ToInt32(this.Options.Timeout.TotalMilliseconds), this.Options.Retries))
-            {
-                SnmpPacket result = target.Request(pdu, this.QueryParameters);
+            using var target = new UdpTarget((IPAddress)this.Address, this.Options.Port, Convert.ToInt32(this.Options.Timeout.TotalMilliseconds), this.Options.Retries);
+            SnmpPacket result = target.Request(pdu, this.QueryParameters);
 
-                SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
+            SnmpAbstraction.RecordSnmpRequest(this.Address, pdu, result);
 
-                return result;
-            }
+            return result;
         }
 
         /// <summary>
@@ -267,13 +265,14 @@ namespace SnmpAbstraction
             var requestId = Interlocked.Increment(ref nextRequestId);
 
             // Pdu class used for all requests
-            Pdu pdu = new Pdu(PduType.GetBulk);
+            Pdu pdu = new Pdu(PduType.GetBulk)
+            {
+                // In this example, set NonRepeaters value to 0
+                NonRepeaters = this.Options.Ver2cMaximumValuesPerRequest,
 
-            // In this example, set NonRepeaters value to 0
-            pdu.NonRepeaters = this.Options.Ver2cMaximumValuesPerRequest;
-
-            // MaxRepetitions tells the agent how many Oid/Value pairs to return in the response.
-            pdu.MaxRepetitions = this.Options.Ver2cMaximumRequests;
+                // MaxRepetitions tells the agent how many Oid/Value pairs to return in the response.
+                MaxRepetitions = this.Options.Ver2cMaximumRequests
+            };
 
             VbCollection returnCollection = new VbCollection();
 

@@ -10,7 +10,7 @@ namespace HamnetDbAbstraction
     /// </summary>
     internal class HamnetDbSubnets : IHamnetDbSubnets
     {
-        private List<IHamnetDbSubnet> networks;
+        private readonly List<IHamnetDbSubnet> networks;
 
         /// <summary>
         /// Construct from a list of subnets.

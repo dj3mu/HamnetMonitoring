@@ -34,7 +34,7 @@ namespace SnmpAbstraction
         /// </summary>
         private static readonly string DeviceDatabasePathAndFile = Path.Combine("Config", "DeviceDatabase.sqlite");
 
-        private string dataBaseFile;
+        private readonly string dataBaseFile;
 
         /// <summary>
         /// Prevent construction from outside the singleton getter.

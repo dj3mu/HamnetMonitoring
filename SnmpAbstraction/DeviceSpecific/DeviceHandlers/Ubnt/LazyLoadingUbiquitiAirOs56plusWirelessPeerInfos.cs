@@ -41,8 +41,7 @@ namespace SnmpAbstraction
             // Note: The MAC address serves as an index in nested OIDs for MikroTik devices.
             //       So this way, we get the amount of peers as well as an index to them.
             var valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressWalkRoot;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 return false;
             }
@@ -57,7 +56,7 @@ namespace SnmpAbstraction
 
             foreach (Vb item in interfaceVbs)
             {
-                int interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 7]);
+                int interfaceId = Convert.ToInt32(item.Oid[^7]);
                 IEnumerable<uint> macOidFragments = item.Oid.Skip(item.Oid.Length - 6).Take(6);
 
                 var isAp = this.CheckIsAccessPoint(interfaceId, out int? numberOfClients); // ignoring numberOfClients as we know that we cannot retrieve it via CheckIsAccessPoint and it will always be null
@@ -79,9 +78,8 @@ namespace SnmpAbstraction
         protected override bool? CheckIsAccessPoint(int interfaceId, out int? numberOfClients)
         {
             var valueToQuery = RetrievableValuesEnum.WirelessMode;
-            DeviceSpecificOid wirelessModeOid;
             numberOfClients = null;
-            if (this.OidLookup.TryGetValue(valueToQuery, out wirelessModeOid))
+            if (this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid wirelessModeOid))
             {
                 // finally we need to get the count of registered clients
                 // if it's 0, this must be a client (this method will only be called if the registration table

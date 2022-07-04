@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Net;
 using SnmpSharpNet;
 using tik4net;
 using tik4net.Objects;
@@ -15,10 +13,10 @@ namespace SnmpAbstraction
     /// </summary>
     internal class MikrotikApiTracerouteOperation
     {
-        private IpAddress remoteIp;
+        private readonly IpAddress remoteIp;
         private readonly uint count;
-        private IpAddress address;
-        private ITikConnection tikConnection;
+        private readonly IpAddress address;
+        private readonly ITikConnection tikConnection;
         private readonly TimeSpan timeout;
         private readonly int maxHops;
 

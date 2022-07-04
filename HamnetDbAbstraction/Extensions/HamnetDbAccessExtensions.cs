@@ -29,13 +29,12 @@ namespace HamnetDbAbstraction
 
             if (allowDirectSupportClass)
             {
-                var directSupportHamnetAccess = hamnetDbAccess as IDirectSupportOfHamnetDbAccessExtensions;
-                if (directSupportHamnetAccess != null)
+                if (hamnetDbAccess is IDirectSupportOfHamnetDbAccessExtensions directSupportHamnetAccess)
                 {
                     return directSupportHamnetAccess.UniqueMonitoredHostPairsInSameSubnet();
                 }
             }
-            
+
             var hosts = hamnetDbAccess.QueryMonitoredHosts();
             var subnets = hamnetDbAccess.QuerySubnets();
 
@@ -65,12 +64,11 @@ namespace HamnetDbAbstraction
                 throw new ArgumentNullException(nameof(subnet), "subnet search monitored hosts for is null");
             }
 
-            var directSupportHamnetAccess = hamnetDbAccess as IDirectSupportOfHamnetDbAccessExtensions;
-            if (directSupportHamnetAccess != null)
+            if (hamnetDbAccess is IDirectSupportOfHamnetDbAccessExtensions directSupportHamnetAccess)
             {
                 return directSupportHamnetAccess.UniqueMonitoredHostPairsInSubnet(subnet);
             }
-            
+
             var hosts = hamnetDbAccess.QueryMonitoredHosts();
             var allSubnets = hamnetDbAccess.QuerySubnets();
 

@@ -28,10 +28,10 @@ namespace SnmpAbstraction
         private static string libraryIdBacking = null;
 
         private static ILog log = null;
-        
+
         private static string libraryInformationalVersionBacking = null;
-        
-        private static PerformanceCounter performanceCounterBacking = new PerformanceCounter();
+
+        private static readonly PerformanceCounter performanceCounterBacking = new PerformanceCounter();
 
         /// <summary>
         /// Gets the performance counter.

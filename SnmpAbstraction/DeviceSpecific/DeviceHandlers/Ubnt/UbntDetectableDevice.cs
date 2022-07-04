@@ -62,19 +62,19 @@ namespace SnmpAbstraction
         /// Walk root for detecting AirFiber -> should actually return the OS version if it's an AirFiber device
         /// Root OID of AirFiber is: .1.3.6.1.4.1.41112.1.3 according to UBNT-MIB-airfiber.txt.
         /// </summary>
-        Oid AirFiberDetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.3.2.1.40");
+        readonly Oid AirFiberDetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.3.2.1.40");
 
         /// <summary>
         /// Walk root for detecting AirFiber AFLTU -> should actually return the OS version if it's an AirFiber device
         /// Root OID of AirFiber AFLTU is: .1.3.6.1.4.1.41112.1.10 according to UBNT-AFLTU-MIB.txt.
         /// </summary>
-        Oid AirFiberAfltuDetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.10.1.3");
+        readonly Oid AirFiberAfltuDetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.10.1.3");
 
         /// <summary>
         /// Walk root for detecting AirFiber airFiber 60 -> should actually return the OS version if it's an AirFiber device
         /// Root OID of AirFiber airFiber 60 is: .1.3.6.1.4.1.41112.1.11 according to UBNT-AFLTU-MIB.txt.
         /// </summary>
-        Oid AirFiber60DetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.11");
+        readonly Oid AirFiber60DetectionWalkRootOid = new Oid(".1.3.6.1.4.1.41112.1.11");
 
         /// <summary>
         /// Field to store an already detect OS version (during IsApplicable) for later use by CreateHandler.
@@ -134,7 +134,7 @@ namespace SnmpAbstraction
                 return false;
             }
 
-            this.detectionId = manufacturer.Oid[manufacturer.Oid.Length - 1];
+            this.detectionId = manufacturer.Oid[^1];
 
             log.Info($"Device '{snmpLowerLayer.Address}' seems to be a Ubiquiti device (detection ID {this.detectionId})");
 
@@ -197,13 +197,12 @@ namespace SnmpAbstraction
 
                 log.Info($"Detected device '{lowerLayer.Address}' as Ubiquiti '{model}' v '{osVersion}'");
 
-                DeviceVersion deviceVersion;
-                IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion, lowerLayer?.Address);
+                IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out DeviceVersion deviceVersion, lowerLayer?.Address);
                 if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
                 {
                     return (model == AirFiberFakeModelString)
-                        ? new UbiquitiAirFiberDeviceHandler(lowerLayer, oidTable, osVersion, model, options) as IDeviceHandler
-                        : new UbiquitiAirOsAbove56DeviceHandler(lowerLayer, oidTable, osVersion, model, options) as IDeviceHandler;
+                        ? new UbiquitiAirFiberDeviceHandler(lowerLayer, oidTable, osVersion, model, options)
+                        : new UbiquitiAirOsAbove56DeviceHandler(lowerLayer, oidTable, osVersion, model, options);
                 }
                 else
                 {

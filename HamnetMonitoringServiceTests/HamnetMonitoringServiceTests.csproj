@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <CodeAnalysisRuleSet>../codeanalysis.ruleset</CodeAnalysisRuleSet>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -19,26 +20,13 @@
     <PackageTags>Hamnet Monitoring HamnetDB Service Tests</PackageTags>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.5.*">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="nunit" Version="3.12.*" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.*" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.*" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj" />
     <ProjectReference Include="..\HamnetMonitoringService\HamnetMonitoringService.csproj" />
-    <PackageReference Include="SharpKml.Core" Version="5.2.*"/>
   </ItemGroup>
-
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
     <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
   </Target>
-
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

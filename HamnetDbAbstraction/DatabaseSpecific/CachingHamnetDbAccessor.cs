@@ -30,6 +30,8 @@ namespace HamnetDbAbstraction
 
         private readonly object multiRefreshPreventionObject = new object();
 
+        private readonly CacheDataStore cacheDataStore;
+
         /// <summary>
         /// To detect redundant calls.
         /// </summary>
@@ -39,8 +41,6 @@ namespace HamnetDbAbstraction
         /// The timer to handle cache refreshing in preemtive mode.
         /// </summary>
         private Timer cacheRefreshTimer = null;
-
-        private CacheDataStore cacheDataStore;
 
         /// <summary>
         /// Instantiate from connection string and an additional Disposer.
@@ -54,20 +54,15 @@ namespace HamnetDbAbstraction
         /// </param>
         public CachingHamnetDbAccessor(TimeSpan cacheRefreshInterval, IHamnetDbAccess underlyingHamnetDbAccess, bool usePreemtiveCachePopulation)
         {
-            if (underlyingHamnetDbAccess == null)
-            {
-                throw new ArgumentNullException(nameof(underlyingHamnetDbAccess), "The underlying IHamnetDbAccess instance is null");
-            }
-
             this.CacheRefreshInterval = (cacheRefreshInterval < TimeSpan.Zero) ? TimeSpan.Zero : cacheRefreshInterval;
-            this.underlyingHamnetDbAccess = underlyingHamnetDbAccess;
+            this.underlyingHamnetDbAccess = underlyingHamnetDbAccess ?? throw new ArgumentNullException(nameof(underlyingHamnetDbAccess), "The underlying IHamnetDbAccess instance is null");
             this.UsePreemtiveCachePopulation = usePreemtiveCachePopulation;
 
             if (this.UsePreemtiveCachePopulation)
             {
                 if (this.CacheRefreshInterval >= MinimumCacheRefreshIntervalPreemtive)
                 {
-                    this.CacheRefreshInterval = this.CacheRefreshInterval - TimeSpan.FromSeconds(3); /* starting a bit before expiry */
+                    this.CacheRefreshInterval -= TimeSpan.FromSeconds(3); /* starting a bit before expiry */
                 }
                 else
                 {
@@ -159,7 +154,7 @@ namespace HamnetDbAbstraction
             {
                 var timeOfQuery = DateTime.UtcNow;
                 var association =
-                    this.cacheDataStore.GetCacheDataSetOrNull<IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts>>(DataTypes.UniqueMonitoredHostPairsInSubnet, timeOfQuery)?.Data 
+                    this.cacheDataStore.GetCacheDataSetOrNull<IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts>>(DataTypes.UniqueMonitoredHostPairsInSubnet, timeOfQuery)?.Data
                     ?? this.RefreshHostAssociations(timeOfQuery);
 
                 var uniquePairs = association
@@ -333,7 +328,7 @@ namespace HamnetDbAbstraction
         {
             private readonly Dictionary<DataTypes, object> cacheData = new Dictionary<DataTypes, object>(3);
 
-            private TimeSpan cacheRefreshInterval;
+            private readonly TimeSpan cacheRefreshInterval;
 
             public CacheDataStore(TimeSpan cacheRefreshInterval)
             {

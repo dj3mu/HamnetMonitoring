@@ -41,9 +41,8 @@ namespace SnmpAbstraction
             // Note: The MAC address serves as an index in nested OIDs for MikroTik devices.
             //       So this way, we get the amount of peers as well as an index to them.
             var valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressWalkRoot;
-            DeviceSpecificOid interfaceIdRootOid;
             bool singlePeerGet = false;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressAppendInterfaceId;
                 if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
@@ -74,7 +73,7 @@ namespace SnmpAbstraction
                 else
                 {
                     macOidFragments = item.Oid.Skip(interfaceIdRootOid.Oid.Length).Take(6);
-                    interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 1]);
+                    interfaceId = Convert.ToInt32(item.Oid[^1]);
                 }
 
                 var isAccessPoint = this.CheckIsAccessPoint(interfaceId, out int? numberOfClients);
@@ -96,9 +95,8 @@ namespace SnmpAbstraction
         protected override bool? CheckIsAccessPoint(int interfaceId, out int? numberOfClients)
         {
             var valueToQuery = RetrievableValuesEnum.WirelessClientCount;
-            DeviceSpecificOid wirelessClientCountRootOid;
             numberOfClients = null;
-            if (this.OidLookup.TryGetValue(valueToQuery, out wirelessClientCountRootOid) && !wirelessClientCountRootOid.Oid.IsNull)
+            if (this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid wirelessClientCountRootOid) && !wirelessClientCountRootOid.Oid.IsNull)
             {
                 // finally we need to get the count of registered clients
                 // if it's 0, this must be a client (this method will only be called if the registration table
@@ -133,8 +131,7 @@ namespace SnmpAbstraction
                     return false;
                 }
 
-                int snmpNumberOfClients = 0;
-                if (!returnValue.Value.TryToInt(out snmpNumberOfClients))
+                if (!returnValue.Value.TryToInt(out int snmpNumberOfClients))
                 {
                     return false;
                 }

@@ -62,9 +62,9 @@ namespace SnmpAbstraction
             this.NexthopChoice = bgpPeer.NexthopChoice;
             this.Multihop = bgpPeer.Multihop;
             this.RouteReflect = bgpPeer.RouteReflect;
-            this.HoldTime = this.TryConvertToTimeSpanOrMinimum(bgpPeer.HoldTime);
+            this.HoldTime = TryConvertToTimeSpanOrMinimum(bgpPeer.HoldTime);
             this.Ttl = bgpPeer.Ttl;
-            this.AddressFamilies = this.TryParseFamilies(bgpPeer.AddressFamilies);
+            this.AddressFamilies = TryParseFamilies(bgpPeer.AddressFamilies);
             this.DefaultOriginate = bgpPeer.DefaultOriginate;
             this.RemovePrivateAs = bgpPeer.RemovePrivateAs;
             this.AsOverride = bgpPeer.AsOverride;
@@ -77,15 +77,15 @@ namespace SnmpAbstraction
                 this.LocalAddress = localAddress;
             }
 
-            this.Uptime = this.TryConvertToTimeSpanOrMinimum(bgpPeer.Uptime);
+            this.Uptime = TryConvertToTimeSpanOrMinimum(bgpPeer.Uptime);
             this.PrefixCount = bgpPeer.PrefixCount;
             this.UpdatesSent = bgpPeer.UpdatesSent;
             this.UpdatesReceived = bgpPeer.UpdatesReceived;
             this.WithdrawnSent = bgpPeer.WithdrawnSent;
             this.WithdrawnReceived = bgpPeer.WithdrawnReceived;
-            this.RemoteHoldTime = this.TryConvertToTimeSpanOrMinimum(bgpPeer.RemoteHoldTime);
-            this.UsedHoldTime = this.TryConvertToTimeSpanOrMinimum(bgpPeer.UsedHoldTime);
-            this.UsedKeepaliveTime = this.TryConvertToTimeSpanOrMinimum(bgpPeer.UsedKeepaliveTime);
+            this.RemoteHoldTime = TryConvertToTimeSpanOrMinimum(bgpPeer.RemoteHoldTime);
+            this.UsedHoldTime = TryConvertToTimeSpanOrMinimum(bgpPeer.UsedHoldTime);
+            this.UsedKeepaliveTime = TryConvertToTimeSpanOrMinimum(bgpPeer.UsedKeepaliveTime);
             this.RefreshCapability = bgpPeer.RefreshCapability;
             this.As4Capability = bgpPeer.As4Capability;
             this.State = bgpPeer.State;
@@ -204,7 +204,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="mtikTimeString">The time span in the Mikrotik format.</param>
         /// <returns>A TimeSpan object with the value of the time string or <see cref="TimeSpan.MinValue" /> if not convertible.</returns>
-        private TimeSpan TryConvertToTimeSpanOrMinimum(string mtikTimeString)
+        private static TimeSpan TryConvertToTimeSpanOrMinimum(string mtikTimeString)
         {
             if (string.IsNullOrWhiteSpace(mtikTimeString))
             {
@@ -240,7 +240,7 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="addressFamilies">The string to parse (usually a comma-separated list of strings)</param>
         /// <returns>The parsed address families or Enumerable.Empty.</returns>
-        private IEnumerable<AddressFamily> TryParseFamilies(string addressFamilies)
+        private static IEnumerable<AddressFamily> TryParseFamilies(string addressFamilies)
         {
             if (string.IsNullOrWhiteSpace(addressFamilies))
             {
@@ -251,26 +251,14 @@ namespace SnmpAbstraction
             List<AddressFamily> families = new List<AddressFamily>(splitFamilies.Length);
             foreach (string family in splitFamilies)
             {
-                AddressFamily foundFamily;
-                if (!Enum.TryParse<AddressFamily>(family, true, out foundFamily))
+                if (!Enum.TryParse(family, true, out AddressFamily foundFamily))
                 {
-                    switch(family.ToUpperInvariant())
+                    foundFamily = family.ToUpperInvariant() switch
                     {
-                        case "IP":
-                        case "IP4":
-                        case "IPV4":
-                            foundFamily = AddressFamily.InterNetwork;
-                            break;
-
-                        case "IP6":
-                        case "IPV6":
-                            foundFamily = AddressFamily.InterNetworkV6;
-                            break;
-
-                        default:
-                            foundFamily = AddressFamily.Unknown;
-                            break;
-                    }
+                        "IP" or "IP4" or "IPV4" => AddressFamily.InterNetwork,
+                        "IP6" or "IPV6" => AddressFamily.InterNetworkV6,
+                        _ => AddressFamily.Unknown,
+                    };
                 }
 
                 families.Add(foundFamily);

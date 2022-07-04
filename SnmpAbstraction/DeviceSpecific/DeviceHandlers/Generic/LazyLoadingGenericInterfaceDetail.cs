@@ -138,8 +138,7 @@ namespace SnmpAbstraction
         protected virtual bool RetrieveMacAddressString()
         {
             var valueToQuery = RetrievableValuesEnum.InterfaceMacAddressWalkRoot;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 this.MacAddressStringBacking = null;
                 return true;
@@ -174,8 +173,7 @@ namespace SnmpAbstraction
         protected virtual bool RetrieveInterfaceType()
         {
             var valueToQuery = RetrievableValuesEnum.InterfaceTypeWalkRoot;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 this.InterfaceTypeBacking = IanaInterfaceType.NotAvailable;
                 return true;
@@ -200,8 +198,7 @@ namespace SnmpAbstraction
         protected virtual bool RetrieveInterfaceName()
         {
             var valueToQuery = RetrievableValuesEnum.InterfaceNameWalkRoot;
-            DeviceSpecificOid interfaceNameRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceNameRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceNameRootOid))
             {
                 this.InterfaceNameBacking = null;
                 return true;

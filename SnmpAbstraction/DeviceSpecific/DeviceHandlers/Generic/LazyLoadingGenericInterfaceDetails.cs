@@ -84,7 +84,7 @@ namespace SnmpAbstraction
             {
                  return;
             }
-            
+
             foreach (var item in this.InterfaceDetailsBacking)
             {
                 item.ForceEvaluateAll();
@@ -142,8 +142,7 @@ namespace SnmpAbstraction
             this.InterfaceDetailsBacking.Clear();
 
             var valueToQuery = RetrievableValuesEnum.InterfaceIdWalkRoot;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 return true;
             }

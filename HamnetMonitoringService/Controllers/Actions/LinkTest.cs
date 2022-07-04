@@ -10,11 +10,11 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class LinkTest
     {
-        private string host1;
+        private readonly string host1;
 
-        private string host2;
+        private readonly string host2;
 
-        private IQuerierOptions querierOptions;
+        private readonly IQuerierOptions querierOptions;
 
         /// <summary>
         /// Construct for a specific host.

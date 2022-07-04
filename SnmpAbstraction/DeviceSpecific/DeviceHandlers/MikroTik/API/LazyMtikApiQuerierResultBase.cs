@@ -30,12 +30,7 @@ namespace SnmpAbstraction
         protected LazyMtikApiQuerierResultBase(IpAddress address, ITikConnection tikConnection, TimeSpan queryDuration, string deviceModel)
             : base(address, deviceModel, queryDuration)
         {
-            if (tikConnection == null)
-            {
-                throw new ArgumentNullException(nameof(tikConnection), "The handle to the Mikrotik API interface is null");
-            }
-
-            this.TikConnection = tikConnection;
+            this.TikConnection = tikConnection ?? throw new ArgumentNullException(nameof(tikConnection), "The handle to the Mikrotik API interface is null");
         }
 
         /// <summary>

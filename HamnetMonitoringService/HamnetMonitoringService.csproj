@@ -1,6 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <CodeAnalysisRuleSet>../codeanalysis.ruleset</CodeAnalysisRuleSet>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <RootNamespace>HamnetDbRest</RootNamespace>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
@@ -21,22 +23,6 @@
     <PublishSingleFile>false</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.5.*">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.*" />
-    <PackageReference Include="IPNetwork2" Version="2.5.*" />
-    <PackageReference Include="log4net" Version="2.0.*" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="5.0.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.*" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0-*" />
-    <PackageReference Include="SharpKml.Core" Version="5.2.*" />
-    <PackageReference Include="System.Linq.Async" Version="5.0.*" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
     <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj" />
@@ -59,4 +45,5 @@
     <Delete Files="@(_DeleteItems1)" />
     <Delete Files="@(_DeleteItems2)" />
   </Target>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

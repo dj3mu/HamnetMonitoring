@@ -19,12 +19,12 @@ namespace SnmpAbstraction
         /// <summary>
         /// The device handler to use for obtaining SNMP data for side #1 of the link.
         /// </summary>
-        private IHamnetQuerier querier1;
+        private readonly IHamnetQuerier querier1;
 
         /// <summary>
         /// The device handler to use for obtaining SNMP data for side #2 of the link.
         /// </summary>
-        private IHamnetQuerier querier2;
+        private readonly IHamnetQuerier querier2;
 
         /// <summary>
         /// Creates a new instance using the specified device handler.

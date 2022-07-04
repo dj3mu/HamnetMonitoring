@@ -36,9 +36,9 @@ namespace RestService.DataFetchingService
 
         private Timer timer;
 
-        private QuerierOptions snmpQuerierOptions = QuerierOptions.Default;
+        private readonly QuerierOptions snmpQuerierOptions = QuerierOptions.Default;
 
-        private object lockObject = new object();
+        private readonly object lockObject = new object();
 
         private TimeSpan maintenanceInterval;
 
@@ -114,8 +114,7 @@ namespace RestService.DataFetchingService
         {
             this.Dispose(true);
 
-            // TODO: Uncomment if finalized is implemented above.
-            // GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -193,7 +192,7 @@ namespace RestService.DataFetchingService
                 }
                 catch(Exception ex)
                 {
-                    this.logger.LogError($"Excpetion caught and ignored in maintenance thread: {ex.ToString()}");
+                    this.logger.LogError($"Excpetion caught and ignored in maintenance thread: {ex}");
                 }
                 finally
                 {
@@ -246,7 +245,7 @@ namespace RestService.DataFetchingService
             var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
             cacheMaintenance.RemoveFromCacheIfModificationOlderThan(configurationSection.GetValue<TimeSpan>("CacheInvalidAfter"));
 
-            this.RemoveCacheEntriesForFailures(resultDatabase, cacheMaintenance);
+            RemoveCacheEntriesForFailures(resultDatabase, cacheMaintenance);
 
             using (var transaction = resultDatabase.Database.BeginTransaction())
             {
@@ -266,7 +265,7 @@ namespace RestService.DataFetchingService
         /// </summary>
         /// <param name="resultDatabase">The database context to work on.</param>
         /// <param name="cacheMaintenance">The cache maintenance object that supports deletion of entries.</param>
-        private void RemoveCacheEntriesForFailures(QueryResultDatabaseContext resultDatabase, CacheMaintenance cacheMaintenance)
+        private static void RemoveCacheEntriesForFailures(QueryResultDatabaseContext resultDatabase, CacheMaintenance cacheMaintenance)
         {
             var affectedHosts = resultDatabase.RssiFailingQueries.AsQueryable().Select(q => q.AffectedHosts);
             List<IPAddress> toDelete = new List<IPAddress>();
@@ -289,52 +288,50 @@ namespace RestService.DataFetchingService
 
             DateTime nowItIs = DateTime.UtcNow;
             double currentUnixTimeStamp = (nowItIs - Program.UnixTimeStampBase).TotalSeconds;
-            using (var transaction = resultDatabase.Database.BeginTransaction())
+            using var transaction = resultDatabase.Database.BeginTransaction();
+            var outdatedRssis = resultDatabase.RssiValues.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
+            foreach (var item in outdatedRssis)
             {
-                var outdatedRssis = resultDatabase.RssiValues.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
-                foreach (var item in outdatedRssis)
-                {
-                    this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI entry for host {item.ForeignId} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
-                }
+                this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI entry for host {item.ForeignId} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
+            }
 
-                var outdatedRssiFailures = resultDatabase.RssiFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
-                foreach (var item in outdatedRssiFailures)
-                {
-                    this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI failing query entry for host {item.Subnet} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
-                }
+            var outdatedRssiFailures = resultDatabase.RssiFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
+            foreach (var item in outdatedRssiFailures)
+            {
+                this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} RSSI failing query entry for host {item.Subnet} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
+            }
 
-                var outdatedBgpPeers = resultDatabase.BgpPeers.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
-                foreach (var item in outdatedBgpPeers)
-                {
-                    this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP peer entry from host {item.LocalAddress} to {item.RemoteAddress} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
-                }
+            var outdatedBgpPeers = resultDatabase.BgpPeers.AsEnumerable().Where(r => IsOutdatedUnixTimeStampColumn(currentUnixTimeStamp, r, resultsOutdatedAfter)).ToList();
+            foreach (var item in outdatedBgpPeers)
+            {
+                this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP peer entry from host {item.LocalAddress} to {item.RemoteAddress} which hast last been updated at {item.TimeStampString} (i.e. {TimeSpan.FromSeconds(currentUnixTimeStamp - item.UnixTimeStamp)} ago)");
+            }
 
-                var outdatedBgpPeerFailures = resultDatabase.BgpFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
-                foreach (var item in outdatedBgpPeerFailures)
-                {
-                    this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP failing peer entry from host {item.Host} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
-                }
+            var outdatedBgpPeerFailures = resultDatabase.BgpFailingQueries.AsEnumerable().Where(r => IsOutdatedTimeStampColumn(nowItIs, r, resultsOutdatedAfter)).ToList();
+            foreach (var item in outdatedBgpPeerFailures)
+            {
+                this.logger.LogInformation($"Maintenance{(this.dryRunMode ? " DRY RUN: Would remove" : ": Removing")} BGP failing peer entry from host {item.Host} which hast last been updated at {item.TimeStamp} (i.e. {item.TimeStamp - nowItIs} ago)");
+            }
 
-                var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
-                cacheMaintenance.DeleteForAddress(outdatedRssis.Select(e => IPAddress.Parse(e.ForeignId)));
-                cacheMaintenance.DeleteForAddress(outdatedRssiFailures.SelectMany(e => e.AffectedHosts.Select(h => IPAddress.Parse(h))));
-                cacheMaintenance.DeleteForAddress(outdatedBgpPeers.Select(e => IPAddress.Parse(e.LocalAddress)));
-                cacheMaintenance.DeleteForAddress(outdatedBgpPeerFailures.Select(e => IPAddress.Parse(e.Host)));
+            var cacheMaintenance = new CacheMaintenance(this.dryRunMode);
+            cacheMaintenance.DeleteForAddress(outdatedRssis.Select(e => IPAddress.Parse(e.ForeignId)));
+            cacheMaintenance.DeleteForAddress(outdatedRssiFailures.SelectMany(e => e.AffectedHosts.Select(h => IPAddress.Parse(h))));
+            cacheMaintenance.DeleteForAddress(outdatedBgpPeers.Select(e => IPAddress.Parse(e.LocalAddress)));
+            cacheMaintenance.DeleteForAddress(outdatedBgpPeerFailures.Select(e => IPAddress.Parse(e.Host)));
 
-                if (!this.dryRunMode)
-                {
-                    resultDatabase.RemoveRange(outdatedRssis);
-                    resultDatabase.RemoveRange(outdatedRssiFailures);
-                    resultDatabase.RemoveRange(outdatedBgpPeers);
-                    resultDatabase.RemoveRange(outdatedBgpPeerFailures);
+            if (!this.dryRunMode)
+            {
+                resultDatabase.RemoveRange(outdatedRssis);
+                resultDatabase.RemoveRange(outdatedRssiFailures);
+                resultDatabase.RemoveRange(outdatedBgpPeers);
+                resultDatabase.RemoveRange(outdatedBgpPeerFailures);
 
-                    resultDatabase.SaveChanges();
-                    transaction.Commit();
-                }
-                else
-                {
-                    transaction.Rollback();
-                }
+                resultDatabase.SaveChanges();
+                transaction.Commit();
+            }
+            else
+            {
+                transaction.Rollback();
             }
         }
     }

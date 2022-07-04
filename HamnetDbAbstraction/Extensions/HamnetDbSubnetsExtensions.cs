@@ -115,9 +115,9 @@ namespace HamnetDbAbstraction
                 return true;
             }
 
-            if (object.ReferenceEquals(x, null))
+            if (x is null)
             {
-                return object.ReferenceEquals(y, null);
+                return y is null;
             }
 
             return x.Subnet.Contains(y.Subnet);

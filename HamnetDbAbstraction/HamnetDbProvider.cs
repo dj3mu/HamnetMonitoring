@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 namespace HamnetDbAbstraction
 {
     /// <summary>
-    /// Class providing central access 
+    /// Class providing central access
     /// </summary>
     public class HamnetDbProvider
     {
@@ -76,7 +76,9 @@ namespace HamnetDbAbstraction
         /// </summary>
         /// <param name="configurationSection">The configuration section.</param>
         /// <returns>A handle to an abstract database interface.</returns>
+#pragma warning disable CA1822 // by design pattern
         public IHamnetDbAccess GetHamnetDbFromConfiguration(IConfigurationSection configurationSection)
+#pragma warning restore
         {
             if (configurationSection == null)
             {
@@ -92,8 +94,7 @@ namespace HamnetDbAbstraction
             }
 
             var cachePreemptiveRefreshString = configurationSection.GetValue<string>(HamnetDbProvider.PreemptiveCacheRefreshKey);
-            bool cacheRefreshPreemptive = true;
-            if (string.IsNullOrWhiteSpace(cachePreemptiveRefreshString) || !Boolean.TryParse(cachePreemptiveRefreshString, out cacheRefreshPreemptive))
+            if (string.IsNullOrWhiteSpace(cachePreemptiveRefreshString) || !Boolean.TryParse(cachePreemptiveRefreshString, out bool cacheRefreshPreemptive))
             {
                 // by default use preemtive cache refresh
                 cacheRefreshPreemptive = true;
@@ -101,15 +102,15 @@ namespace HamnetDbAbstraction
 
             if (configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() == "MYSQL")
             {
-                var accessor = this.InstantiateMySqlAccessor(configurationSection.GetValue<string>(HamnetDbProvider.ConnectionStringKey));
+                var accessor = InstantiateMySqlAccessor(configurationSection.GetValue<string>(HamnetDbProvider.ConnectionStringKey));
                 return (cacheRefreshInterval != TimeSpan.Zero)
                     ? new CachingHamnetDbAccessor(cacheRefreshInterval, accessor, cacheRefreshPreemptive)
                     : accessor;
             }
-            
+
             if (configurationSection.GetValue<string>(HamnetDbProvider.DatabaseTypeKey).ToUpperInvariant() == "JSONURL")
             {
-                var accessor = this.InstantiateJsonUrlAccessor(configurationSection.GetSection(HamnetDbProvider.DatabaseUrlsKey));
+                var accessor = InstantiateJsonUrlAccessor(configurationSection.GetSection(HamnetDbProvider.DatabaseUrlsKey));
                 return (cacheRefreshInterval != TimeSpan.Zero)
                     ? new CachingHamnetDbAccessor(cacheRefreshInterval, accessor, cacheRefreshPreemptive)
                     : accessor;
@@ -142,10 +143,10 @@ namespace HamnetDbAbstraction
         {
             if (string.IsNullOrWhiteSpace(this.connectionString))
             {
-                this.connectionString = this.ReadAndValidateConnectionStringFromFile(connectionStringFile);
+                this.connectionString = ReadAndValidateConnectionStringFromFile(connectionStringFile);
             }
 
-            return this.InstantiateMySqlAccessor(this.connectionString);
+            return InstantiateMySqlAccessor(this.connectionString);
         }
 
         /// <summary>
@@ -153,7 +154,7 @@ namespace HamnetDbAbstraction
         /// </summary>
         /// <param name="connectionString">The connection string.</param>
         /// <returns>The accessor instance.</returns>
-        private IHamnetDbAccess InstantiateMySqlAccessor(string connectionString)
+        private static IHamnetDbAccess InstantiateMySqlAccessor(string connectionString)
         {
             return new MySqlHamnetDbAccessor(connectionString, null);
         }
@@ -163,7 +164,7 @@ namespace HamnetDbAbstraction
         /// </summary>
         /// <param name="configurationSection">The configuration section containing the API URLs.</param>
         /// <returns>The accessor instance.</returns>
-        private IHamnetDbAccess InstantiateJsonUrlAccessor(IConfigurationSection configurationSection)
+        private static IHamnetDbAccess InstantiateJsonUrlAccessor(IConfigurationSection configurationSection)
         {
             return new JsonHamnetDbAccessor(
                 configurationSection.GetValue<string>(HamnetDbProvider.HostsUrlKey),
@@ -178,7 +179,7 @@ namespace HamnetDbAbstraction
         /// </summary>
         /// <param name="connectionStringFile">A path to and name of a file containing the database connection string.</param>
         /// <returns>The connection string read from the file.</returns>
-        private string ReadAndValidateConnectionStringFromFile(string connectionStringFile)
+        private static string ReadAndValidateConnectionStringFromFile(string connectionStringFile)
         {
             var fileNameToUse = connectionStringFile.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
 

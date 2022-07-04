@@ -102,8 +102,7 @@ namespace SnmpAbstraction
 
             log.Info($"Detected device '{lowerLayer.Address}' as MikroTik '{model}' v '{osVersion}'");
 
-            DeviceVersion deviceVersion;
-            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion, lowerLayer.Address);
+            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out DeviceVersion deviceVersion, lowerLayer.Address);
             if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
             {
                 try

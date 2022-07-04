@@ -16,9 +16,11 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class CacheInfoApiController : ControllerBase
     {
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
 
         private readonly IConfiguration configuration;
+#pragma warning restore
 
         /// <summary>
         /// Instantiates the controller taking a logger.

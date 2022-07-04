@@ -14,7 +14,7 @@ namespace SnmpAbstraction
 
         private int circularCreateHandler = 0;
 
-        private List<InfoAndException> collectedExceptions = new List<InfoAndException>();
+        private readonly List<InfoAndException> collectedExceptions = new List<InfoAndException>();
 
         /// <inheritdoc />
         public abstract QueryApis SupportedApi { get; }
@@ -100,8 +100,7 @@ namespace SnmpAbstraction
                 throw new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Exception while instantiating DeviceHandler of name '{handlerClassName}': {ex.Message}", ex, lowerLayer.Address?.ToString());
             }
 
-            IDeviceHandler castedHandler = myObject as IDeviceHandler;
-            if (castedHandler == null)
+            if (myObject is not IDeviceHandler castedHandler)
             {
                 var ex = new HamnetSnmpException($"{lowerLayer.Address} ({model} v {osVersion}): Instantiating DeviceHandler of name '{handlerClassName}' is NOT an IDeviceHandler", lowerLayer.Address?.ToString());
                 this.CollectException($"Cast handler class '{type.FullName}' to IDeviceHandler", ex);
@@ -121,63 +120,59 @@ namespace SnmpAbstraction
         /// <returns>The OID lookup table for the specified device name and version.</returns>
         protected IDeviceSpecificOidLookup ObtainOidTable(string deviceName, SemanticVersion version, out DeviceVersion deviceVersion, IpAddress deviceAddress)
         {
-            using(var database = DeviceDatabaseProvider.Instance.DeviceDatabase)
+            using var database = DeviceDatabaseProvider.Instance.DeviceDatabase;
+            int foundDeviceId = -1;
+            if (!database.TryFindDeviceId(deviceName, out foundDeviceId))
             {
-                int foundDeviceId = -1;
-                if (!database.TryFindDeviceId(deviceName, out foundDeviceId))
-                {
-                    var exception = new HamnetSnmpException($"Device name '{deviceName}' cannot be found in device database", deviceAddress?.ToString());
-                    log.Error(exception.Message);
-                    this.CollectException("No OID lookup for device name", exception);
-                    throw exception;
-                }
-
-                deviceVersion = null;
-                if (!database.TryFindDeviceVersionId(foundDeviceId, version, out deviceVersion))
-                {
-                    var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}) cannot be matched to any version range of device database", deviceAddress?.ToString());
-                    log.Error(exception.Message);
-                    this.CollectException("No OID lookup for device version", exception);
-                    throw exception;
-                }
-
-                string foundOidMappingIds = string.Empty;
-                if (!database.TryFindOidLookupId(deviceVersion.Id, out foundOidMappingIds))
-                {
-                    var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}, version ID {deviceVersion.Id}) cannot be matched to any OID mapping ID of device database", deviceAddress?.ToString());
-                    log.Error(exception.Message);
-                    this.CollectException("No OID mapping for device version", exception);
-                    throw exception;
-                }
-
-                // need to convert the string containing a comma-separated list of OID lookup tables IDs into single, integer table IDs
-                // Example: There are two lookups given in order "3,1" in the foundOidMappingIds string.
-                //          If a RetrievableValuesEnum has a value in lookup of ID 3 that value shall be used. Otherwise the value of lookup #1.
-                string[] splitOidMappingIds = foundOidMappingIds.Split(new char[] { ',', ';', ':', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                List<IDeviceSpecificOidLookup> orderedOidLookupsList = new List<IDeviceSpecificOidLookup>(splitOidMappingIds.Length);
-                foreach(var sid in splitOidMappingIds)
-                {
-                    int intId;
-                    if (!int.TryParse(sid, out intId))
-                    {
-                        log.Warn($"OID mapping table ID '{sid}' as found for device '{deviceName}' v '{version}' (version ID {deviceVersion.Id}, mapping IDs '{foundOidMappingIds}') is not an integer value and will be ignored");
-                        continue;
-                    }
-
-                    IDeviceSpecificOidLookup foundLookup = null;
-                    if (!database.TryFindDeviceSpecificOidLookup(intId, deviceVersion.MinimumSupportedSnmpVersion?.ToSnmpVersion() ?? SnmpVersion.Ver1, deviceVersion.MaximumSupportedSnmpVersion.ToSnmpVersion(), out foundLookup))
-                    {
-                        var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}': Cannot find OID mapping ID table of ID {intId} in device database", deviceAddress?.ToString());
-                        log.Error(exception.Message);
-                        this.CollectException("No OID mapping for mapping ID", exception);
-                        throw exception;
-                    }
-
-                    orderedOidLookupsList.Add(foundLookup);
-                }
-
-                return new DeviceSpecificMultiLayerOidLookupProxy(orderedOidLookupsList);
+                var exception = new HamnetSnmpException($"Device name '{deviceName}' cannot be found in device database", deviceAddress?.ToString());
+                log.Error(exception.Message);
+                this.CollectException("No OID lookup for device name", exception);
+                throw exception;
             }
+
+            deviceVersion = null;
+            if (!database.TryFindDeviceVersionId(foundDeviceId, version, out deviceVersion))
+            {
+                var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}) cannot be matched to any version range of device database", deviceAddress?.ToString());
+                log.Error(exception.Message);
+                this.CollectException("No OID lookup for device version", exception);
+                throw exception;
+            }
+
+            string foundOidMappingIds = string.Empty;
+            if (!database.TryFindOidLookupId(deviceVersion.Id, out foundOidMappingIds))
+            {
+                var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}' (ID {foundDeviceId}, version ID {deviceVersion.Id}) cannot be matched to any OID mapping ID of device database", deviceAddress?.ToString());
+                log.Error(exception.Message);
+                this.CollectException("No OID mapping for device version", exception);
+                throw exception;
+            }
+
+            // need to convert the string containing a comma-separated list of OID lookup tables IDs into single, integer table IDs
+            // Example: There are two lookups given in order "3,1" in the foundOidMappingIds string.
+            //          If a RetrievableValuesEnum has a value in lookup of ID 3 that value shall be used. Otherwise the value of lookup #1.
+            string[] splitOidMappingIds = foundOidMappingIds.Split(new char[] { ',', ';', ':', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            List<IDeviceSpecificOidLookup> orderedOidLookupsList = new List<IDeviceSpecificOidLookup>(splitOidMappingIds.Length);
+            foreach (var sid in splitOidMappingIds)
+            {
+                if (!int.TryParse(sid, out int intId))
+                {
+                    log.Warn($"OID mapping table ID '{sid}' as found for device '{deviceName}' v '{version}' (version ID {deviceVersion.Id}, mapping IDs '{foundOidMappingIds}') is not an integer value and will be ignored");
+                    continue;
+                }
+
+                if (!database.TryFindDeviceSpecificOidLookup(intId, deviceVersion.MinimumSupportedSnmpVersion?.ToSnmpVersion() ?? SnmpVersion.Ver1, deviceVersion.MaximumSupportedSnmpVersion.ToSnmpVersion(), out IDeviceSpecificOidLookup foundLookup))
+                {
+                    var exception = new HamnetSnmpException($"Version '{version}' of device named '{deviceName}': Cannot find OID mapping ID table of ID {intId} in device database", deviceAddress?.ToString());
+                    log.Error(exception.Message);
+                    this.CollectException("No OID mapping for mapping ID", exception);
+                    throw exception;
+                }
+
+                orderedOidLookupsList.Add(foundLookup);
+            }
+
+            return new DeviceSpecificMultiLayerOidLookupProxy(orderedOidLookupsList);
         }
     }
 }

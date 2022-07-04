@@ -19,7 +19,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The peer index (to use in SNMP get).
         /// </summary>
-        private int peerIndex;
+        private readonly int peerIndex;
 
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
@@ -64,8 +64,7 @@ namespace SnmpAbstraction
         protected override bool RetrieveRxSignalStrength()
         {
             var valueToQuery = RetrievableValuesEnum.RxSignalStrengthApAppendMacAndInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.RxSignalStrengthBacking = double.NegativeInfinity;
@@ -91,8 +90,7 @@ namespace SnmpAbstraction
         protected override bool RetrieveLinkUptime()
         {
             var valueToQuery = RetrievableValuesEnum.LinkUptimeAppendMacAndInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.LinkUptimeBacking = TimeSpan.Zero;
@@ -118,8 +116,7 @@ namespace SnmpAbstraction
         protected override bool RetrieveCcq()
         {
             var valueToQuery = RetrievableValuesEnum.OverallCcqAppendInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.CcqBacking = null;

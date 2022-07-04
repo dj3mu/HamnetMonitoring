@@ -9,10 +9,10 @@ namespace SnmpAbstraction
     /// </summary>
     internal class TracerouteResult : ITracerouteResult
     {
-        private IReadOnlyCollection<ITracerouteHop> hopsBacking;
+        private readonly IReadOnlyCollection<ITracerouteHop> hopsBacking;
 
         /// <summary>
-        /// Construct 
+        /// Construct
         /// </summary>
         /// <param name="fromAddress">The address initiating the traceroute.</param>
         /// <param name="toAddress">The address of the target of the traceroute.</param>

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,9 +12,9 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class BgpPeersAction
     {
-        private string host;
+        private readonly string host;
 
-        private string remotePeerAddress;
+        private readonly string remotePeerAddress;
 
         private readonly FromUrlQueryQuerierOptions querierOptions;
 
@@ -67,7 +66,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         private class BgpPeersResult : IBgpPeersResult
         {
-            List<IBgpPeerResult> peerResultsBacking = null;
+            readonly List<IBgpPeerResult> peerResultsBacking = null;
 
             /// <summary>
             /// Construct from the querier interface container.

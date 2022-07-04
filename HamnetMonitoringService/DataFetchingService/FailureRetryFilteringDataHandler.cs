@@ -299,8 +299,8 @@ namespace RestService.DataFetchingService
         {
             // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in Dispose(bool disposing) weiter oben ein.
             this.Dispose(true);
-            // TODO: Auskommentierung der folgenden Zeile aufheben, wenn der Finalizer weiter oben überschrieben wird.
-            // GC.SuppressFinalize(this);
+
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -875,7 +875,7 @@ namespace RestService.DataFetchingService
                                     }
 
                                     this.networkFailureInfos[ipNetwork] = new SingleFailureInfo(this.mininumRetryInterval, this.maximumRetryInterval, item);
-                                    
+
                                     break;
 
                                 default:
@@ -1101,7 +1101,7 @@ namespace RestService.DataFetchingService
 
                             // double the retry interval on every occurance
                             // but make sure it's at most maximumRetryInterval
-                            this.currentRetryInterval = this.currentRetryInterval * 2;
+                            this.currentRetryInterval *= 2;
                             if (this.currentRetryInterval > this.maximumRetryInterval)
                             {
                                 this.currentRetryInterval = this.maximumRetryInterval;

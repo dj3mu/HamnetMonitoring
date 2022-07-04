@@ -14,11 +14,13 @@ namespace HamnetDbRest.Controllers
     {
         private readonly string host;
 
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
 
         private readonly IConfiguration configuration;
+#pragma warning restore
 
-        private IQuerierOptions querierOptions;
+        private readonly IQuerierOptions querierOptions;
 
         /// <summary>
         /// Construct for a specific host.

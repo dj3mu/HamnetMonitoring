@@ -52,10 +52,12 @@ namespace RestService.Database
             }
         };
 
+#pragma warning disable IDE0052 // for future use
         /// <summary>
         /// Handle to the logger.
         /// </summary>
         private static readonly log4net.ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// Gets access to the RSSI values table.
@@ -123,12 +125,7 @@ namespace RestService.Database
         /// <param name="configuration">The configuration settings.</param>
         public QueryResultDatabaseContext(IConfigurationSection configuration)
         {
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration), "The specified database configuration data is null");
-            }
-
-            this.Configuration = configuration;
+            this.Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "The specified database configuration data is null");
             this.ConnectionString = configuration.GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey);
         }
 

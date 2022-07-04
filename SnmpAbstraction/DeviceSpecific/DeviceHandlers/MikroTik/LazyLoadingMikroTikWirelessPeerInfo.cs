@@ -44,8 +44,7 @@ namespace SnmpAbstraction
         protected override bool RetrieveTxSignalStrength()
         {
             var valueToQuery = RetrievableValuesEnum.TxSignalStrengthAppendMacAndInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.TxSignalStrengthBacking = double.NaN;
@@ -72,8 +71,7 @@ namespace SnmpAbstraction
         {
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            DeviceSpecificOid singleOid;
-            if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthImmediateOid, out singleOid) && !singleOid.Oid.IsNull)
+            if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthImmediateOid, out DeviceSpecificOid singleOid) && !singleOid.Oid.IsNull)
             {
                 this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid, "RSSI single value (RxSignalStrengthImmediateOid)");
                 this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
@@ -86,15 +84,14 @@ namespace SnmpAbstraction
             }
             else
             {
-                DeviceSpecificOid[] oidValues;
-                var valuesToQuery = new []
+                var valuesToQuery = new[]
                 {
                     RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId,
                     RetrievableValuesEnum.RxSignalStrengthCh1AppendMacAndInterfaceId,
                     RetrievableValuesEnum.RxSignalStrengthCh2AppendMacAndInterfaceId
                 };
 
-                if (!this.OidLookup.TryGetValues(out oidValues, valuesToQuery))
+                if (!this.OidLookup.TryGetValues(out DeviceSpecificOid[] oidValues, valuesToQuery))
                 {
 
                     log.Warn($"Not even one supported OID has been found for getting the stream-specific RX level. RxSignalStrength for device '{this.DeviceAddress}', interface ID {this.InterfaceId}, cannot be retrieved.");
@@ -102,7 +99,8 @@ namespace SnmpAbstraction
                     return true;
                 }
 
-                var clientSpecificOids = oidValues.Where(oid => oid != null).Select(oid => {
+                var clientSpecificOids = oidValues.Where(oid => oid != null).Select(oid =>
+                {
                     var interfaceTypeOid = oid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
 
                     return interfaceTypeOid;
@@ -145,8 +143,7 @@ namespace SnmpAbstraction
         protected override bool RetrieveLinkUptime()
         {
             var valueToQuery = RetrievableValuesEnum.LinkUptimeAppendMacAndInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.LinkUptimeBacking = TimeSpan.Zero;
@@ -183,8 +180,7 @@ namespace SnmpAbstraction
             }
 
             var valueToQuery = RetrievableValuesEnum.OverallCcqAppendInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.RecordCachableOid(CachableValueMeanings.Ccq, new Oid("0"));

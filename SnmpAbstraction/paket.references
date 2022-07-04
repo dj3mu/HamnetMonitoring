@@ -1,0 +1,14 @@
+GitVersion.MsBuild
+log4net
+Microsoft.EntityFrameworkCore.Design
+Microsoft.EntityFrameworkCore.Sqlite
+Microsoft.Extensions.Configuration
+Microsoft.Extensions.Configuration.Binder
+Microsoft.Extensions.Configuration.EnvironmentVariables
+Microsoft.Extensions.Configuration.FileExtensions
+Microsoft.Extensions.Configuration.Json
+Newtonsoft.Json
+Pomelo.EntityFrameworkCore.MySql
+SemanticVersion
+SnmpSharpNetStandard
+tik4net

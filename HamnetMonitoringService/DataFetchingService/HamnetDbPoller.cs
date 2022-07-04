@@ -19,7 +19,7 @@ namespace RestService.DataFetchingService
         private readonly int maximumSubnetCount = int.MaxValue;
 
         private readonly int subnetStartOffset = 0;
-        
+
         private readonly int maximumHostCount = int.MaxValue;
 
         private readonly int hostStartOffset = 0;
@@ -27,12 +27,12 @@ namespace RestService.DataFetchingService
         private readonly TimeSpan cacheRefreshInterval = TimeSpan.Zero;
 
         private readonly IConfiguration configuration;
-        
+
         private readonly IConfigurationSection hamnetDbConfig;
 
         private bool disposedValue = false;
 
-        private Dictionary<IPAddress, IHamnetDbSubnet> subnetCache = new Dictionary<IPAddress, IHamnetDbSubnet>();
+        private readonly Dictionary<IPAddress, IHamnetDbSubnet> subnetCache = new Dictionary<IPAddress, IHamnetDbSubnet>();
 
         private DateTime lastRefresh = DateTime.MinValue;
 
@@ -66,7 +66,7 @@ namespace RestService.DataFetchingService
                 // config returns 0 if not defined --> turn it to the reasonable "maximum" value
                 this.maximumHostCount = int.MaxValue;
             }
-            
+
             this.hostStartOffset = bgpAquisitionConfig.GetValue<int>("HostStartOffset"); // will implicitly return 0 if not defined
 
             this.cacheRefreshInterval = this.hamnetDbConfig.GetValue<TimeSpan>("CacheRefreshInterval");
@@ -166,7 +166,7 @@ namespace RestService.DataFetchingService
             }
 
             this.subnetCache.Add(host, subnet);
-            
+
             return true;
         }
 

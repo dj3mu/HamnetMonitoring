@@ -19,7 +19,7 @@ namespace HamnetDbAbstraction
         /// <summary>
         /// Culture used by HamnetDB.
         /// </summary>
-        private static CultureInfo HamnetDbJsonCultureInfo = CultureInfo.CreateSpecificCulture("de-DE");
+        private static readonly CultureInfo HamnetDbJsonCultureInfo = CultureInfo.CreateSpecificCulture("de-DE");
 
         /// <summary>
         /// HamnetDB is using German formattings.
@@ -94,14 +94,13 @@ namespace HamnetDbAbstraction
         /// <inheritdoc />
         public IHamnetDbHosts QueryBgpRouters()
         {
-            var responseString = this.SendHttpRequest(new Uri(this.HostApiUrl, UriKind.Absolute));
+            var responseString = SendHttpRequest(new Uri(this.HostApiUrl, UriKind.Absolute));
 
             var responseData = JsonConvert.DeserializeObject<IEnumerable<JsonHostDataSet>>(responseString);
             List<IHamnetDbHost> hosts = new List<IHamnetDbHost>();
             foreach (var responseDataSet in responseData.Where(r => !r.Deleted && r.Routing))
             {
-                IPAddress address;
-                if (!IPAddress.TryParse(responseDataSet.Address, out address))
+                if (!IPAddress.TryParse(responseDataSet.Address, out IPAddress address))
                 {
                     log.Error($"Cannot convert retrieved string '{responseDataSet.Address}' to a valid IP address. This entry will be skipped.");
                     continue;
@@ -116,14 +115,13 @@ namespace HamnetDbAbstraction
         /// <inheritdoc />
         public IHamnetDbHosts QueryMonitoredHosts()
         {
-            var responseString = this.SendHttpRequest(new Uri(this.HostApiUrl, UriKind.Absolute));
+            var responseString = SendHttpRequest(new Uri(this.HostApiUrl, UriKind.Absolute));
 
             var responseData = JsonConvert.DeserializeObject<IEnumerable<JsonHostDataSet>>(responseString);
             List<IHamnetDbHost> hosts = new List<IHamnetDbHost>();
             foreach (var responseDataSet in responseData.Where(r => !r.Deleted && r.Monitor))
             {
-                IPAddress address;
-                if (!IPAddress.TryParse(responseDataSet.Address, out address))
+                if (!IPAddress.TryParse(responseDataSet.Address, out IPAddress address))
                 {
                     log.Error($"Cannot convert retrieved string '{responseDataSet.Address}' to a valid IP address. This entry will be skipped.");
                     continue;
@@ -138,14 +136,13 @@ namespace HamnetDbAbstraction
         /// <inheritdoc />
         public IHamnetDbSubnets QuerySubnets()
         {
-            var responseString = this.SendHttpRequest(new Uri(this.SubnetsApiUrl, UriKind.Absolute));
+            var responseString = SendHttpRequest(new Uri(this.SubnetsApiUrl, UriKind.Absolute));
 
             var responseData = JsonConvert.DeserializeObject<IEnumerable<JsonSubnetDataSet>>(responseString);
             List<IHamnetDbSubnet> hosts = new List<IHamnetDbSubnet>();
             foreach (var responseDataSet in responseData.Where(r => !r.Deleted))
             {
-                IPNetwork network;
-                if (!IPNetwork.TryParse(responseDataSet.Subnet, out network))
+                if (!IPNetwork.TryParse(responseDataSet.Subnet, out IPNetwork network))
                 {
                     log.Error($"Cannot convert retrieved string '{responseDataSet.Subnet}' to a valid IP subnet. This entry will be skipped.");
                     continue;
@@ -160,7 +157,7 @@ namespace HamnetDbAbstraction
         /// <inheritdoc />
         public IHamnetDbSites QuerySites()
         {
-            var responseString = this.SendHttpRequest(new Uri(this.SitesApiUrl, UriKind.Absolute));
+            var responseString = SendHttpRequest(new Uri(this.SitesApiUrl, UriKind.Absolute));
 
             var responseData = JsonConvert.DeserializeObject<IEnumerable<JsonSiteDataSet>>(responseString, SerializerSettings);
 
@@ -204,26 +201,24 @@ namespace HamnetDbAbstraction
             }
         }
 
-        private string SendHttpRequest(Uri uri)
+        private static string SendHttpRequest(Uri uri)
         {
-            using (HttpClient client = new HttpClient())
+            using HttpClient client = new HttpClient();
+            client.Timeout = TimeSpan.FromMinutes(3);
+            client.BaseAddress = uri;
+
+            // Add an Accept header for JSON format.
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // List data response.
+            using HttpResponseMessage response = client.GetAsync(string.Empty).Result;
+            if (response.IsSuccessStatusCode)
             {
-                client.Timeout = TimeSpan.FromMinutes(3);
-                client.BaseAddress = uri;
-
-                // Add an Accept header for JSON format.
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                // List data response.
-                HttpResponseMessage response = client.GetAsync(string.Empty).Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    return response.Content.ReadAsStringAsync().Result;
-                }
-                else
-                {
-                    throw new HttpRequestException($"Request for '{uri}' failed: Status {response.StatusCode}, Reason '{response.ReasonPhrase}");
-                }
+                return response.Content.ReadAsStringAsync().Result;
+            }
+            else
+            {
+                throw new HttpRequestException($"Request for '{uri}' failed: Status {response.StatusCode}, Reason '{response.ReasonPhrase}");
             }
         }
 

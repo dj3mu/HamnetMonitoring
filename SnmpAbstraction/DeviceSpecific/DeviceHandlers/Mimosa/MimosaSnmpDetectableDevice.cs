@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.RegularExpressions;
 using SemVersion;
 using SnmpSharpNet;
 
@@ -22,7 +21,6 @@ namespace SnmpAbstraction
         /// Example: "RouterOS 6.45.3 (stable) on RB711-5Hn-MMCX"
         /// </summary>
         private readonly Oid OsVersionOid = new Oid(".1.3.6.1.4.1.43356.2.1.2.1.3.0");
-        private readonly Oid ModelOid = new Oid(".1.3.6.1.4.1.43356.2.1.2.1.1.0");
 
         /// <inheritdoc />
         public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
@@ -86,8 +84,7 @@ namespace SnmpAbstraction
 
             log.Info($"Detected device '{lowerLayer.Address}' as {model} v '{osVersion}'");
 
-            DeviceVersion deviceVersion;
-            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion, lowerLayer.Address);
+            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out DeviceVersion deviceVersion, lowerLayer.Address);
             if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
             {
                 try

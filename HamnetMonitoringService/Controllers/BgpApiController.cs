@@ -21,7 +21,9 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class BgpController : ControllerBase
     {
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
+#pragma warning restore
 
         private readonly IConfiguration configuration;
 

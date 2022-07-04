@@ -31,29 +31,14 @@ namespace SnmpAbstraction
         /// <param name="options">The options to use.</param>
         public DeviceHandlerBase(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup, SemVersion.SemanticVersion osVersion, string model, IQuerierOptions options)
         {
-            if (lowerLayer == null)
-            {
-                throw new ArgumentNullException(nameof(lowerLayer), "lower layer is null when constructing a device handler");
-            }
-
-            if (oidLookup == null)
-            {
-                throw new ArgumentNullException(nameof(oidLookup), "OID lookup table is null when constructing a device handler");
-            }
-
-            if (osVersion == null)
-            {
-                throw new ArgumentNullException(nameof(osVersion), "OS version info is null when constructing a device handler");
-            }
-
             if (string.IsNullOrWhiteSpace(model))
             {
                 throw new ArgumentNullException(nameof(model), "Model name is null, empty or white-space-only when constructing a device handler");
             }
 
-            this.LowerLayer = lowerLayer;
-            this.OidLookup = oidLookup;
-            this.OsVersion = osVersion;
+            this.LowerLayer = lowerLayer ?? throw new ArgumentNullException(nameof(lowerLayer), "lower layer is null when constructing a device handler");
+            this.OidLookup = oidLookup ?? throw new ArgumentNullException(nameof(oidLookup), "OID lookup table is null when constructing a device handler");
+            this.OsVersion = osVersion ?? throw new ArgumentNullException(nameof(osVersion), "OS version info is null when constructing a device handler");
             this.Model = model;
             this.Options = options ?? throw new ArgumentNullException(nameof(options), "The options are null when constructing a device handler");
         }

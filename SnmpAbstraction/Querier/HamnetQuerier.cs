@@ -35,18 +35,8 @@ namespace SnmpAbstraction
         /// <param name="options">The options for the query.</param>
         public HamnetQuerier(IDeviceHandler handler, IQuerierOptions options)
         {
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler), "The device handler is null");
-            }
-
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options), "The query options are null");
-            }
-
-            this.handler = handler;
-            this.options = options;
+            this.handler = handler ?? throw new ArgumentNullException(nameof(handler), "The device handler is null");
+            this.options = options ?? throw new ArgumentNullException(nameof(options), "The query options are null");
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -144,7 +134,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{this.Address.ToString()} ({this.SystemData?.DeviceModel})";
+            return $"{this.Address} ({this.SystemData?.DeviceModel})";
         }
 
         public void Dispose()

@@ -25,10 +25,9 @@ namespace SnmpAbstraction
                 throw new ArgumentOutOfRangeException(nameof(options), $"This device handler doesn't support any of the APIs allowed by the IQuerierOptions (allowed: {options.AllowedApis}, supported {this.SupportedApi}).");
             }
 
-            LazyLoadingDeviceSystemData llsd = lowerLayer.SystemData as LazyLoadingDeviceSystemData;
-            if (llsd != null)
+            if (lowerLayer.SystemData is LazyLoadingDeviceSystemData llsd)
             {
-                if ((oidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId, out DeviceSpecificOid oid0) && !oid0.Oid.IsNull))
+                if (oidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId, out DeviceSpecificOid oid0) && !oid0.Oid.IsNull)
                 {
                     // for AirFiber devices we currently only support RSSI querying
                     llsd.SupportedFeatures = DeviceSupportedFeatures.Rssi;

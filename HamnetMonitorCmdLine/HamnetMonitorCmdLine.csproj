@@ -1,8 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <CodeAnalysisRuleSet>../codeanalysis.ruleset</CodeAnalysisRuleSet>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -23,40 +24,25 @@
     <PublishSingleFile>false</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.5.*">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="IPNetwork2" Version="2.5.*" />
-    <PackageReference Include="CommandLineParser" Version="2.8.*" />
-    <PackageReference Include="log4net" Version="2.0.*" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
     <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
   </ItemGroup>
-
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
     <Copy SourceFiles="$(ProjectDir)/../SnmpAbstraction/DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
     <Copy SourceFiles="$(ProjectDir)/../log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
   </Target>
-
   <Target Name="PublishCustomContent" AfterTargets="Publish">
     <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high" />
     <MakeDir Directories="$(PublishDir)$(ConfigDir)" />
     <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)" />
   </Target>
-
   <Target Name="PackageZip" AfterTargets="PublishCustomContent">
     <Message Text="Would package ZIP file now but not yet implemented due ZIP being required" Importance="high" />
   </Target>
-
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

@@ -16,7 +16,9 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class VwRestRssiController : ControllerBase
     {
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
+#pragma warning restore
 
         private readonly QueryResultDatabaseContext dbContext;
 

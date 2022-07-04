@@ -1,0 +1,6 @@
+GitVersion.MsBuild
+nunit
+NUnit3TestAdapter
+Microsoft.NET.Test.Sdk
+SnmpSharpNetStandard
+tik4net

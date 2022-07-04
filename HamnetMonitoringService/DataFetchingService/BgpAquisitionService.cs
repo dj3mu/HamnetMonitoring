@@ -37,8 +37,6 @@ namespace RestService.DataFetchingService
 
         private readonly object multiTimerLockingObject = new object();
 
-        private readonly object databaseLockingObject = new object();
-
         private HamnetDbPoller hamnetDbPoller;
 
         private bool disposedValue = false;
@@ -179,8 +177,7 @@ namespace RestService.DataFetchingService
         {
             this.Dispose(true);
 
-            // TODO: Uncomment if finalized is implemented above.
-            // GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -231,7 +228,7 @@ namespace RestService.DataFetchingService
                 }
                 catch(Exception ex)
                 {
-                    this.logger.LogError($"Excpetion caught and ignored in timer-called data aquisition thread: {ex.ToString()}");
+                    this.logger.LogError($"Excpetion caught and ignored in timer-called data aquisition thread: {ex}");
                 }
                 finally
                 {
@@ -300,12 +297,12 @@ namespace RestService.DataFetchingService
                 .Where(hsatc => this.filterRegexList.Any(fr => fr.IsMatch(hsatc.Callsign)))
                 .ToList(); // for debugger
 
-            Parallel.ForEach(
+            _ = Parallel.ForEach(
                 filteredHosts,
                 new ParallelOptions { MaxDegreeOfParallelism = this.maxParallelQueries },
             host =>
             {
-                if ((excludeNets != null) && (excludeNets.Any(exclude => exclude.Contains(host.Address))))
+                if ((excludeNets != null) && excludeNets.Any(exclude => exclude.Contains(host.Address)))
                 {
                     this.logger.LogInformation($"Skipping subnet {host.Address} due to exclude list");
                     return;
@@ -317,7 +314,7 @@ namespace RestService.DataFetchingService
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError($"Exception caught and ignored in BGP parallel data aquisition thread: {ex.ToString()}");
+                    this.logger.LogError($"Exception caught and ignored in BGP parallel data aquisition thread: {ex}");
                 }
             });
 

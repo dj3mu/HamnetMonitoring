@@ -8,18 +8,20 @@ namespace SnmpAbstraction
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// Indicating whether <see cref="TxSignalStrengthBacking" /> has already been populated.
         /// </summary>
         private bool txSignalStrengthPopulated = false;
-        
+
         /// <summary>
         /// Indicating whether <see cref="RxSignalStrengthBacking" /> has already been populated.
         /// </summary>
         private bool rxSignalStrengthPopulated = false;
-        
+
         /// <summary>
         /// Indicating whether <see cref="LinkUptimeBacking" /> has already been populated.
         /// </summary>

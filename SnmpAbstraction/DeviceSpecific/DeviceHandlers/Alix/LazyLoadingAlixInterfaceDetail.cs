@@ -23,7 +23,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// Field to indicate whether we've already queried (and assigned) interface type and name (for UBNT done in a single query).
         /// </summary>
-        private bool typeAndNameQueried = false;
+        private readonly bool typeAndNameQueried = false;
 
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
@@ -65,8 +65,7 @@ namespace SnmpAbstraction
             List<Oid> oidsToQuery = new List<Oid>();
 
             var valueToQuery = RetrievableValuesEnum.InterfaceTypeWalkRoot;
-            DeviceSpecificOid interfaceTypeRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceTypeRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceTypeRootOid))
             {
                 log.Warn($"Cannot find OID to get interface type for UBNT device '{this.DeviceAddress}'.");
                 this.InterfaceTypeBacking = IanaInterfaceType.NotAvailable;
@@ -76,9 +75,8 @@ namespace SnmpAbstraction
             var interfaceTypeOid = interfaceTypeRootOid.Oid + new Oid(new int[] { this.InterfaceId });
             oidsToQuery.Add(interfaceTypeOid);
             valueToQuery = RetrievableValuesEnum.InterfaceNameWalkRoot;
-            DeviceSpecificOid interfaceNameRootOid;
             Oid interfaceNameOid = null;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceNameRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceNameRootOid))
             {
                 log.Warn($"Cannot find OID to get interface name for UBNT device '{this.DeviceAddress}'. Will continue, but cannot ensure that the interface type is actually correct.");
             }
@@ -93,7 +91,7 @@ namespace SnmpAbstraction
             var retrievedValues = this.LowerSnmpLayer.Query(oidsToQuery);
 
             IanaInterfaceType retrievedType = (IanaInterfaceType)retrievedValues[interfaceTypeOid].Value.ToInt();
-            
+
             durationWatch.Stop();
 
             this.InterfaceNameBacking = retrievedValues[interfaceNameOid].Value.ToString();

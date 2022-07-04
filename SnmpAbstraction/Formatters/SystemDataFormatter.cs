@@ -25,62 +25,52 @@ namespace SnmpAbstraction
                 return "<null>";
             }
 
-            IDeviceSystemData asDevSysData = someObject as IDeviceSystemData;
-            if (asDevSysData != null)
+            if (someObject is IDeviceSystemData asDevSysData)
             {
                 return this.Format(asDevSysData);
             }
 
-            IInterfaceDetails asIfDetails = someObject as IInterfaceDetails;
-            if (asIfDetails != null)
+            if (someObject is IInterfaceDetails asIfDetails)
             {
                 return this.Format(asIfDetails);
             }
 
-            IInterfaceDetail asIfDetail = someObject as IInterfaceDetail;
-            if (asIfDetail != null)
+            if (someObject is IInterfaceDetail asIfDetail)
             {
                 return this.Format(asIfDetail);
             }
 
-            IWirelessPeerInfos asWiPeerInfos = someObject as IWirelessPeerInfos;
-            if (asWiPeerInfos != null)
+            if (someObject is IWirelessPeerInfos asWiPeerInfos)
             {
                 return this.Format(asWiPeerInfos);
             }
 
-            IWirelessPeerInfo asWiPeerInfo = someObject as IWirelessPeerInfo;
-            if (asWiPeerInfo != null)
+            if (someObject is IWirelessPeerInfo asWiPeerInfo)
             {
                 return this.Format(asWiPeerInfo);
             }
 
-            ILinkDetails asLinkDetails = someObject as ILinkDetails;
-            if (asLinkDetails != null)
+            if (someObject is ILinkDetails asLinkDetails)
             {
                 return this.Format(asLinkDetails);
             }
 
-            IBgpPeers asBgpPeers = someObject as IBgpPeers;
-            if (asBgpPeers != null)
+            if (someObject is IBgpPeers asBgpPeers)
             {
                 return this.Format(asBgpPeers);
             }
 
-            IBgpPeer asBgpPeer = someObject as IBgpPeer;
-            if (asBgpPeer != null)
+            if (someObject is IBgpPeer asBgpPeer)
             {
                 return this.Format(asBgpPeer);
             }
 
-            ITracerouteResult asTracerouteResult = someObject as ITracerouteResult;
-            if (asTracerouteResult != null)
+            if (someObject is ITracerouteResult asTracerouteResult)
             {
                 return this.Format(asTracerouteResult);
             }
 
-            ITracerouteHop asTracerouteHop = someObject as ITracerouteHop;
-            if (asTracerouteHop != null)
+            if (someObject is ITracerouteHop asTracerouteHop)
             {
                 return this.Format(asTracerouteHop);
             }
@@ -126,7 +116,9 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="tracerouteHop">The data to format.</param>
         /// <returns>The formatted string.</returns>
+#pragma warning disable CA1822 // API
         public string Format(ITracerouteHop tracerouteHop)
+#pragma warning restore
         {
             if (tracerouteHop == null)
             {
@@ -152,7 +144,9 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="bgpPeer">The data to format.</param>
         /// <returns>The formatted string.</returns>
+#pragma warning disable CA1822 // API
         public string Format(IBgpPeer bgpPeer)
+#pragma warning restore
         {
             if (bgpPeer == null)
             {
@@ -179,12 +173,12 @@ namespace SnmpAbstraction
             returnBuilder.Append("Passive: ").AppendLine(bgpPeer.Passive.ToString());
             returnBuilder.Append("Use BFD: ").AppendLine(bgpPeer.UseBfd.ToString());
             returnBuilder.Append("Remote ID: ").AppendLine(bgpPeer.RemoteId);
-            returnBuilder.Append("Uptime: ").AppendLine(bgpPeer.Uptime.ToString()); 
+            returnBuilder.Append("Uptime: ").AppendLine(bgpPeer.Uptime.ToString());
             returnBuilder.Append("Prefix count: ").AppendLine(bgpPeer.PrefixCount.ToString());
             returnBuilder.Append("Updates sent: ").AppendLine(bgpPeer.UpdatesSent.ToString());
             returnBuilder.Append("Updates received: ").AppendLine(bgpPeer.UpdatesReceived.ToString());
             returnBuilder.Append("Withdrawn sent: ").AppendLine(bgpPeer.WithdrawnSent.ToString());
-            returnBuilder.Append("Withdrawn received: ").AppendLine(bgpPeer.WithdrawnReceived.ToString()); 
+            returnBuilder.Append("Withdrawn received: ").AppendLine(bgpPeer.WithdrawnReceived.ToString());
             returnBuilder.Append("Remote hold time: ").AppendLine(bgpPeer.RemoteHoldTime.ToString());
             returnBuilder.Append("Used hold time: ").AppendLine(bgpPeer.UsedHoldTime.ToString());
             returnBuilder.Append("Used Keepalive time: ").AppendLine(bgpPeer.UsedKeepaliveTime.ToString());
@@ -233,7 +227,9 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="linkDetail">The data to format.</param>
         /// <returns>The formatted string.</returns>
+#pragma warning disable CA1822 // API
         public string Format(ILinkDetail linkDetail)
+#pragma warning restore
         {
             if (linkDetail == null)
             {
@@ -289,7 +285,9 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="wirelessPeerInfo">The data to format.</param>
         /// <returns>The formatted string.</returns>
+#pragma warning disable CA1822 // API
         public string Format(IWirelessPeerInfo wirelessPeerInfo)
+#pragma warning restore
         {
             if (wirelessPeerInfo == null)
             {
@@ -376,7 +374,9 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="interfaceDetail">The data to format.</param>
         /// <returns>The formatted string.</returns>
+#pragma warning disable CA1822 // API
         public string Format(IInterfaceDetail interfaceDetail)
+#pragma warning restore
         {
             if (interfaceDetail == null)
             {
@@ -397,7 +397,9 @@ namespace SnmpAbstraction
         /// </summary>
         /// <param name="deviceSystemData">The data to format.</param>
         /// <returns>The formatted string.</returns>
+#pragma warning disable CA1822 // API
         public string Format(IDeviceSystemData deviceSystemData)
+#pragma warning restore
         {
             if (deviceSystemData == null)
             {

@@ -22,11 +22,6 @@ namespace SnmpAbstraction
         private static readonly Regex OsVersionExtractionRegex = new Regex(@"([0-9.]+)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// The minimum version for support of MTik API v2.
-        /// </summary>
-        private static readonly SemanticVersion ApiV2MinimumVersion = new SemanticVersion(6, 45, 0, string.Empty, string.Empty);
-
-        /// <summary>
         /// To avoid redundant calls to Dispose.
         /// </summary>
         private bool disposedValue = false;
@@ -297,7 +292,7 @@ namespace SnmpAbstraction
             }
             else
             {
-                throw new InvalidOperationException($"Cannot convert version string '{sysResource.Version}' to a valid SemanticVersion: It's not matching the version Regex '{OsVersionExtractionRegex.ToString()}'");
+                throw new InvalidOperationException($"Cannot convert version string '{sysResource.Version}' to a valid SemanticVersion: It's not matching the version Regex '{OsVersionExtractionRegex}'");
             }
 
             this.modelBacking = this.sysRouterboard.Model.Replace("RouterBOARD", "RB").Replace(" ", string.Empty);

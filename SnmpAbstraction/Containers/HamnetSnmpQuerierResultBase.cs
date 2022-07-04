@@ -25,12 +25,7 @@ namespace SnmpAbstraction
         /// <param name="queryDuration">The duration of the query.</param>
         protected HamnetSnmpQuerierResultBase(IpAddress address, string deviceModel, TimeSpan queryDuration)
         {
-            if (address == null)
-            {
-                throw new ArgumentNullException(nameof(address), "The IP address of the device producing this result is null");
-            }
-
-            this.DeviceAddress = address;
+            this.DeviceAddress = address ?? throw new ArgumentNullException(nameof(address), "The IP address of the device producing this result is null");
             this.queryDuration = queryDuration;
             this.DeviceModel = deviceModel;
         }

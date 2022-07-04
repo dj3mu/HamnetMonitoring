@@ -149,8 +149,7 @@
 
             Console.Write($" entries, starting at entry index {opts.StartOffset}");
 
-            IPNetwork onlyNetwork = null;
-            if (!string.IsNullOrWhiteSpace(opts.Network) && IPNetwork.TryParse(opts.Network, out onlyNetwork))
+            if (!string.IsNullOrWhiteSpace(opts.Network) && IPNetwork.TryParse(opts.Network, out IPNetwork onlyNetwork))
             {
                 Console.Write($" and being inside network {onlyNetwork}");
             }
@@ -310,8 +309,7 @@
         /// <param name="result">The result to print.</param>
         private static void OutputResult(GlobalOptions options, IHamnetSnmpQuerierResult result)
         {
-            ILazyEvaluated resultAsLazyEval = result as ILazyEvaluated;
-            if (resultAsLazyEval != null)
+            if (result is ILazyEvaluated resultAsLazyEval)
             {
                 resultAsLazyEval.ForceEvaluateAll();
             }
