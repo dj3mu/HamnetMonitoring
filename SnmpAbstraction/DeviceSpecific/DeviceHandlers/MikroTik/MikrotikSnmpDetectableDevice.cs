@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text.RegularExpressions;
 using SemVersion;
 using SnmpSharpNet;
@@ -11,6 +12,8 @@ namespace SnmpAbstraction
     internal class MikrotikSnmpDetectableDevice : DetectableDeviceBase
     {
         private static readonly Regex OsVersionExtractionRegex = new Regex(RouterOsDetectionString + @"\s+([0-9.]+).*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
+        private static readonly Regex ModelFromVersionExtractionRegex = new Regex(@".*\s+on\s+(.+)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -99,6 +102,15 @@ namespace SnmpAbstraction
             SemanticVersion osVersion = match.Success ? match.Groups[1].Value.ToSemanticVersion() : null;
 
             var model = lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Replace("RB ", string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(model))
+            {
+                Match modelMatch = ModelFromVersionExtractionRegex.Match(osVersionString);
+                if (modelMatch.Success)
+                {
+                    model = modelMatch.Groups[1].Value.Trim();
+                }
+            }
 
             log.Info($"Detected device '{lowerLayer.Address}' as MikroTik '{model}' v '{osVersion}'");
 
