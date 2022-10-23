@@ -58,7 +58,7 @@ namespace SnmpAbstraction
                 new LazyLoadingUbiquitiAirFiberAfltuWirelessPeerInfo(
                     this.LowerSnmpLayer,
                     this.OidLookup,
-                    new Oid(interfaceVbs[0].Oid.Skip(interfaceVbs[0].Oid.Length - 4).Take(4).ToArray()),
+                    new Oid(interfaceVbs[0].Oid.Skip(interfaceVbs[0].Oid.Length - 6).Take(6).ToArray()),
                     interfaceVbs.Count));
 
             return true;

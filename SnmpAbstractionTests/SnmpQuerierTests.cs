@@ -185,7 +185,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AllForSingleIpTest()
         {
-            var ipUnderTest = new IpAddress("44.148.24.90");
+            var ipUnderTest = new IpAddress("44.142.41.194");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
@@ -205,9 +205,10 @@ namespace SnmpAbstractionTests
         [Test]
         public void IpLinkTestTest()
         {
-            var ip1UnderTest = new IpAddress("44.168.14.34");
-            var ip2UnderTest = new IpAddress("44.168.14.37");
-            var snmpVersion = SnmpVersion.Ver1;            var useCache = false;
+            var ip1UnderTest = new IpAddress("44.142.42.210");
+            var ip2UnderTest = new IpAddress("44.142.42.213");
+            var snmpVersion = SnmpVersion.Ver1;
+            var useCache = false;
 
             Console.WriteLine($"{Environment.NewLine}{ip1UnderTest} (side #1) SYSTEM DATA:");
             QueryAndPrintSystemData(ip1UnderTest, snmpVersion, useCache);
