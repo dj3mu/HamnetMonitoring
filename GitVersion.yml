@@ -1,21 +1,23 @@
 next-version: 3.0
-assembly-versioning-scheme: MajorMinorPatch
-mode: ContinuousDelivery
+legacy-semver-padding: 4
+build-metadata-padding: 4
+commits-since-version-source-padding: 4
+commit-message-incrementing: Disabled
+assembly-versioning-scheme: MajorMinor
+assembly-file-versioning-scheme: MajorMinorPatchTag
+assembly-informational-format: '{NuGetVersionV2}'
+mode: ContinuousDeployment
+increment: Minor
+tag-prefix: '[vV]'
 branches:
   develop:
-    mode: ContinuousDelivery
-    tag: alpha
+    prevent-increment-of-merged-branch-version: true
   feature:
-    mode: ContinuousDelivery
-    tag: afeat
-  master:
-    mode: ContinuousDelivery
-  release:
-    mode: ContinuousDelivery
-    tag: beta
+    tag: afeat.{BranchName}
   support:
-    mode: ContinuousDelivery
     tag: alpha
+    increment: Minor
+    prevent-increment-of-merged-branch-version: true
 ignore:
   sha: []
-merge-message-formats: {}
+commit-date-format: yyyy-MM-ddTHH:mm:sszzz
