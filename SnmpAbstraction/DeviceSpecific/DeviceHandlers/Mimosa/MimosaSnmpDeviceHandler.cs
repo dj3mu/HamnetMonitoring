@@ -52,7 +52,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override IInterfaceDetails RetrieveDeviceInterfaceDetails(ISnmpLowerLayer lowerLayer, IDeviceSpecificOidLookup oidLookup)
         {
-            return new LazyLoadingGenericInterfaceDetails(this.LowerLayer, this.OidLookup);
+            return new LazyLoadingMimosaInterfaceDetails(this.LowerLayer, this.OidLookup);
         }
 
         /// <inheritdoc />
