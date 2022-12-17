@@ -58,10 +58,7 @@ namespace SnmpAbstraction
         {
             get
             {
-                if (this.tikConnectionBacking == null)
-                {
-                    this.tikConnectionBacking = ConnectionFactory.CreateConnection((this.OsVersion < ApiV2MinimumVersion) ? TikConnectionType.Api : TikConnectionType.Api);
-                }
+                this.tikConnectionBacking ??= ConnectionFactory.CreateConnection((this.OsVersion < ApiV2MinimumVersion) ? TikConnectionType.Api : TikConnectionType.Api);
 
                 if (!this.tikConnectionBacking.IsOpened)
                 {

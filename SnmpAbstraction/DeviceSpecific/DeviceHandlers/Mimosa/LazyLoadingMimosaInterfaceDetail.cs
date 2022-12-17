@@ -4,7 +4,7 @@ namespace SnmpAbstraction
 {
     internal class LazyLoadingMimosaInterfaceDetail : LazyLoadingGenericInterfaceDetail
     {
-        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        ////private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.

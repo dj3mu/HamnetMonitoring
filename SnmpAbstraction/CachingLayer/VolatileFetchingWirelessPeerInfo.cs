@@ -53,7 +53,7 @@ namespace SnmpAbstraction
 
                 // Note: As the SNMP cannot return -infinity MikroTik devices return 0.
                 //       Hence we effectively skip 0 values here assuming that stream is not in use.
-                var txSignalStrength = queryResults.Values.Where(v => v != 0).DecibelLogSum();
+                var txSignalStrength = queryResults.Values.Select(v => v * queryOid.Factor).Where(v => v != 0).DecibelLogSum();
 
                 return txSignalStrength;
             }
@@ -81,7 +81,7 @@ namespace SnmpAbstraction
 
                 // Note: As the SNMP cannot return -infinity MikroTik devices return 0.
                 //       Hence we effectively skip 0 values here assuming that stream is not in use.
-                var rxSignalStrength = queryResults.Values.Where(v => v != 0).DecibelLogSum();
+                var rxSignalStrength = queryResults.Values.Select(v => v * queryOid.Factor).Where(v => v != 0).DecibelLogSum();
 
                 return rxSignalStrength;
             }
@@ -149,7 +149,7 @@ namespace SnmpAbstraction
 
                 try
                 {
-                    var queryResult = Convert.ToDouble(this.lowerLayer.QueryAsInt(queryOid.Oid, "CCQ"));
+                    var queryResult = Convert.ToDouble(this.lowerLayer.QueryAsInt(queryOid.Oid, "CCQ")) * queryOid.Factor;
 
                     return queryResult;
                 }

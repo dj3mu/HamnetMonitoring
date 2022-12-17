@@ -110,10 +110,7 @@ namespace SnmpAbstraction
             {
                 if (disposing)
                 {
-                    if (this.LowerLayer != null)
-                    {
-                        this.LowerLayer.Dispose();
-                    }
+                    this.LowerLayer?.Dispose();
                 }
 
                 this.disposedValue = true;

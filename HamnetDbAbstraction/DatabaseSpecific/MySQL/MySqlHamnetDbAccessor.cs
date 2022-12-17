@@ -25,7 +25,7 @@ namespace HamnetDbAbstraction
         /// <summary>
         /// If applicable, an additional Disposer that will be called when this obejects gets disposed off.
         /// </summary>
-        private readonly IDisposable additionalDisposer;
+        private IDisposable additionalDisposer;
 
         /// <summary>
         /// Instantiate from connection string and an additional Disposer.
@@ -145,16 +145,11 @@ namespace HamnetDbAbstraction
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects).
-                    if (this.connection != null)
-                    {
-                        this.connection.Dispose();
-                        this.connection = null;
-                    }
+                    this.connection?.Dispose();
+                    this.connection = null;
 
-                    if (this.additionalDisposer != null)
-                    {
-                        this.additionalDisposer.Dispose();
-                    }
+                    this.additionalDisposer?.Dispose();
+                    this.additionalDisposer = null;
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

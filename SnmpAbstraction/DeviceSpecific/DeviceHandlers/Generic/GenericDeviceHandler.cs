@@ -35,10 +35,7 @@ namespace SnmpAbstraction
         {
             get
             {
-                if (this.interfaceDetails == null)
-                {
-                    this.interfaceDetails = this.RetrieveDeviceInterfaceDetails(this.LowerLayer, this.OidLookup);
-                }
+                this.interfaceDetails ??= this.RetrieveDeviceInterfaceDetails(this.LowerLayer, this.OidLookup);
 
                 return this.interfaceDetails;
             }
@@ -49,10 +46,7 @@ namespace SnmpAbstraction
         {
             get
             {
-                if (this.wirelessPeerInfos == null)
-                {
-                    this.wirelessPeerInfos = this.RetrieveWirelessPeerInfos(this.LowerLayer, this.OidLookup);
-                }
+                this.wirelessPeerInfos ??= this.RetrieveWirelessPeerInfos(this.LowerLayer, this.OidLookup);
 
                 return this.wirelessPeerInfos;
             }

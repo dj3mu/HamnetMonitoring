@@ -171,10 +171,7 @@ namespace SnmpAbstraction
             {
                 if (disposing)
                 {
-                    if (this.TikConnection != null)
-                    {
-                        this.TikConnection.Dispose();
-                    }
+                    this.TikConnection?.Dispose();
                 }
 
                 this.disposedValue = true;

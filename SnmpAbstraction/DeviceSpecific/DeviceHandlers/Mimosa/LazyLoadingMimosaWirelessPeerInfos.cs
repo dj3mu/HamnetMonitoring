@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
@@ -11,12 +7,12 @@ namespace SnmpAbstraction
     /// /// </summary>
     internal class LazyLoadingMimosaWirelessPeerInfos : LazyLoadingGenericWirelessPeerInfos
     {
-        private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        ////private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Field to sum up the query duration on each "Populate" call.
         /// </summary>
-        private TimeSpan localQueryDuration = TimeSpan.Zero;
+        private readonly TimeSpan localQueryDuration = TimeSpan.Zero;
 
         /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
