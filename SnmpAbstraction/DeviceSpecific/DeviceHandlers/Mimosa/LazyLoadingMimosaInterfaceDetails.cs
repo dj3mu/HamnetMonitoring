@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace SnmpAbstraction
+﻿namespace SnmpAbstraction
 {
     /// <summary>
     /// Worker class for lazy-loading interface details.
@@ -24,7 +22,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         protected override IInterfaceDetail InstantiateInterfaceDetail(ISnmpLowerLayer lowerSnmpLayer, IDeviceSpecificOidLookup oidLookup, int interfaceId)
         {
-            return new LazyLoadingMimosaInterfaceDetail(this.LowerSnmpLayer, this.OidLookup, interfaceId, new string[] { "WIFI", "ATH", "AIR", "ETH" });
+            return new LazyLoadingMimosaInterfaceDetail(this.LowerSnmpLayer, this.OidLookup, interfaceId);
         }
     }
 }

@@ -144,6 +144,21 @@
         /// <summary>
         /// Root OID to get the RX signal strength from given OID with interface ID appended
         /// </summary>
-        RxSignalStrengthCh0AppendInterfaceId = 20
+        RxSignalStrengthCh0AppendInterfaceId = 20,
+
+        /// <summary>
+        /// RX signal strength where the chain index (e.g. for MIMOSA 1-4) is to be appended
+        /// </summary>
+        RxSignalStrengthAppendChainIndex = 21,
+
+        /// <summary>
+        /// Link uptime directly provided by the given OID
+        /// </summary>
+        LinkUptimeDirectValue = 22,
+
+        /// <summary>
+        /// TX signal strength where the chain index (e.g. for MIMOSA 1-4) is to be appended
+        /// </summary>
+        TxSignalStrengthAppendChainIndex = 23,
     }
 }

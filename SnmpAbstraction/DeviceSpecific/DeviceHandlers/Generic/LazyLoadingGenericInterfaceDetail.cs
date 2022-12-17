@@ -105,7 +105,11 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the MAC address backing field into our deriving classes.
         /// </summary>
-        protected string MacAddressStringBacking { get; set; }
+        protected string MacAddressStringBacking
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the interface name backing field into our deriving classes.
