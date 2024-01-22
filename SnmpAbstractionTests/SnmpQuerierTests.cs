@@ -24,7 +24,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void UbntQuerySystemDataTest()
         {
-            QueryAndPrintSystemData(new IpAddress("44.148.68.21"), SnmpVersion.Ver1, false);
+            QueryAndPrintSystemData(new IpAddress("44.148.64.125"), SnmpVersion.Ver1, false);
             //QueryAndPrintSystemData(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, true);
             //QueryAndPrintSystemData(TestConstants.TestAddressUbntAirOs6side1, SnmpVersion.Ver1, true);
         }
@@ -185,7 +185,7 @@ namespace SnmpAbstractionTests
         [Test]
         public void AllForSingleIpTest()
         {
-            var ipUnderTest = new IpAddress("44.148.46.146");
+            var ipUnderTest = new IpAddress("44.148.64.122");
             var snmpVersion = SnmpVersion.Ver1;
             var useCache = false;
 
@@ -205,8 +205,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void IpLinkTestTest()
         {
-            var ip1UnderTest = new IpAddress("44.148.46.146");
-            var ip2UnderTest = new IpAddress("44.148.46.149");
+            var ip1UnderTest = new IpAddress("44.148.64.125");
+            var ip2UnderTest = new IpAddress("44.148.64.122");
             // var ip1UnderTest = new IpAddress("44.148.10.74");
             // var ip2UnderTest = new IpAddress("44.148.10.77");
             var snmpVersion = SnmpVersion.Ver1;
