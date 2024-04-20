@@ -2,6 +2,7 @@
 using HamnetDbAbstraction;
 using System;
 using System.Linq;
+using NUnit.Framework.Legacy;
 
 namespace HamnetDbAbstractionTests
 {
@@ -31,8 +32,8 @@ namespace HamnetDbAbstractionTests
 
             var association = subnets.AssociateHosts(hosts);
 
-            Assert.NotNull(association, "Returned association is null");
-            Assert.Greater(association.Count, 0, "0 associations returned");
+            ClassicAssert.NotNull(association, "Returned association is null");
+            ClassicAssert.Greater(association.Count, 0, "0 associations returned");
 
             Console.WriteLine($"Received {association.Count} associations");
 
@@ -51,8 +52,8 @@ namespace HamnetDbAbstractionTests
 
             var uniquePairs = accessor.UniqueMonitoredHostPairsInSameSubnet();
 
-            Assert.NotNull(uniquePairs, "Unique pairs received is null");
-            Assert.Greater(uniquePairs.Count, 0, "0 unique pairs received");
+            ClassicAssert.NotNull(uniquePairs, "Unique pairs received is null");
+            ClassicAssert.Greater(uniquePairs.Count, 0, "0 unique pairs received");
 
             Console.WriteLine($"Received {uniquePairs.Count} unique pairs");
         }
@@ -68,13 +69,13 @@ namespace HamnetDbAbstractionTests
 
             var direction = from.DirectionTo(to);
 
-            Assert.NotNull(direction, "direction is null");
+            ClassicAssert.NotNull(direction, "direction is null");
 
-            Assert.AreEqual(Math.Round(28028.59701576899, 9), Math.Round(direction.Distance, 9), "wrong distance");
-            Assert.AreEqual(Math.Round(291.91583231225843, 9), Math.Round(direction.Bearing, 9), "wrong bearing");
-            Assert.AreEqual(Math.Round(-0.179888135, 9), Math.Round(direction.Elevation, 9), "wrong elevation");
-            Assert.AreSame(from, direction.From, "from not same");
-            Assert.AreSame(to, direction.To, "to not same");
+            ClassicAssert.AreEqual(Math.Round(28028.59701576899, 9), Math.Round(direction.Distance, 9), "wrong distance");
+            ClassicAssert.AreEqual(Math.Round(291.91583231225843, 9), Math.Round(direction.Bearing, 9), "wrong bearing");
+            ClassicAssert.AreEqual(Math.Round(-0.179888135, 9), Math.Round(direction.Elevation, 9), "wrong elevation");
+            ClassicAssert.AreSame(from, direction.From, "from not same");
+            ClassicAssert.AreSame(to, direction.To, "to not same");
         }
 
         /// <summary>
@@ -88,7 +89,7 @@ namespace HamnetDbAbstractionTests
 
             var bearing = from.GreatCircleBearingTo(to);
 
-            Assert.AreEqual(Math.Round(291.91583231225843, 9), Math.Round(bearing, 9), "wrong bearing");
+            ClassicAssert.AreEqual(Math.Round(291.91583231225843, 9), Math.Round(bearing, 9), "wrong bearing");
         }
 
         /// <summary>
@@ -102,7 +103,7 @@ namespace HamnetDbAbstractionTests
 
             var elevation = from.ElevationTo(to);
 
-            Assert.AreEqual(Math.Round(-0.179888135, 9), Math.Round(elevation, 9), "wrong elevation");
+            ClassicAssert.AreEqual(Math.Round(-0.179888135, 9), Math.Round(elevation, 9), "wrong elevation");
         }
 
         /// <summary>
@@ -118,10 +119,10 @@ namespace HamnetDbAbstractionTests
             var distance = from.HaversineDistanceTo(to);
 
             var fspl = from.FreeSpacePathloss(to, frequency);
-            Assert.AreEqual(Math.Round(136.668370283, 9), Math.Round(fspl, 9), "wrong path loss w/o distance");
+            ClassicAssert.AreEqual(Math.Round(136.668370283, 9), Math.Round(fspl, 9), "wrong path loss w/o distance");
 
             fspl = distance.FreeSpacePathloss(frequency);
-            Assert.AreEqual(Math.Round(136.668370283, 9), Math.Round(fspl, 9), "wrong path loss w/ distance");
+            ClassicAssert.AreEqual(Math.Round(136.668370283, 9), Math.Round(fspl, 9), "wrong path loss w/ distance");
         }
 
         /// <summary>
@@ -132,7 +133,7 @@ namespace HamnetDbAbstractionTests
         {
             var radian = 45.0.ToRadian();
 
-            Assert.AreEqual(Math.Round(0.785398163397, 9), Math.Round(radian, 9), "wrong radian");
+            ClassicAssert.AreEqual(Math.Round(0.785398163397, 9), Math.Round(radian, 9), "wrong radian");
         }
 
         /// <summary>
@@ -143,7 +144,7 @@ namespace HamnetDbAbstractionTests
         {
             var degrees = 0.785398163397.ToDegrees();
 
-            Assert.AreEqual(Math.Round(45.0, 9), Math.Round(degrees, 9), "wrong degrees");
+            ClassicAssert.AreEqual(Math.Round(45.0, 9), Math.Round(degrees, 9), "wrong degrees");
         }
     }
 }

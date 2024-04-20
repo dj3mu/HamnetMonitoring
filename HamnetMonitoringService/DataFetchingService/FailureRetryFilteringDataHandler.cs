@@ -79,7 +79,7 @@ namespace RestService.DataFetchingService
         }
 
         /// <inheritdoc />
-        public bool? IsRetryFeasible(QueryType source, IPAddress address, IPNetwork network)
+        public bool? IsRetryFeasible(QueryType source, IPAddress address, IPNetwork2 network)
         {
             var feasible = this.recordStore.IsRetryFeasible(source, network, address);
             var randomizedFeasible = this.RandomizeFeasibility(feasible);
@@ -93,7 +93,7 @@ namespace RestService.DataFetchingService
         }
 
         /// <inheritdoc />
-        public bool? IsRetryFeasible(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork network)
+        public bool? IsRetryFeasible(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork2 network)
         {
             bool? feasible = null;
             foreach (IPAddress address in addresses)
@@ -139,7 +139,7 @@ namespace RestService.DataFetchingService
         }
 
         /// <inheritdoc />
-        public bool? IsRetryFeasible(QueryType source, IPNetwork network)
+        public bool? IsRetryFeasible(QueryType source, IPNetwork2 network)
         {
             var feasible = this.recordStore.IsRetryFeasible(source, network);
             var randomizedFeasible = this.RandomizeFeasibility(feasible);
@@ -159,7 +159,7 @@ namespace RestService.DataFetchingService
         }
 
         /// <inheritdoc />
-        public ISingleFailureInfo QueryPenaltyDetails(QueryType source, IPNetwork network)
+        public ISingleFailureInfo QueryPenaltyDetails(QueryType source, IPNetwork2 network)
         {
             return this.recordStore.QueryDetails(source, network);
         }
@@ -382,7 +382,7 @@ namespace RestService.DataFetchingService
             /// <param name="source">The source causing the failure.</param>
             /// <param name="address">The host address affected by the failure. Set to null to only consider network.</param>
             /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
-            public void RecordFailure(QueryType source, IPAddress address, IPNetwork network)
+            public void RecordFailure(QueryType source, IPAddress address, IPNetwork2 network)
             {
                 log.Debug($"Recording failure for {source}, IP {address}, net {network}");
 
@@ -396,7 +396,7 @@ namespace RestService.DataFetchingService
             /// <param name="source">The source causing the failure.</param>
             /// <param name="addresses">The hosts address affected by the failure. Set to null to only consider network.</param>
             /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
-            public void RecordFailure(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork network)
+            public void RecordFailure(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork2 network)
             {
                 log.Debug($"Recording failure for {source}, IP {string.Join(", ", addresses)}, net {network}");
 
@@ -411,7 +411,7 @@ namespace RestService.DataFetchingService
             /// <param name="source">The source causing the failure.</param>
             /// <param name="address">The host address affected by the failure. Set to null to only consider network.</param>
             /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
-            public void RecordSuccess(QueryType source, IPAddress address, IPNetwork network)
+            public void RecordSuccess(QueryType source, IPAddress address, IPNetwork2 network)
             {
                 log.Debug($"Recording success for {source}, IP {address}, net {network}");
 
@@ -425,7 +425,7 @@ namespace RestService.DataFetchingService
             /// <param name="source">The source causing the failure.</param>
             /// <param name="addresses">The hosts address affected by the failure. Set to null to only consider network.</param>
             /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
-            public void RecordSuccess(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork network)
+            public void RecordSuccess(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork2 network)
             {
                 log.Debug($"Recording success for {source}, IP {string.Join(", ", addresses)}, net {network}");
 
@@ -444,7 +444,7 @@ namespace RestService.DataFetchingService
             /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
             /// <c>false</c> if a retry is not yet due according to the store's settings.
             /// </returns>
-            public bool? IsRetryFeasible(QueryType source, IPNetwork network)
+            public bool? IsRetryFeasible(QueryType source, IPNetwork2 network)
             {
                 var perFailureSourceStore = this.GetOrCreateStoreForSource(source);
                 return perFailureSourceStore.IsRetryFeasible(network);
@@ -477,7 +477,7 @@ namespace RestService.DataFetchingService
             /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
             /// <c>false</c> if a retry is not yet due according to the store's settings.
             /// </returns>
-            public bool? IsRetryFeasible(QueryType source, IPNetwork network, IPAddress address)
+            public bool? IsRetryFeasible(QueryType source, IPNetwork2 network, IPAddress address)
             {
                 var perFailureSourceStore = this.GetOrCreateStoreForSource(source);
                 return perFailureSourceStore.IsRetryFeasible(network, address);
@@ -528,7 +528,7 @@ namespace RestService.DataFetchingService
             /// <c>null</c> if no information about the source/address/network combination is available.
             /// <c>false</c> if a retry is not yet due according to the store's settings.
             /// </returns>
-            internal ISingleFailureInfo QueryDetails(QueryType source, IPNetwork network)
+            internal ISingleFailureInfo QueryDetails(QueryType source, IPNetwork2 network)
             {
                 var perFailureSourceStore = this.GetOrCreateStoreForSource(source);
                 return perFailureSourceStore.QueryDetails(network);
@@ -581,7 +581,7 @@ namespace RestService.DataFetchingService
 
                 private readonly Dictionary<IPAddress, SingleFailureInfo> hostFailureInfos = new Dictionary<IPAddress, SingleFailureInfo>();
 
-                private readonly Dictionary<IPNetwork, SingleFailureInfo> networkFailureInfos = new Dictionary<IPNetwork, SingleFailureInfo>();
+                private readonly Dictionary<IPNetwork2, SingleFailureInfo> networkFailureInfos = new Dictionary<IPNetwork2, SingleFailureInfo>();
 
                 private readonly object lockingObject = new object();
 
@@ -609,7 +609,7 @@ namespace RestService.DataFetchingService
                 /// </summary>
                 /// <param name="address">The host address affected by the failure. Set to null to only consider network.</param>
                 /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
-                public void RecordFailure(IPAddress address, IPNetwork network)
+                public void RecordFailure(IPAddress address, IPNetwork2 network)
                 {
                     lock (this.lockingObject)
                     {
@@ -623,7 +623,7 @@ namespace RestService.DataFetchingService
                 /// </summary>
                 /// <param name="addresses">The hosts address affected by the failure. Set to null to only consider network.</param>
                 /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
-                public void RecordFailure(IEnumerable<IPAddress> addresses, IPNetwork network)
+                public void RecordFailure(IEnumerable<IPAddress> addresses, IPNetwork2 network)
                 {
                     lock (this.lockingObject)
                     {
@@ -640,7 +640,7 @@ namespace RestService.DataFetchingService
                 /// </summary>
                 /// <param name="address">The host address affected by the failure. Set to null to only consider network.</param>
                 /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
-                public void RecordSuccess(IPAddress address, IPNetwork network)
+                public void RecordSuccess(IPAddress address, IPNetwork2 network)
                 {
                     lock (this.lockingObject)
                     {
@@ -654,7 +654,7 @@ namespace RestService.DataFetchingService
                 /// </summary>
                 /// <param name="addresses">The hosts address affected by the failure. Set to null to only consider network.</param>
                 /// <param name="network">The IP network affected by the failure. Set to null to only consider address.</param>
-                public void RecordSuccess(IEnumerable<IPAddress> addresses, IPNetwork network)
+                public void RecordSuccess(IEnumerable<IPAddress> addresses, IPNetwork2 network)
                 {
                     lock (this.lockingObject)
                     {
@@ -675,7 +675,7 @@ namespace RestService.DataFetchingService
                 /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
                 /// <c>false</c> if a retry is not yet due according to the store's settings.
                 /// </returns>
-                public bool? IsRetryFeasible(IPNetwork network)
+                public bool? IsRetryFeasible(IPNetwork2 network)
                 {
                     lock (this.lockingObject)
                     {
@@ -730,7 +730,7 @@ namespace RestService.DataFetchingService
                 /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
                 /// <c>false</c> if a retry is not yet due according to the store's settings.
                 /// </returns>
-                public bool? IsRetryFeasible(IPNetwork network, IPAddress address)
+                public bool? IsRetryFeasible(IPNetwork2 network, IPAddress address)
                 {
                     lock (this.lockingObject)
                     {
@@ -815,7 +815,7 @@ namespace RestService.DataFetchingService
                 /// <c>null</c> if no information about the source/address/network combination is available.
                 /// <c>false</c> if a retry is not yet due according to the store's settings.
                 /// </returns>
-                internal ISingleFailureInfo QueryDetails(IPNetwork network)
+                internal ISingleFailureInfo QueryDetails(IPNetwork2 network)
                 {
                     if (network == null)
                     {
@@ -868,7 +868,7 @@ namespace RestService.DataFetchingService
                                     break;
 
                                 case EntityType.Subnet:
-                                    if (!IPNetwork.TryParse(item.Entity, out IPNetwork ipNetwork))
+                                    if (!IPNetwork2.TryParse(item.Entity, out IPNetwork2 ipNetwork))
                                     {
                                         log.Error($"Cannot convert entity '{item.Entity}' of type {item.EntityType} into an IPNetwork of the subnet");
                                         break;
@@ -904,7 +904,7 @@ namespace RestService.DataFetchingService
                     }
                 }
 
-                private void DeleteNetworkFailure(IPNetwork network)
+                private void DeleteNetworkFailure(IPNetwork2 network)
                 {
                     if (network == null)
                     {
@@ -922,7 +922,7 @@ namespace RestService.DataFetchingService
                     }
                 }
 
-                private void RecordFailingNetwork(IPNetwork network)
+                private void RecordFailingNetwork(IPNetwork2 network)
                 {
                     if (network == null)
                     {

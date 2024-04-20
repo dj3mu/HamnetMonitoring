@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using SnmpAbstraction;
 using SnmpSharpNet;
 
@@ -205,8 +206,8 @@ namespace SnmpAbstractionTests
         [Test]
         public void IpLinkTestTest()
         {
-            var ip1UnderTest = new IpAddress("44.148.64.125");
-            var ip2UnderTest = new IpAddress("44.148.64.122");
+            var ip1UnderTest = new IpAddress("44.148.10.74");
+            var ip2UnderTest = new IpAddress("44.148.10.77");
             // var ip1UnderTest = new IpAddress("44.148.10.74");
             // var ip2UnderTest = new IpAddress("44.148.10.77");
             var snmpVersion = SnmpVersion.Ver1;
@@ -246,11 +247,11 @@ namespace SnmpAbstractionTests
             var systemData = querier.SystemData;
             systemData.ForceEvaluateAll();
 
-            Assert.NotNull(querier, "Create(...) returned null");
+            ClassicAssert.NotNull(querier, "Create(...) returned null");
 
             var traceroute = querier.Traceroute(target, 1, TimeSpan.FromSeconds(1), 500);
 
-            Assert.NotNull(traceroute, "querier.BgpPeers returned null");
+            ClassicAssert.NotNull(traceroute, "querier.BgpPeers returned null");
 
             Console.WriteLine("Obtained route trace:");
             Console.WriteLine(new BlockTextFormatter().Format(traceroute));
@@ -270,11 +271,11 @@ namespace SnmpAbstractionTests
             var systemData = querier.SystemData;
             systemData.ForceEvaluateAll();
 
-            Assert.NotNull(querier, "Create(...) returned null");
+            ClassicAssert.NotNull(querier, "Create(...) returned null");
 
             var bgpPeers = querier.FetchBgpPeers(null);
 
-            Assert.NotNull(bgpPeers, "querier.BgpPeers returned null");
+            ClassicAssert.NotNull(bgpPeers, "querier.BgpPeers returned null");
 
             bgpPeers.ForceEvaluateAll();
 
@@ -294,14 +295,14 @@ namespace SnmpAbstractionTests
         {
             using var querier = SnmpQuerierFactory.Instance.Create(address1.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
-            Assert.NotNull(querier, "Create(...) returned null");
+            ClassicAssert.NotNull(querier, "Create(...) returned null");
 
             var linkDetails = querier.FetchLinkDetails(address2.ToString());
 
-            Assert.NotNull(linkDetails, "querier.FetchLinkDetails returned null");
+            ClassicAssert.NotNull(linkDetails, "querier.FetchLinkDetails returned null");
 
-            Assert.NotNull(linkDetails.Details, "querier.FetchLinkDetails(...).Details returned null");
-            Assert.Greater(linkDetails.Details.Count, 0, "querier.FetchLinkDetails(...).Details.Count == 0");
+            ClassicAssert.NotNull(linkDetails.Details, "querier.FetchLinkDetails(...).Details returned null");
+            ClassicAssert.Greater(linkDetails.Details.Count, 0, "querier.FetchLinkDetails(...).Details.Count == 0");
 
             Console.WriteLine($"=== Link details from {address1} to {address2} ===");
             Console.WriteLine(new BlockTextFormatter().Format(linkDetails));
@@ -318,11 +319,11 @@ namespace SnmpAbstractionTests
         {
             using var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
-            Assert.NotNull(querier, "Create(...) returned null");
+            ClassicAssert.NotNull(querier, "Create(...) returned null");
 
             var systemData = querier.SystemData;
 
-            Assert.NotNull(systemData, "querier.SystemData returned null");
+            ClassicAssert.NotNull(systemData, "querier.SystemData returned null");
 
             systemData.ForceEvaluateAll();
 
@@ -341,16 +342,16 @@ namespace SnmpAbstractionTests
         {
             using var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
-            Assert.NotNull(querier, "Create(...) returned null");
+            ClassicAssert.NotNull(querier, "Create(...) returned null");
 
             var wirelessPeerInfos = querier.WirelessPeerInfos;
 
-            Assert.NotNull(wirelessPeerInfos, "querier.WirelessPeerInfos returned null");
+            ClassicAssert.NotNull(wirelessPeerInfos, "querier.WirelessPeerInfos returned null");
 
             wirelessPeerInfos.ForceEvaluateAll();
 
-            Assert.NotNull(wirelessPeerInfos.Details, "querier.WirelessPeerInfos.Details returned null");
-            Assert.Greater(wirelessPeerInfos.Details.Count, 0, "querier.WirelessPeerInfos.Details.Count == 0");
+            ClassicAssert.NotNull(wirelessPeerInfos.Details, "querier.WirelessPeerInfos.Details returned null");
+            ClassicAssert.Greater(wirelessPeerInfos.Details.Count, 0, "querier.WirelessPeerInfos.Details.Count == 0");
 
             Console.WriteLine("Obtained peer infos:");
             Console.WriteLine(new BlockTextFormatter().Format(wirelessPeerInfos));
@@ -367,16 +368,16 @@ namespace SnmpAbstractionTests
         {
             using var querier = SnmpQuerierFactory.Instance.Create(address.ToString(), QuerierOptions.Default.WithProtocolVersion(snmpVersion).WithCaching(useCache).WithAllowedApis(allowedApis));
 
-            Assert.NotNull(querier, "Create(...) returned null");
+            ClassicAssert.NotNull(querier, "Create(...) returned null");
 
             var networkInterfaceDetails = querier.NetworkInterfaceDetails;
 
-            Assert.NotNull(networkInterfaceDetails, "querier.NetworkInterfaceDetails returned null");
+            ClassicAssert.NotNull(networkInterfaceDetails, "querier.NetworkInterfaceDetails returned null");
 
             networkInterfaceDetails.ForceEvaluateAll();
 
-            Assert.NotNull(networkInterfaceDetails.Details, "querier.NetworkInterfaceDetails.Details returned null");
-            Assert.Greater(networkInterfaceDetails.Details.Count, 0, "querier.NetworkInterfaceDetails.Details.Count == 0");
+            ClassicAssert.NotNull(networkInterfaceDetails.Details, "querier.NetworkInterfaceDetails.Details returned null");
+            ClassicAssert.Greater(networkInterfaceDetails.Details.Count, 0, "querier.NetworkInterfaceDetails.Details.Count == 0");
 
             Console.WriteLine("Obtained interface details:");
             Console.WriteLine(new BlockTextFormatter().Format(networkInterfaceDetails));

@@ -62,7 +62,7 @@ namespace HamnetDbRest.Controllers
 
             if ((settings != null) && (settings.Refresh > 0))
             {
-                this.HttpContext.Response.Headers.Add("Refresh", settings.Refresh.ToString());
+                this.HttpContext.Response.Headers.Append(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>("Refresh", settings.Refresh.ToString()));
             }
 
             return await Task.Run(this.GetVersionInformation);

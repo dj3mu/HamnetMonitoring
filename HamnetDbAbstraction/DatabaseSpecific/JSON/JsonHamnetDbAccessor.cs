@@ -142,7 +142,7 @@ namespace HamnetDbAbstraction
             List<IHamnetDbSubnet> hosts = new List<IHamnetDbSubnet>();
             foreach (var responseDataSet in responseData.Where(r => !r.Deleted))
             {
-                if (!IPNetwork.TryParse(responseDataSet.Subnet, out IPNetwork network))
+                if (!IPNetwork2.TryParse(responseDataSet.Subnet, out IPNetwork2 network))
                 {
                     log.Error($"Cannot convert retrieved string '{responseDataSet.Subnet}' to a valid IP subnet. This entry will be skipped.");
                     continue;

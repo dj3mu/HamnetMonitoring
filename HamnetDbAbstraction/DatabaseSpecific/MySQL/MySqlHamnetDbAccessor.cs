@@ -108,7 +108,7 @@ namespace HamnetDbAbstraction
                 while (reader.Read())
                 {
                     var networkCidr = reader.GetString("ip");
-                    if (!IPNetwork.TryParse(networkCidr, out IPNetwork ipNet))
+                    if (!IPNetwork2.TryParse(networkCidr, out IPNetwork2 ipNet))
                     {
                         log.Error($"Cannot convert retrieved string '{networkCidr}' to a valid IP network. This entry will be skipped.");
                         continue;

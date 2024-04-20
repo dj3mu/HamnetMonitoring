@@ -15,7 +15,7 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class NetworkTest
     {
-        private readonly IPNetwork network;
+        private readonly IPNetwork2 network;
 
 #pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
@@ -39,7 +39,7 @@ namespace HamnetDbRest.Controllers
                 throw new ArgumentNullException(nameof(network), "Network to test is null, empty or white-space-only");
             }
 
-            if (!IPNetwork.TryParse(network, out IPNetwork subnet))
+            if (!IPNetwork2.TryParse(network, out IPNetwork2 subnet))
             {
                 throw new ArgumentException($"Specified network '{network}' is not a valid IP network specification", nameof(network));
             }

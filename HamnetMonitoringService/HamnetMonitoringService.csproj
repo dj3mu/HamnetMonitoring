@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <CodeAnalysisRuleSet>../codeanalysis.ruleset</CodeAnalysisRuleSet>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <RootNamespace>HamnetDbRest</RootNamespace>
-    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-    <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Windows'))">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</RuntimeIdentifier>
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>HamnetMonitor.RestService</PackageId>
     <AssemblyTitle>REST service for Hamnet Monitoring.</AssemblyTitle>
@@ -19,7 +20,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Hamnet Monitoring REST service</PackageTags>
     <PublishTrimmed>false</PublishTrimmed>
-    <PublishReadyToRun>false</PublishReadyToRun>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
     <PublishSingleFile>false</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
   </PropertyGroup>

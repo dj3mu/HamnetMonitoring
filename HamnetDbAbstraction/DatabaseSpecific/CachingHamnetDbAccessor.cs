@@ -143,7 +143,7 @@ namespace HamnetDbAbstraction
         }
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> UniqueMonitoredHostPairsInSubnet(IPNetwork subnet)
+        public IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> UniqueMonitoredHostPairsInSubnet(IPNetwork2 subnet)
         {
             if (subnet == null)
             {

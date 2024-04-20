@@ -10,6 +10,6 @@ namespace HamnetDbAbstraction
         /// <summary>
         /// Gets the network data set of the subnet.
         /// </summary>
-        IPNetwork Subnet { get; }
+        IPNetwork2 Subnet { get; }
     }
 }

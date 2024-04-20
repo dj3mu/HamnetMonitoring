@@ -149,7 +149,7 @@
 
             Console.Write($" entries, starting at entry index {opts.StartOffset}");
 
-            if (!string.IsNullOrWhiteSpace(opts.Network) && IPNetwork.TryParse(opts.Network, out IPNetwork onlyNetwork))
+            if (!string.IsNullOrWhiteSpace(opts.Network) && IPNetwork2.TryParse(opts.Network, out IPNetwork2 onlyNetwork))
             {
                 Console.Write($" and being inside network {onlyNetwork}");
             }
