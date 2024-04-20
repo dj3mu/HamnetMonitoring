@@ -16,6 +16,7 @@ nuget Microsoft.Bcl.AsyncInterfaces ~> 6.0
 nuget Microsoft.EntityFrameworkCore ~> 6.0
 nuget Microsoft.EntityFrameworkCore.Design ~> 6.0
 nuget Microsoft.EntityFrameworkCore.Sqlite ~> 6.0
+nuget Microsoft.EntityFrameworkCore.Sqlite.Core ~> 6.0
 nuget Microsoft.EntityFrameworkCore.Abstractions ~> 6.0
 nuget Microsoft.EntityFrameworkCore.Analyzers ~> 6.0
 nuget Microsoft.Data.Sqlite.Core ~> 6.0
