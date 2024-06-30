@@ -94,6 +94,13 @@ namespace SnmpAbstraction
                     {
                         macOidFragments = item.Oid.Skip(interfaceIdRootOid.Oid.Length).Take(6);
                         interfaceId = Convert.ToInt32(item.Oid[^1]);
+                        valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressAppendInterfaceId;
+                        if (this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid macOid) || macOid.Oid.IsNull)
+                        {
+                            var macQueryOid = macOid.Oid + new Oid(new int[] { interfaceId });
+                            var macSnmpResponse = this.LowerSnmpLayer.Query(macQueryOid);
+                            macOidFragments = macSnmpResponse[0].Value.ToString().HexStringToByteArray(' ').Select(b => Convert.ToUInt32(b));
+                        }
                     }
                 }
 
