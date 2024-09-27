@@ -24,6 +24,7 @@
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishSingleFile>false</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />

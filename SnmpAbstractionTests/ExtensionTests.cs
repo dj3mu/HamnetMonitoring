@@ -87,7 +87,7 @@ namespace SnmpAbstractionTests
         }
 
         /// <summary>
-        /// Test for <see cref="EnumerableExtensions.DecibelLogSum(System.Collections.Generic.IEnumerable{double})" />
+        /// Test for EnumerableExtensions.DecibelLogSum
         /// </summary>
         [Test]
         public void DecibelLogSumTest()

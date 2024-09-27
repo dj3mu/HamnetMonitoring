@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 
 namespace SnmpAbstraction
 {
@@ -62,15 +61,6 @@ namespace SnmpAbstraction
         public HamnetSnmpException(string message, Exception innerException, params string[] affectedHosts) : base(message, innerException)
         {
             this.AffectedHosts = affectedHosts?.Where(a => !string.IsNullOrWhiteSpace(a))?.ToArray() ?? Array.Empty<string>();
-        }
-
-        /// <summary>
-        /// Deserialization c'tor.
-        /// </summary>
-        /// <param name="info">The serialization info.</param>
-        /// <param name="context">The streaming context.</param>
-        protected HamnetSnmpException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
         }
     }
 }
