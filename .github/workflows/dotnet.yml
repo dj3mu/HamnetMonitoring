@@ -6,6 +6,7 @@ name: .NET
 on:
   push:
     branches: [ "develop" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "develop" ]
 
@@ -31,10 +32,19 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet msbuild HamnetMonitoringService/HamnetMonitoringService.csproj -t:CreateDeb -p:TargetFramework=net8.0 -p:RuntimeIdentifier=linux-x64 -p:Configuration=Release -p:PackageDir=./ -p:DebSection=testing
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          DEB_SECTION=main
+        else
+          DEB_SECTION=testing
+        fi
+        dotnet msbuild HamnetMonitoringService/HamnetMonitoringService.csproj -t:CreateDeb -p:TargetFramework=net8.0 -p:RuntimeIdentifier=linux-x64 -p:Configuration=Release -p:PackageDir=./ -p:DebSection=$DEB_SECTION
 
-    - name: List files
-      run: ls -R
+    - name: Upload Release Asset
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: HamnetMonitoringService/HamnetMonitoringService.*.deb
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4
