@@ -17,7 +17,7 @@ namespace SnmpAbstraction
         /// </summary>
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool dryRunMode;
+        private readonly bool dryRunMode;
 
         /// <summary>
         /// Default-Construct
@@ -62,34 +62,32 @@ namespace SnmpAbstraction
 
             using (var dbContext = CacheDatabaseProvider.Instance.CacheDatabase)
             {
-                using (var transaction = dbContext.Database.BeginTransaction())
+                using var transaction = dbContext.Database.BeginTransaction();
+                List<CacheData> dataToDelete = new List<CacheData>();
+                foreach (var item in addresses)
                 {
-                    List<CacheData> dataToDelete = new List<CacheData>();
-                    foreach (var item in addresses)
+                    var itemIp = new IpAddress(item);
+
+                    var entryToDelete = dbContext.CacheData
+                        .Where(d => d.Address == itemIp);
+
+                    if (entryToDelete.Any())
                     {
-                        var itemIp = new IpAddress(item);
-
-                        var entryToDelete = dbContext.CacheData
-                            .Where(d => d.Address == itemIp);
-
-                        if (entryToDelete.Any())
-                        {
-                            log.Info($"Listing cache entry for address '{item}' as explicitly requested REMOVAL");
-                        }
-
-                        dataToDelete.AddRange(entryToDelete);
+                        log.Info($"Listing cache entry for address '{item}' as explicitly requested REMOVAL");
                     }
 
-                    log.Info($"{(this.dryRunMode ? "DRY RUN: Would now remove" : "Removing")} {dataToDelete.Count} cache entries as explicitly requested");
-
-                    if (!this.dryRunMode)
-                    {
-                        dbContext.CacheData.RemoveRange(dataToDelete);
-                    }
-
-                    dbContext.SaveChanges();
-                    transaction.Commit();
+                    dataToDelete.AddRange(entryToDelete);
                 }
+
+                log.Info($"{(this.dryRunMode ? "DRY RUN: Would now remove" : "Removing")} {dataToDelete.Count} cache entries as explicitly requested");
+
+                if (!this.dryRunMode)
+                {
+                    dbContext.CacheData.RemoveRange(dataToDelete);
+                }
+
+                dbContext.SaveChanges();
+                transaction.Commit();
             }
 
             log.Info($"{(this.dryRunMode ? "DRY RUN: " : string.Empty)}COMPLETED: Deleting explicitly requested cache entries");
@@ -100,7 +98,9 @@ namespace SnmpAbstraction
         /// EXPENSIVE. Use with care.
         /// </summary>
         /// <returns>The complete cache data list.</returns>
+#pragma warning disable CA1822 // API
         public IEnumerable<ICacheData> FetchEntryList()
+#pragma warning restore
         {
             List<ICacheData> returnList = null;
             using (var dbContext = CacheDatabaseProvider.Instance.CacheDatabase)
@@ -122,33 +122,31 @@ namespace SnmpAbstraction
 
             using (var dbContext = CacheDatabaseProvider.Instance.CacheDatabase)
             {
-                using (var transaction = dbContext.Database.BeginTransaction())
+                using var transaction = dbContext.Database.BeginTransaction();
+                var nowItIs = DateTime.UtcNow;
+
+                // [KL 2020-02-02]: The following is NOT deleting outdated entries since 2020-01-31.
+                //                  Looks like a bug in DateTime handling of entity framework.
+                //                  As this method is only seldomly executed, we can switch to C#-internal evaluation
+                //                  without significant performance issue and investigate later.
+                var entriesToDelete = dbContext.CacheData
+                    .ToList() // this makes it C# linq instead of entity-converted mysql
+                    .Where(d => (nowItIs - d.LastModification) > cacheValidSpan);
+
+                foreach (var item in entriesToDelete)
                 {
-                    var nowItIs = DateTime.UtcNow;
-
-                    // [KL 2020-02-02]: The following is NOT deleting outdated entries since 2020-01-31.
-                    //                  Looks like a bug in DateTime handling of entity framework.
-                    //                  As this method is only seldomly executed, we can switch to C#-internal evaluation
-                    //                  without significant performance issue and investigate later.
-                    var entriesToDelete = dbContext.CacheData
-                        .ToList() // this makes it C# linq instead of entity-converted mysql
-                        .Where(d => (nowItIs - d.LastModification) > cacheValidSpan);
-
-                    foreach (var item in entriesToDelete)
-                    {
-                        log.Info($"{(this.dryRunMode ? "DRY RUN: Would now remove" : "Removing")} outdated cache entry for address {item.Address}: Last modified {item.LastModification} was more than {cacheValidSpan} ago");
-                    }
-
-                    log.Info($"{(this.dryRunMode ? "DRY RUN: Would now remove" : "Removing")} {entriesToDelete.Count()} cache entries which have last been modified more than {cacheValidSpan} ago");
-
-                    if (!this.dryRunMode)
-                    {
-                        dbContext.RemoveRange(entriesToDelete);
-                    }
-
-                    dbContext.SaveChanges();
-                    transaction.Commit();
+                    log.Info($"{(this.dryRunMode ? "DRY RUN: Would now remove" : "Removing")} outdated cache entry for address {item.Address}: Last modified {item.LastModification} was more than {cacheValidSpan} ago");
                 }
+
+                log.Info($"{(this.dryRunMode ? "DRY RUN: Would now remove" : "Removing")} {entriesToDelete.Count()} cache entries which have last been modified more than {cacheValidSpan} ago");
+
+                if (!this.dryRunMode)
+                {
+                    dbContext.RemoveRange(entriesToDelete);
+                }
+
+                dbContext.SaveChanges();
+                transaction.Commit();
             }
 
             log.Info($"{(this.dryRunMode ? "DRY RUN: " : string.Empty)}COMPLETED: Deleting cache entries that last changed more than {cacheValidSpan} ago");
@@ -158,15 +156,15 @@ namespace SnmpAbstraction
         /// Gets some statistics info about that database.
         /// </summary>
         /// <returns>Key-value-pairs with the statistics information.</returns>
+#pragma warning disable CA1822 // API
         public IReadOnlyDictionary<string, string> CacheStatistics()
+#pragma warning restore
         {
-            using (var dbContext = CacheDatabaseProvider.Instance.CacheDatabase)
-            {
-                return new Dictionary<string, string>
+            using var dbContext = CacheDatabaseProvider.Instance.CacheDatabase;
+            return new Dictionary<string, string>
                 {
                     { "UniqueCacheEntries", dbContext.CacheData.Count().ToString() }
                 };
-            }
         }
     }
 }

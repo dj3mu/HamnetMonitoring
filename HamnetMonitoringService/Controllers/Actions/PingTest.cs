@@ -13,7 +13,7 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class PingTest
     {
-        private string host;
+        private readonly string host;
 
         /// <summary>
         /// Construct for a specific host.
@@ -68,7 +68,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         private class PingTestResult : IPingTestResult
         {
-            private PingReply reply;
+            private readonly PingReply reply;
 
             public PingTestResult(PingReply reply)
             {

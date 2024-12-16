@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using SnmpSharpNet;
 using tik4net;
 using tik4net.Objects;
@@ -16,16 +15,9 @@ namespace SnmpAbstraction
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        /// <summary>
-        /// String in system description to detect RouterOS
-        /// </summary>
-        private const string RouterOsDetectionString = "RouterOS";
-
-        private static readonly Regex OsVersionExtractionRegex = new Regex(RouterOsDetectionString + @"\s+([0-9.]+)\s+");
-
         private ITikConnection tikConnection = null;
 
-        private TikConnectionType apiInUse = TikConnectionType.Api_v2;
+        private TikConnectionType apiInUse = TikConnectionType.Api;
 
         private SystemResource sysResource = null;
 
@@ -147,7 +139,7 @@ namespace SnmpAbstraction
                     this.tikConnection.Dispose();
                     this.tikConnection = null;
                 }
-                
+
                 return false;
             }
             catch(TikConnectionException tikConnectionException)
@@ -161,7 +153,7 @@ namespace SnmpAbstraction
                     this.tikConnection.Dispose();
                     this.tikConnection = null;
                 }
-                
+
                 return false;
             }
         }

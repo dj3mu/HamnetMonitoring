@@ -1,0 +1,11 @@
+GitVersion.MsBuild
+InfluxDB.LineProtocol
+IPNetwork2
+log4net
+Microsoft.Extensions.Logging.Log4Net.AspNetCore
+Microsoft.AspNetCore.Mvc.NewtonsoftJson
+Microsoft.EntityFrameworkCore.Design
+Microsoft.EntityFrameworkCore.Sqlite
+Pomelo.EntityFrameworkCore.MySql
+SharpKml.Core
+System.Linq.Async

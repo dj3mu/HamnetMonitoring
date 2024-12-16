@@ -10,10 +10,10 @@ namespace SnmpAbstraction
     internal class VolatileFetchingInterfaceDetails : IInterfaceDetails
     {
         private readonly IInterfaceDetails underlyingInterfaceDetails;
-        
+
         private readonly ISnmpLowerLayer lowerLayer;
 
-        private TimeSpan queryDurationBacking = TimeSpan.Zero;
+        private readonly TimeSpan queryDurationBacking = TimeSpan.Zero;
 
         /// <summary>
         /// Construct for a lower layer and a cache data set (from which we return the non-volatile data).

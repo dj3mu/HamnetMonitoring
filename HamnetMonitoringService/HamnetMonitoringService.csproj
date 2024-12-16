@@ -1,62 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
+    <CodeAnalysisRuleSet>../codeanalysis.ruleset</CodeAnalysisRuleSet>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <RootNamespace>HamnetDbRest</RootNamespace>
-    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-    <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Windows'))">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</RuntimeIdentifier>
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>HamnetMonitor.RestService</PackageId>
     <AssemblyTitle>REST service for Hamnet Monitoring.</AssemblyTitle>
-    <PackageDescription>&#xD;
-    The application is the REST service providing access to Hamnet Monitoring data.&#xD;
-    </PackageDescription>
+    <PackageDescription>The application is the service collecting and providing access to Hamnet Monitoring data.</PackageDescription>
     <Authors>DJ3MU</Authors>
     <Product>Hamnet Monitoring REST service</Product>
-    <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
+    <Copyright>(c) 2024 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>Hamnet Monitoring REST service</PackageTags>
-    <PublishTrimmed>true</PublishTrimmed>
+    <PackageTags>Hamnet Monitoring aquisition and REST service</PackageTags>
+    <PublishTrimmed>false</PublishTrimmed>
+    <SelfContained>true</SelfContained>
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishSingleFile>false</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <DebSection>testing</DebSection>
+    <DebHomepage>https://github.com/dj3mu/HamnetMonitoring.git</DebHomepage>
+    <DebPriority>optional</DebPriority>
+    <InstallService>false</InstallService>
+    <ServiceName>HamnetMonitoringWeb</ServiceName>
+    <Prefix>/usr/local/lib/HamnetMonitoringService</Prefix>
+    <LinuxFolders>/usr/local/lib/systemd/system;</LinuxFolders>
+    <SuppressWindowsPlatformTargetingRequiredError>true</SuppressWindowsPlatformTargetingRequiredError>
+    <PostInstallScript><![CDATA[systemctl list-units --type=service --all --plain | grep HamnetMonitoring | awk '{print $1}' | xargs -r -t systemctl start]]></PostInstallScript>
+    <PreRemoveScript><![CDATA[systemctl list-units --type=service --state=running --plain | grep HamnetMonitoring | awk '{print $1}' | xargs -r -t systemctl stop]]></PreRemoveScript>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.0.1">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.App"/>
-    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All"/>
-    <PackageReference Include="IPNetwork2" Version="2.4.0.133"/>
-    <PackageReference Include="log4net" Version="2.0.8"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="2.2.12"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6"/>
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0"/>
-    <PackageReference Include="SharpKml.Core" Version="5.1.0"/>
+    <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
+    <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj"/>
-    <ProjectReference Include="..\HamnetDbAbstraction\HamnetDbAbstraction.csproj"/>
+    <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
+    <_DeleteItems1 Include="$(PublishDir)/appsettings*.json" />
+    <_DeleteItems2 Include="$(PublishDir)/log4net*.config" />
   </ItemGroup>
   <ItemGroup>
-    <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*"/>
-    <_DeleteItems1 Include="$(PublishDir)/appsettings*.*"/>
-    <_DeleteItems2 Include="$(PublishDir)/log4net*.*"/>
+    <Content Include="Contrib/HamnetMonitoringAquisition.service" CopyToPublishDirectory="PreserveNewest" LinuxFileMode="1755">
+      <LinuxPath>/usr/local/lib/systemd/system/HamnetMonitoringAquisition.service</LinuxPath>
+    </Content>
+    <Content Include="Contrib/HamnetMonitoringWeb.service" CopyToPublishDirectory="PreserveNewest" LinuxFileMode="1755">
+      <LinuxPath>/usr/local/lib/systemd/system/HamnetMonitoringWeb.service</LinuxPath>
+    </Content>
   </ItemGroup>
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
-    <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high"/>
-    <Copy SourceFiles="$(ProjectDir)log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config"/>
-    <Copy SourceFiles="$(ProjectDir)/appsettings-$(Configuration).json" DestinationFiles="$(OutDir)$(ConfigDir)/appsettings.json.template"/>
-    <Copy SourceFiles="$(ProjectDir)../SnmpAbstraction/DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)"/>
+    <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
+    <Copy SourceFiles="$(ProjectDir)log4net-$(Configuration).config" DestinationFiles="$(OutDir)$(ConfigDir)/log4net.config" />
+    <Copy SourceFiles="$(ProjectDir)/appsettings-$(Configuration).json" DestinationFiles="$(OutDir)$(ConfigDir)/appsettings.json.template" />
+    <Copy SourceFiles="$(ProjectDir)../SnmpAbstraction/DeviceDatabase/DeviceDatabase.sqlite" DestinationFolder="$(OutDir)$(ConfigDir)" />
   </Target>
   <Target Name="PublishCustomContent" AfterTargets="Publish">
-    <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high"/>
-    <MakeDir Directories="$(PublishDir)$(ConfigDir)"/>
-    <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)"/>
-    <Delete Files="@(_DeleteItems1)"/>
-    <Delete Files="@(_DeleteItems2)"/>
+    <Message Text="Copying $(OutDir)$(ConfigDir)/*.* to $(PublishDir)$(ConfigDir)" Importance="high" />
+    <MakeDir Directories="$(PublishDir)$(ConfigDir)" />
+    <Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)$(ConfigDir)" />
+    <Delete Files="@(_DeleteItems1)" />
+    <Delete Files="@(_DeleteItems2)" />
   </Target>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

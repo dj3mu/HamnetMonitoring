@@ -12,7 +12,9 @@ namespace SnmpAbstraction
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
 
         /// <summary>
@@ -28,7 +30,7 @@ namespace SnmpAbstraction
                 throw new ArgumentNullException(nameof(bytes), "The bytes array to convert to dotted-decimal is null");
             }
 
-            return bytes.Aggregate(string.Empty, (aggregated, current) => 
+            return bytes.Aggregate(string.Empty, (aggregated, current) =>
             {
                 return aggregated += (aggregated.Length > 0) ? ("." + ((int)current)) : ((int)current).ToString();
             });

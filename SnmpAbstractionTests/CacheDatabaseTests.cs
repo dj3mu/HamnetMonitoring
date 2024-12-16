@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using SemVersion;
 using SnmpAbstraction;
 using SnmpSharpNet;
@@ -34,10 +35,8 @@ namespace Tests
         [Test]
         public void DbContextTest()
         {
-            using (var context = new CacheDatabaseContext(this.database))
-            {
-                Assert.NotNull(context, "The database context is null");
-            }
+            using var context = new CacheDatabaseContext(this.database);
+            ClassicAssert.NotNull(context, "The database context is null");
         }
 
         /// <summary>
@@ -67,7 +66,7 @@ namespace Tests
 
                 context.Database.EnsureCreated();
 
-                Assert.NotNull(context, "The database context is null");
+                ClassicAssert.NotNull(context, "The database context is null");
 
                 context.CacheData.Add(new CacheData
                 {
@@ -82,23 +81,23 @@ namespace Tests
 
             using (var context = new CacheDatabaseContext(this.database))
             {
-                Assert.NotNull(context, "The database context is null");
+                ClassicAssert.NotNull(context, "The database context is null");
 
                 var retrievedSystemData = context.CacheData.First().SystemData;
 
-                Assert.NotNull(retrievedSystemData, "Retrieved system data is null");
+                ClassicAssert.NotNull(retrievedSystemData, "Retrieved system data is null");
 
-                Assert.AreEqual(testSystemData.Contact, retrievedSystemData.Contact, "Error in Contact");
-                Assert.AreEqual(testSystemData.Description, retrievedSystemData.Description, "Error in Description");
-                Assert.AreEqual(testSystemData.DeviceAddress, retrievedSystemData.DeviceAddress, "Error in DeviceAddress");
-                Assert.AreEqual(testSystemData.DeviceModel, retrievedSystemData.DeviceModel, "Error in DeviceModel");
-                Assert.AreEqual(testSystemData.EnterpriseObjectId, retrievedSystemData.EnterpriseObjectId, "Error in EnterpriseObjectId");
-                Assert.AreEqual(testSystemData.Location, retrievedSystemData.Location, "Error in Location");
-                Assert.AreEqual(testSystemData.Model, retrievedSystemData.Model, "Error in Model");
-                Assert.AreEqual(testSystemData.Name, retrievedSystemData.Name, "Error in Name");
-                Assert.AreNotEqual(testSystemData.QueryDuration, retrievedSystemData.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
-                Assert.AreNotEqual(testSystemData.Uptime, retrievedSystemData.Uptime, "Error in Uptime: Seems it has been serialized even though marked as ignore");
-                Assert.AreEqual(testSystemData.Version, retrievedSystemData.Version, "Error in Version");
+                ClassicAssert.AreEqual(testSystemData.Contact, retrievedSystemData.Contact, "Error in Contact");
+                ClassicAssert.AreEqual(testSystemData.Description, retrievedSystemData.Description, "Error in Description");
+                ClassicAssert.AreEqual(testSystemData.DeviceAddress, retrievedSystemData.DeviceAddress, "Error in DeviceAddress");
+                ClassicAssert.AreEqual(testSystemData.DeviceModel, retrievedSystemData.DeviceModel, "Error in DeviceModel");
+                ClassicAssert.AreEqual(testSystemData.EnterpriseObjectId, retrievedSystemData.EnterpriseObjectId, "Error in EnterpriseObjectId");
+                ClassicAssert.AreEqual(testSystemData.Location, retrievedSystemData.Location, "Error in Location");
+                ClassicAssert.AreEqual(testSystemData.Model, retrievedSystemData.Model, "Error in Model");
+                ClassicAssert.AreEqual(testSystemData.Name, retrievedSystemData.Name, "Error in Name");
+                ClassicAssert.AreNotEqual(testSystemData.QueryDuration, retrievedSystemData.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
+                ClassicAssert.AreNotEqual(testSystemData.Uptime, retrievedSystemData.Uptime, "Error in Uptime: Seems it has been serialized even though marked as ignore");
+                ClassicAssert.AreEqual(testSystemData.Version, retrievedSystemData.Version, "Error in Version");
             }
         }
 
@@ -139,7 +138,7 @@ namespace Tests
 
                 context.Database.EnsureCreated();
 
-                Assert.NotNull(context, "The database context is null");
+                ClassicAssert.NotNull(context, "The database context is null");
 
                 context.CacheData.Add(new CacheData
                 {
@@ -154,33 +153,33 @@ namespace Tests
 
             using (var context = new CacheDatabaseContext(this.database))
             {
-                Assert.NotNull(context, "The database context is null");
+                ClassicAssert.NotNull(context, "The database context is null");
 
                 var retrievedPeerInfos = context.CacheData.First().WirelessPeerInfos;
 
-                Assert.NotNull(retrievedPeerInfos, "Retrieved peers infos is null");
+                ClassicAssert.NotNull(retrievedPeerInfos, "Retrieved peers infos is null");
 
-                Assert.NotNull(retrievedPeerInfos.Details, "Retrieved peer 'Details' property is null");
+                ClassicAssert.NotNull(retrievedPeerInfos.Details, "Retrieved peer 'Details' property is null");
 
-                Assert.AreEqual(testPeerInfos.Details.Count, retrievedPeerInfos.Details.Count, "Wrong count of peer infos");
+                ClassicAssert.AreEqual(testPeerInfos.Details.Count, retrievedPeerInfos.Details.Count, "Wrong count of peer infos");
 
-                var firstPeerExpected = testPeerInfos.Details.First();
-                var firstPeerRetrieved = retrievedPeerInfos.Details.First();
+                var firstPeerExpected = testPeerInfos.Details[0];
+                var firstPeerRetrieved = retrievedPeerInfos.Details[0];
 
-                Assert.AreEqual(firstPeerExpected.DeviceAddress, firstPeerRetrieved.DeviceAddress, "Error in DeviceAddress");
-                Assert.AreEqual(firstPeerExpected.DeviceModel, firstPeerRetrieved.DeviceModel, "Error in DeviceModel");
-                Assert.AreEqual(firstPeerExpected.InterfaceId, firstPeerRetrieved.InterfaceId, "Error in InterfaceId");
-                Assert.AreEqual(firstPeerExpected.IsAccessPoint, firstPeerRetrieved.IsAccessPoint, "Error in IsAccessPoint");
-                Assert.AreNotEqual(firstPeerExpected.LinkUptime, firstPeerRetrieved.LinkUptime, "Error in LinkUptime: Seems it has been serialized even though marked as ignore");
-                Assert.AreEqual(firstPeerExpected.RemoteMacString, firstPeerRetrieved.RemoteMacString, "Error in RemoteMacString");
-                Assert.AreNotEqual(firstPeerExpected.RxSignalStrength, firstPeerRetrieved.RxSignalStrength, "Error in RxSignalStrength: Seems it has been serialized even though marked as ignore");
-                Assert.AreNotEqual(firstPeerExpected.TxSignalStrength, firstPeerRetrieved.TxSignalStrength, "Error in TxSignalStrength: Seems it has been serialized even though marked as ignore");
+                ClassicAssert.AreEqual(firstPeerExpected.DeviceAddress, firstPeerRetrieved.DeviceAddress, "Error in DeviceAddress");
+                ClassicAssert.AreEqual(firstPeerExpected.DeviceModel, firstPeerRetrieved.DeviceModel, "Error in DeviceModel");
+                ClassicAssert.AreEqual(firstPeerExpected.InterfaceId, firstPeerRetrieved.InterfaceId, "Error in InterfaceId");
+                ClassicAssert.AreEqual(firstPeerExpected.IsAccessPoint, firstPeerRetrieved.IsAccessPoint, "Error in IsAccessPoint");
+                ClassicAssert.AreNotEqual(firstPeerExpected.LinkUptime, firstPeerRetrieved.LinkUptime, "Error in LinkUptime: Seems it has been serialized even though marked as ignore");
+                ClassicAssert.AreEqual(firstPeerExpected.RemoteMacString, firstPeerRetrieved.RemoteMacString, "Error in RemoteMacString");
+                ClassicAssert.AreNotEqual(firstPeerExpected.RxSignalStrength, firstPeerRetrieved.RxSignalStrength, "Error in RxSignalStrength: Seems it has been serialized even though marked as ignore");
+                ClassicAssert.AreNotEqual(firstPeerExpected.TxSignalStrength, firstPeerRetrieved.TxSignalStrength, "Error in TxSignalStrength: Seems it has been serialized even though marked as ignore");
 
-                Assert.AreEqual(firstPeerExpected.Oids.Count, firstPeerRetrieved.Oids.Count, "Error in Oids");
+                ClassicAssert.AreEqual(firstPeerExpected.Oids.Count, firstPeerRetrieved.Oids.Count, "Error in Oids");
 
                 var firstOidExpected = firstPeerRetrieved.Oids.First();
                 var firstOidRetrieved = firstPeerRetrieved.Oids.First();
-                Assert.AreEqual(firstOidExpected.Value.Address, firstOidRetrieved.Value.Address, "Error in Oids");
+                ClassicAssert.AreEqual(firstOidExpected.Value.Address, firstOidRetrieved.Value.Address, "Error in Oids");
             }
         }
 
@@ -214,7 +213,7 @@ namespace Tests
 
                 context.Database.EnsureCreated();
 
-                Assert.NotNull(context, "The database context is null");
+                ClassicAssert.NotNull(context, "The database context is null");
 
                 context.CacheData.Add(new CacheData
                 {
@@ -229,26 +228,26 @@ namespace Tests
 
             using (var context = new CacheDatabaseContext(this.database))
             {
-                Assert.NotNull(context, "The database context is null");
+                ClassicAssert.NotNull(context, "The database context is null");
 
                 var retrievedInterfaceDetails = context.CacheData.First().InterfaceDetails;
 
-                Assert.NotNull(retrievedInterfaceDetails, "Retrieved interface details is null");
+                ClassicAssert.NotNull(retrievedInterfaceDetails, "Retrieved interface details is null");
 
-                Assert.NotNull(retrievedInterfaceDetails.Details, "Retrieved interface 'Details' property is null");
+                ClassicAssert.NotNull(retrievedInterfaceDetails.Details, "Retrieved interface 'Details' property is null");
 
-                Assert.AreEqual(testInterfaceDetails.Details.Count, retrievedInterfaceDetails.Details.Count, "Wrong count of peer infos");
+                ClassicAssert.AreEqual(testInterfaceDetails.Details.Count, retrievedInterfaceDetails.Details.Count, "Wrong count of peer infos");
 
-                var firstPeerExpected = testInterfaceDetails.Details.First();
-                var firstPeerRetrieved = retrievedInterfaceDetails.Details.First();
+                var firstPeerExpected = testInterfaceDetails.Details[0];
+                var firstPeerRetrieved = retrievedInterfaceDetails.Details[0];
 
-                Assert.AreEqual(firstPeerExpected.DeviceAddress, firstPeerRetrieved.DeviceAddress, "Error in DeviceAddress");
-                Assert.AreEqual(firstPeerExpected.DeviceModel, firstPeerRetrieved.DeviceModel, "Error in DeviceModel");
-                Assert.AreEqual(firstPeerExpected.InterfaceId, firstPeerRetrieved.InterfaceId, "Error in InterfaceId");
-                Assert.AreEqual(firstPeerExpected.MacAddressString, firstPeerRetrieved.MacAddressString, "Error in MacAddressString");
-                Assert.AreNotEqual(firstPeerExpected.QueryDuration, firstPeerRetrieved.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
-                Assert.AreEqual(firstPeerExpected.InterfaceName, firstPeerRetrieved.InterfaceName, "Error in InterfaceName");
-                Assert.AreEqual(firstPeerExpected.InterfaceType, firstPeerRetrieved.InterfaceType, "Error in InterfaceType");
+                ClassicAssert.AreEqual(firstPeerExpected.DeviceAddress, firstPeerRetrieved.DeviceAddress, "Error in DeviceAddress");
+                ClassicAssert.AreEqual(firstPeerExpected.DeviceModel, firstPeerRetrieved.DeviceModel, "Error in DeviceModel");
+                ClassicAssert.AreEqual(firstPeerExpected.InterfaceId, firstPeerRetrieved.InterfaceId, "Error in InterfaceId");
+                ClassicAssert.AreEqual(firstPeerExpected.MacAddressString, firstPeerRetrieved.MacAddressString, "Error in MacAddressString");
+                ClassicAssert.AreNotEqual(firstPeerExpected.QueryDuration, firstPeerRetrieved.QueryDuration, "Error in QueryDuration: Seems it has been serialized even though marked as ignore");
+                ClassicAssert.AreEqual(firstPeerExpected.InterfaceName, firstPeerRetrieved.InterfaceName, "Error in InterfaceName");
+                ClassicAssert.AreEqual(firstPeerExpected.InterfaceType, firstPeerRetrieved.InterfaceType, "Error in InterfaceType");
             }
         }
     }

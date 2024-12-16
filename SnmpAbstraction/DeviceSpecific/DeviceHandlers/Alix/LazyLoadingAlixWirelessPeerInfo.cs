@@ -9,7 +9,9 @@ namespace SnmpAbstraction
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// Field to sum up the query duration on each "Populate" call.
@@ -53,8 +55,7 @@ namespace SnmpAbstraction
         {
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            DeviceSpecificOid rxLevelRootOid;
-            if (!this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId, out rxLevelRootOid) || rxLevelRootOid.Oid.IsNull)
+            if (!this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId, out DeviceSpecificOid rxLevelRootOid) || rxLevelRootOid.Oid.IsNull)
             {
                 return false;
             }
@@ -62,7 +63,7 @@ namespace SnmpAbstraction
             var rxLevelOid = rxLevelRootOid.Oid + new Oid(new int[] { this.InterfaceId.Value });
 
             this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(rxLevelOid, "RSSI single value");
-            
+
             this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, rxLevelOid);
 
             durationWatch.Stop();

@@ -40,7 +40,7 @@ namespace SnmpAbstraction
         public IDeviceHandler Detect(IQuerierOptions options)
         {
             Stopwatch detectionDuration = Stopwatch.StartNew();
-            
+
             var snmpVersionBackup = this.lowerLayer.ProtocolVersionInUse;
 
             // for device detection fall back to the lowest possible version
@@ -159,9 +159,15 @@ namespace SnmpAbstraction
                     var internalSystemData = internalLowerLayer.InternalSystemData;
                     internalSystemData.ModifyableModel = handler.Model;
                     internalSystemData.ModifyableVersion = handler.OsVersion;
+                    internalSystemData.ModifyableMinimumSnmpVersion = handlerBase.OidLookup.MinimumSupportedSnmpVersion;
                     internalSystemData.ModifyableMaximumSnmpVersion = handlerBase.OidLookup.MaximumSupportedSnmpVersion;
 
-                    if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
+                    if (handlerBase.OidLookup.MinimumSupportedSnmpVersion > snmpVersionBackup)
+                    {
+                        log.Info($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MinimumSupportedSnmpVersion} due to minimum version in device database");
+                        internalLowerLayer.AdjustSnmpVersion(handlerBase.OidLookup.MinimumSupportedSnmpVersion);
+                    }
+                    else if (handlerBase.OidLookup.MaximumSupportedSnmpVersion < snmpVersionBackup)
                     {
                         log.Info($"Device '{this.lowerLayer.Address}': Adjusting SNMP protocol version from {snmpVersionBackup} to {handlerBase.OidLookup.MaximumSupportedSnmpVersion} due to maximum version in device database");
                         internalLowerLayer.AdjustSnmpVersion(handlerBase.OidLookup.MaximumSupportedSnmpVersion);
@@ -171,7 +177,7 @@ namespace SnmpAbstraction
                         this.lowerLayer.AdjustSnmpVersion(snmpVersionBackup);
                     }
                 }
-                
+
                 return handler;
             }
             catch(SnmpException ex)

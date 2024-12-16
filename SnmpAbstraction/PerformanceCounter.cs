@@ -36,7 +36,7 @@ namespace SnmpAbstraction
         /// Backing field for <see cref="ResultsPerRequestType" />.
         /// </summary>
         private readonly ConcurrentDictionary<string, IPerformanceSingleResultSet> resultsPerRequestTypeInterfaced = new ConcurrentDictionary<string, IPerformanceSingleResultSet>();
-        
+
         /// <summary>
         /// Backing field for the overall results.
         /// </summary>
@@ -81,8 +81,7 @@ namespace SnmpAbstraction
                 this.overallResultsBacking.Record(request, result);
 
                 // per address results:
-                PerformanceSingleResultSet singleResultSet;
-                if (!this.resultsPerDeviceMutable.TryGetValue((IPAddress)destinationAddress, out singleResultSet))
+                if (!this.resultsPerDeviceMutable.TryGetValue((IPAddress)destinationAddress, out PerformanceSingleResultSet singleResultSet))
                 {
                     singleResultSet = new PerformanceSingleResultSet();
 

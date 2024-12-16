@@ -40,8 +40,7 @@ namespace SnmpAbstraction
             // Note: The MAC address serves as an index in nested OIDs for MikroTik devices.
             //       So this way, we get the amount of peers as well as an index to them.
             var valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressWalkRoot;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid))
             {
                 return false;
             }

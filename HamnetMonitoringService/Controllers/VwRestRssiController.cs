@@ -16,7 +16,9 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class VwRestRssiController : ControllerBase
     {
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
+#pragma warning restore
 
         private readonly QueryResultDatabaseContext dbContext;
 
@@ -39,7 +41,7 @@ namespace HamnetDbRest.Controllers
         public async Task<ActionResult<IEnumerable<Rssi>>> GetRssi()
         {
             Program.RequestStatistics.LegacyVzwRssiRequests++;
-            return await this.dbContext.RssiValues.ToListAsync();
+            return await this.dbContext.RssiValues.AsQueryable().ToListAsync();
         }
 
         /// <summary>
@@ -50,7 +52,7 @@ namespace HamnetDbRest.Controllers
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetFailingRssiQueries()
         {
             Program.RequestStatistics.LegacyVzwRssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries.ToListAsync();
+            return await this.dbContext.RssiFailingQueries.AsQueryable().ToListAsync();
         }
 
         /// <summary>
@@ -61,7 +63,7 @@ namespace HamnetDbRest.Controllers
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetTimeoutFailingRssiQueries()
         {
             Program.RequestStatistics.LegacyVzwRssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries.Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
+            return await this.dbContext.RssiFailingQueries.AsQueryable().Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
         }
 
         /// <summary>
@@ -72,7 +74,7 @@ namespace HamnetDbRest.Controllers
         public async Task<ActionResult<IEnumerable<RssiFailingQuery>>> GetNonTimeoutFailingRssiQueries()
         {
             Program.RequestStatistics.LegacyVzwRssiFailingRequests++;
-            return await this.dbContext.RssiFailingQueries.Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
+            return await this.dbContext.RssiFailingQueries.AsQueryable().Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("Request has reached maximum retries")).ToListAsync();
         }
     }
 }

@@ -1,0 +1,7 @@
+GitVersion.MsBuild
+IPNetwork2
+log4net
+Microsoft.Extensions.Configuration
+Microsoft.Extensions.Configuration.Binder
+MySqlConnector
+Newtonsoft.Json

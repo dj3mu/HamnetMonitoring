@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "gitversion.tool": {
+      "version": "5.12.0",
+      "commands": [
+        "dotnet-gitversion"
+      ]
+    },
+    "dotnet-ef": {
+      "version": "8.0.11",
+      "commands": [
+        "dotnet-ef"
+      ]
+    },
+    "paket": {
+      "version": "8.0.3",
+      "commands": [
+        "paket"
+      ]
+    },
+    "dotnet-deb": {
+      "version": "0.1.226",
+      "commands": [
+        "dotnet-deb"
+      ]
+    }
+  }
+}

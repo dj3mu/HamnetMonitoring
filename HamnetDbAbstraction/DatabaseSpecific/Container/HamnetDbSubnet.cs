@@ -11,12 +11,12 @@ namespace HamnetDbAbstraction
         /// Contruct taking all parameters.
         /// </summary>
         /// <param name="subnet">The network container of the subnet.</param>
-        public HamnetDbSubnet(IPNetwork subnet)
+        public HamnetDbSubnet(IPNetwork2 subnet)
         {
             this.Subnet = subnet;
         }
 
         /// <inheritdoc />
-        public IPNetwork Subnet { get; }
+        public IPNetwork2 Subnet { get; }
     }
 }

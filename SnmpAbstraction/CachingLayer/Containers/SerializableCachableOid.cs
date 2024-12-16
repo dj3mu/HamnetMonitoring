@@ -13,7 +13,7 @@ namespace SnmpAbstraction
     internal class SerializableCachableOid : ICachableOid
     {
         [JsonProperty("Oids")]
-        private List<Oid> oidsBacking;
+        private readonly List<Oid> oidsBacking;
 
         public SerializableCachableOid()
         {
@@ -60,11 +60,15 @@ namespace SnmpAbstraction
         public IEnumerable<Oid> Oids  => this.oidsBacking;
 
         /// <inheritdoc />
+        [JsonProperty(Required = Required.Default)]
+        public double Factor { get; set; } = 1.0;
+
+        /// <inheritdoc />
         public override string ToString()
         {
             StringBuilder returnBuilder = new StringBuilder();
 
-            returnBuilder.Append("Cachable OIDs for ").Append(this.Address).Append(", meaning '").Append(this.Meaning).Append("': ");
+            returnBuilder.Append("Cachable OIDs for ").Append(this.Address).Append(", meaning '").Append(this.Meaning).Append("', Factor ").Append(this.Factor).Append(": ");
 
             bool isFirst = true;
             foreach (var item in this.oidsBacking)

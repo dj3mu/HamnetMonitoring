@@ -78,6 +78,11 @@ namespace SnmpAbstraction
         SemanticVersion Version { get; }
 
         /// <summary>
+        /// Gets the device's minimum supported SNMP version.
+        /// </summary>
+        SnmpVersion MinimumSnmpVersion { get; }
+
+        /// <summary>
         /// Gets the device's maximum supported SNMP version.
         /// </summary>
         SnmpVersion MaximumSnmpVersion { get; }

@@ -14,7 +14,7 @@ namespace SnmpAbstraction
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Converts the 
+        /// Converts the
         /// </summary>
         /// <param name="asnType">The <see cref="AsnType" /> to convert.</param>
         /// <returns>Integer representation of the <see cref="AsnType" />.</returns>
@@ -24,18 +24,17 @@ namespace SnmpAbstraction
             {
                 throw new ArgumentNullException(nameof(asnType), "The AsnType to convert to Integer is null");
             }
-            
-            int convertedValue;
-            if (!int.TryParse(asnType.ToString(), out convertedValue))
+
+            if (!int.TryParse(asnType.ToString(), out int convertedValue))
             {
-                throw new HamnetSnmpException($"Cannot convert an ASN Type '{SnmpConstants.GetTypeName(asnType.Type)}' of value '{asnType.ToString()}' to an integer: Value malformatted or out of range");
+                throw new HamnetSnmpException($"Cannot convert an ASN Type '{SnmpConstants.GetTypeName(asnType.Type)}' of value '{asnType}' to an integer: Value malformatted or out of range");
             }
 
             return convertedValue;
         }
 
         /// <summary>
-        /// Converts the 
+        /// Converts the
         /// </summary>
         /// <param name="asnType">The <see cref="AsnType" /> to convert.</param>
         /// <param name="converted">Returs the integer representation of the <see cref="AsnType" />.</param>
@@ -46,11 +45,11 @@ namespace SnmpAbstraction
             {
                 throw new ArgumentNullException(nameof(asnType), "The AsnType to convert to Integer is null");
             }
-            
+
             converted = int.MinValue;
             if (!int.TryParse(asnType.ToString(), out converted))
             {
-                log.Warn($"Cannot convert an ASN Type '{SnmpConstants.GetTypeName(asnType.Type)}' of value '{asnType.ToString()}' to an integer: Value malformatted or out of range");
+                log.Warn($"Cannot convert an ASN Type '{SnmpConstants.GetTypeName(asnType.Type)}' of value '{asnType}' to an integer: Value malformatted or out of range");
                 return false;
             }
 

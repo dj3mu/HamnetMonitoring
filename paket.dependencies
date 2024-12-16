@@ -1,0 +1,82 @@
+source https://api.nuget.org/v3/index.json
+
+framework: net8.0
+
+nuget CommandLineParser ~> 2.9
+nuget GitVersion.MsBuild ~> 5.10
+
+nuget InfluxDB.LineProtocol ~> 1.1
+
+nuget IPNetwork2 ~> 3.0
+nuget log4net ~> 2.0.14
+
+nuget Microsoft.AspNetCore.JsonPatch ~> 8.0
+nuget Microsoft.AspNetCore.Mvc.NewtonsoftJson ~> 8.0
+nuget Microsoft.Bcl.AsyncInterfaces ~> 8.0
+nuget Microsoft.Data.Sqlite.Core ~> 8.0
+nuget Microsoft.EntityFrameworkCore ~> 8.0
+nuget Microsoft.EntityFrameworkCore.Abstractions ~> 8.0
+nuget Microsoft.EntityFrameworkCore.Analyzers ~> 8.0
+nuget Microsoft.EntityFrameworkCore.Design ~> 8.0
+nuget Microsoft.EntityFrameworkCore.Sqlite ~> 8.0
+nuget Microsoft.EntityFrameworkCore.Sqlite.Core ~> 8.0
+nuget Microsoft.Extensions.Caching.Abstractions ~> 8.0
+nuget Microsoft.Extensions.Caching.Memory ~> 8.0
+nuget Microsoft.Extensions.Configuration ~> 8.0
+nuget Microsoft.Extensions.Configuration.Abstractions ~> 8.0
+nuget Microsoft.Extensions.Configuration.Binder ~> 8.0
+nuget Microsoft.Extensions.Configuration.EnvironmentVariables ~> 8.0
+nuget Microsoft.Extensions.Configuration.FileExtensions ~> 8.0
+nuget Microsoft.Extensions.Configuration.Json ~> 8.0
+nuget Microsoft.Extensions.DependencyInjection ~> 8.0
+nuget Microsoft.Extensions.DependencyInjection.Abstractions ~> 8.0
+nuget Microsoft.Extensions.DependencyModel ~> 8.0
+nuget Microsoft.Extensions.FileSystemGlobbing ~> 8.0
+nuget Microsoft.Extensions.Logging.Abstractions ~> 8.0
+nuget Microsoft.Extensions.Logging.Log4Net.AspNetCore ~> 8.0
+nuget Microsoft.Extensions.Options ~> 8.0
+nuget Microsoft.Extensions.Primitives ~> 8.0
+nuget Microsoft.NETCore.Platforms ~> 7.0
+nuget Microsoft.Win32.SystemEvents ~> 8.0
+
+nuget System.CodeDom ~> 8.0
+nuget System.Collections.Immutable ~> 8.0
+nuget System.Composition ~> 8.0
+nuget System.Composition.AttributedModel ~> 8.0
+nuget System.Composition.Convention ~> 8.0
+nuget System.Composition.Hosting ~> 8.0
+nuget System.Composition.Runtime ~> 8.0
+nuget System.Configuration.ConfigurationManager ~> 8.0
+nuget System.Diagnostics.DiagnosticSource ~> 8.0
+nuget System.Diagnostics.EventLog ~> 8.0
+nuget System.Drawing.Common ~> 8.0
+nuget System.Formats.Asn1 ~> 8.0
+nuget System.IO.Pipelines ~> 8.0
+nuget System.Linq.Async ~> 6.0
+nuget System.Net.Primitives ~> 4.3
+nuget System.Security.Cryptography.ProtectedData ~> 8.0
+nuget System.Security.Permissions ~> 8.0
+nuget System.Text.Encodings.Web ~> 8.0
+nuget System.Text.Json ~> 8.0
+nuget System.Threading.Channels ~> 8.0
+nuget System.Windows.Extensions ~> 8.0
+
+nuget Microsoft.NET.Test.Sdk ~> 17.2.0
+
+nuget MySqlConnector ~> 2.1
+
+nuget Newtonsoft.Json ~> 13.0
+
+nuget nunit ~> 4.1.0
+
+nuget NUnit3TestAdapter ~> 4.2
+
+nuget Pomelo.EntityFrameworkCore.MySql ~> 8.0
+
+nuget SemanticVersion ~> 2.1.0
+
+nuget SharpKml.Core ~> 5.2.0
+
+nuget SnmpSharpNetStandard ~> 0.10.0
+
+nuget tik4net ~> 3.5.0

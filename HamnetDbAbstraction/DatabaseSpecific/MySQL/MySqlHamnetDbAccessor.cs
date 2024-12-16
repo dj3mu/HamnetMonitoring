@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 
 namespace HamnetDbAbstraction
 {
@@ -25,7 +25,7 @@ namespace HamnetDbAbstraction
         /// <summary>
         /// If applicable, an additional Disposer that will be called when this obejects gets disposed off.
         /// </summary>
-        private readonly IDisposable additionalDisposer;
+        private IDisposable additionalDisposer;
 
         /// <summary>
         /// Instantiate from connection string and an additional Disposer.
@@ -36,7 +36,7 @@ namespace HamnetDbAbstraction
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                throw new ArgumentNullException($"The connection string is null, empty or white-space-only");
+                throw new ArgumentNullException(nameof(connectionString), "The connection string is null, empty or white-space-only");
             }
 
             this.ConnectionString = connectionString;
@@ -67,7 +67,7 @@ namespace HamnetDbAbstraction
             }
 
             this.connection = new MySqlConnection(this.ConnectionString);
-            
+
             this.connection.Open();
 
             return this.connection;
@@ -96,7 +96,7 @@ namespace HamnetDbAbstraction
         {
             throw new NotImplementedException("Querying sites from HamnetDB via MySQL is not yet implemented (was not needed up to now)");
         }
-        
+
         /// <inheritdoc />
         public IHamnetDbSubnets QuerySubnets()
         {
@@ -104,20 +104,17 @@ namespace HamnetDbAbstraction
             List<IHamnetDbSubnet> subnets = new List<IHamnetDbSubnet>();
             using(MySqlCommand cmd = new MySqlCommand("SELECT ip FROM hamnet_subnet;", this.connection))
             {
-                using (MySqlDataReader reader = cmd.ExecuteReader())  
-                {  
-                    while (reader.Read())  
-                    {  
-                        var networkCidr = reader.GetString("ip");
-                        IPNetwork ipNet;
-                        if (!IPNetwork.TryParse(networkCidr, out ipNet))
-                        {
-                            log.Error($"Cannot convert retrieved string '{networkCidr}' to a valid IP network. This entry will be skipped.");
-                            continue;
-                        }
+                using MySqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var networkCidr = reader.GetString("ip");
+                    if (!IPNetwork2.TryParse(networkCidr, out IPNetwork2 ipNet))
+                    {
+                        log.Error($"Cannot convert retrieved string '{networkCidr}' to a valid IP network. This entry will be skipped.");
+                        continue;
+                    }
 
-                        subnets.Add(new HamnetDbSubnet(ipNet));
-                    }  
+                    subnets.Add(new HamnetDbSubnet(ipNet));
                 }
             }
 
@@ -148,16 +145,11 @@ namespace HamnetDbAbstraction
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects).
-                    if (this.connection != null)
-                    {
-                        this.connection.Dispose();
-                        this.connection = null;
-                    }
+                    this.connection?.Dispose();
+                    this.connection = null;
 
-                    if (this.additionalDisposer != null)
-                    {
-                        this.additionalDisposer.Dispose();
-                    }
+                    this.additionalDisposer?.Dispose();
+                    this.additionalDisposer = null;
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
@@ -166,27 +158,24 @@ namespace HamnetDbAbstraction
                 this.disposedValue = true;
             }
         }
- 
+
         private List<IHamnetDbHost> ReadHostsForSqlCommand(string hostSelectCommand)
         {
             List<IHamnetDbHost> hosts = new List<IHamnetDbHost>();
 
             using (MySqlCommand cmd = new MySqlCommand(hostSelectCommand, this.connection))
             {
-                using (MySqlDataReader reader = cmd.ExecuteReader())
+                using MySqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    var addressString = reader.GetString("ip");
+                    if (!IPAddress.TryParse(addressString, out IPAddress address))
                     {
-                        var addressString = reader.GetString("ip");
-                        IPAddress address;
-                        if (!IPAddress.TryParse(addressString, out address))
-                        {
-                            log.Error($"Cannot convert retrieved string '{addressString}' to a valid IP address. This entry will be skipped.");
-                            continue;
-                        }
-
-                        hosts.Add(new HamnetDbHost(address, reader.GetString("site"), reader.GetString("name"), reader.GetString("typ")));
+                        log.Error($"Cannot convert retrieved string '{addressString}' to a valid IP address. This entry will be skipped.");
+                        continue;
                     }
+
+                    hosts.Add(new HamnetDbHost(address, reader.GetString("site"), reader.GetString("name"), reader.GetString("typ")));
                 }
             }
 

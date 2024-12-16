@@ -45,11 +45,6 @@ namespace SnmpAbstraction
         private CacheData cacheEntry;
 
         /// <summary>
-        /// The lookup for cachable values.
-        /// </summary>
-        private Dictionary<CachableValueMeanings, ICachableOid> cachableOidLookup = new Dictionary<CachableValueMeanings, ICachableOid>();
-
-        /// <summary>
         /// The volatile data fetching wireless peer info object.
         /// </summary>
         private IWirelessPeerInfos volatileFetchingWirelessPeerInfo = null;
@@ -157,8 +152,7 @@ namespace SnmpAbstraction
 
             List<IHamnetQuerier> remoteQueriers = remoteHostNamesOrIps.Select(remoteHostNamesOrIp =>
             {
-                IPAddress outAddress;
-                if (!remoteHostNamesOrIp.TryGetResolvedConnecionIPAddress(out outAddress))
+                if (!remoteHostNamesOrIp.TryGetResolvedConnecionIPAddress(out IPAddress outAddress))
                 {
                     log.Error($"Cannot resolve host name or IP string '{remoteHostNamesOrIp}' to a valid IPAddres. Skipping that remote for link detail fetching");
                 }
@@ -171,7 +165,16 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"No remote IP address available at all after resolving {remoteHostNamesOrIps.Length} host name or address string to IP addresses");
             }
 
-            return this.FetchLinkDetails(remoteQueriers.ToArray());
+            var linkDetails = this.FetchLinkDetails(remoteQueriers.ToArray());
+
+            foreach (var querier in remoteQueriers)
+            {
+                querier.Dispose();
+            }
+
+            remoteQueriers.Clear();
+
+            return linkDetails;
         }
 
         /// <inheritdoc />

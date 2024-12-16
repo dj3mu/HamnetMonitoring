@@ -35,18 +35,8 @@ namespace SnmpAbstraction
         /// <param name="options">The options for the query.</param>
         public HamnetQuerier(IDeviceHandler handler, IQuerierOptions options)
         {
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler), "The device handler is null");
-            }
-
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options), "The query options are null");
-            }
-
-            this.handler = handler;
-            this.options = options;
+            this.handler = handler ?? throw new ArgumentNullException(nameof(handler), "The device handler is null");
+            this.options = options ?? throw new ArgumentNullException(nameof(options), "The query options are null");
         }
 
         // TODO: Finalizer nur überschreiben, wenn Dispose(bool disposing) weiter oben Code für die Freigabe nicht verwalteter Ressourcen enthält.
@@ -90,7 +80,6 @@ namespace SnmpAbstraction
 
             List<IHamnetQuerier> remoteQueriers = remoteHostNamesOrIps.Select(remoteHostNamesOrIp =>
             {
-
                 if (!remoteHostNamesOrIp.TryGetResolvedConnecionIPAddress(out IPAddress outAddress))
                 {
                     log.Error($"Cannot resolve host name or IP string '{remoteHostNamesOrIp}' to a valid IPAddress. Skipping that remote for link detail fetching");
@@ -104,7 +93,18 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException($"No remote IP address available at all after resolving {remoteHostNamesOrIps.Length} host name or address string to IP addresses");
             }
 
-            return FetchLinkDetails(remoteQueriers.ToArray());
+            var linkDetails = FetchLinkDetails(remoteQueriers.ToArray());
+
+            linkDetails.ForceEvaluateAll();
+
+            foreach (var querier in remoteQueriers)
+            {
+                querier.Dispose();
+            }
+
+            remoteQueriers.Clear();
+
+            return linkDetails;
         }
 
         /// <inheritdoc />
@@ -134,7 +134,7 @@ namespace SnmpAbstraction
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{this.Address.ToString()} ({this.SystemData?.DeviceModel})";
+            return $"{this.Address} ({this.SystemData?.DeviceModel})";
         }
 
         public void Dispose()

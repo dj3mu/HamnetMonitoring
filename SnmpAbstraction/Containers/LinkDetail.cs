@@ -13,7 +13,7 @@ namespace SnmpAbstraction
         /// <summary>
         /// The tuple of the two link partners
         /// </summary>
-        private LinkRelatedResultCollection linkRelatedResultCollection;
+        private readonly LinkRelatedResultCollection linkRelatedResultCollection;
 
         /// <summary>
         /// Construct from all paraters.
@@ -25,7 +25,7 @@ namespace SnmpAbstraction
         {
             this.linkRelatedResultCollection = linkRelatedResultCollection;
             if ((this.linkRelatedResultCollection?.WirelessPeerInfo1?.IsAccessPoint != null)
-                && (this.linkRelatedResultCollection.WirelessPeerInfo1.IsAccessPoint.HasValue))
+                && this.linkRelatedResultCollection.WirelessPeerInfo1.IsAccessPoint.HasValue)
             {
                 this.SideOfAccessPoint = this.linkRelatedResultCollection.WirelessPeerInfo1.IsAccessPoint.Value ? 1 : 2;
             }

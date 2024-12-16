@@ -9,7 +9,9 @@ namespace SnmpAbstraction
     /// /// </summary>
     internal abstract class LazyLoadingGenericWirelessPeerInfos : LazyHamnetSnmpQuerierResultBase, IWirelessPeerInfos
     {
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// Field indicating whether the peer infos have been queried.<br/>

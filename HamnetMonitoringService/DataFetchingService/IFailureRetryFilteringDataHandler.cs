@@ -27,7 +27,7 @@ namespace RestService.DataFetchingService
     /// </summary>
     public enum EntityType
     {
-        
+
         /// <summary>
         /// The entity is a host.
         /// </summary>
@@ -56,7 +56,7 @@ namespace RestService.DataFetchingService
         /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
         /// <c>false</c> if a retry is not yet due according to the store's settings.
         /// </returns>
-        bool? IsRetryFeasible(QueryType source, IPAddress address, IPNetwork network);
+        bool? IsRetryFeasible(QueryType source, IPAddress address, IPNetwork2 network);
 
         /// <summary>
         /// Checks whether a retry shall be made for the given combination of query type, address and network.
@@ -69,7 +69,7 @@ namespace RestService.DataFetchingService
         /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
         /// <c>false</c> if a retry is not yet due according to the store's settings.
         /// </returns>
-        bool? IsRetryFeasible(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork network);
+        bool? IsRetryFeasible(QueryType source, IEnumerable<IPAddress> addresses, IPNetwork2 network);
 
         /// <summary>
         /// Checks whether a retry shall be made for the given combination of query type and address.
@@ -93,7 +93,7 @@ namespace RestService.DataFetchingService
         /// <c>null</c> if no information about the source/network combination is available. It's up to the caller do consider this as retry or no retry.
         /// <c>false</c> if a retry is not yet due according to the store's settings.
         /// </returns>
-        bool? IsRetryFeasible(QueryType source, IPNetwork network);
+        bool? IsRetryFeasible(QueryType source, IPNetwork2 network);
 
         /// <summary>
         /// Queries the details of the given combination of query type and address.
@@ -117,7 +117,7 @@ namespace RestService.DataFetchingService
         /// <c>null</c> if no information about the source/network combination is available.
         /// <c>false</c> if a retry is not yet due according to the store's settings.
         /// </returns>
-        ISingleFailureInfo QueryPenaltyDetails(QueryType source, IPNetwork network);
+        ISingleFailureInfo QueryPenaltyDetails(QueryType source, IPNetwork2 network);
 
         /// <summary>
         /// Loads the data for the given query type from the given enumeration of failure infos
@@ -130,7 +130,7 @@ namespace RestService.DataFetchingService
         /// </remarks>
         void InitializeData(QueryType queryType, IEnumerable<ISingleFailureInfoWithEntity> singleFailureInfos);
     }
-    
+
     /// <summary>
     /// Class for the info about a single failure.
     /// </summary>

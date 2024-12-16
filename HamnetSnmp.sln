@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{1A950BD9-E2D9-492F-B9F7-C1946C31F8D7}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnmpAbstraction", "SnmpAbstraction\SnmpAbstraction.csproj", "{60650DBE-3380-4777-A0BD-15D05619B3EF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnmpAbstractionTests", "SnmpAbstractionTests\SnmpAbstractionTests.csproj", "{6DD0225A-4C88-43D4-B678-E52EE762A1BB}"

@@ -1,5 +1,6 @@
 ﻿using HamnetMonitoringService;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace HamnetMonitoringServiceTests
 {
@@ -17,17 +18,17 @@ namespace HamnetMonitoringServiceTests
         }
 
         /// <summary>
-        /// Test 
+        /// Test
         /// </summary>
         [Test]
         public void ToKmlPlacemarkTest()
         {
             var placemark = TestDataProvider.TestSite1.ToKmlPlacemark();
 
-            Assert.NotNull(placemark, "placemark is null");
-            Assert.AreEqual(TestDataProvider.TestSite1.Callsign, placemark.Name, "name != callsign");
-            Assert.AreEqual(TestDataProvider.TestSite1.Callsign, placemark.Id, "id != callsign");
-            Assert.AreEqual(TestDataProvider.TestSite1.Comment, placemark.Description.Text, "description text != comment");
+            ClassicAssert.NotNull(placemark, "placemark is null");
+            ClassicAssert.AreEqual(TestDataProvider.TestSite1.Callsign, placemark.Name, "name != callsign");
+            ClassicAssert.AreEqual(TestDataProvider.TestSite1.Callsign, placemark.Id, "id != callsign");
+            ClassicAssert.AreEqual(TestDataProvider.TestSite1.Comment, placemark.Description.Text, "description text != comment");
         }
     }
 }

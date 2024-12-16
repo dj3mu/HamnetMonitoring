@@ -149,8 +149,7 @@
 
             Console.Write($" entries, starting at entry index {opts.StartOffset}");
 
-            IPNetwork onlyNetwork = null;
-            if (!string.IsNullOrWhiteSpace(opts.Network) && IPNetwork.TryParse(opts.Network, out onlyNetwork))
+            if (!string.IsNullOrWhiteSpace(opts.Network) && IPNetwork2.TryParse(opts.Network, out IPNetwork2 onlyNetwork))
             {
                 Console.Write($" and being inside network {onlyNetwork}");
             }
@@ -178,7 +177,7 @@
 
                 try
                 {
-                    var querier = SnmpQuerierFactory.Instance.Create(pair.Value.First().Address, querierOptions);
+                    using var querier = SnmpQuerierFactory.Instance.Create(pair.Value.First().Address, querierOptions);
 
                     var linkDetails = querier.FetchLinkDetails(pair.Value.Last().Address.ToString());
 
@@ -208,7 +207,7 @@
 
             var querierOptions = CreateQuerierOptions(opts);
 
-            var querier = SnmpQuerierFactory.Instance.Create(opts.HostsOrAddresses.First(), querierOptions);
+            using var querier = SnmpQuerierFactory.Instance.Create(opts.HostsOrAddresses.First(), querierOptions);
 
             var wirelessPeerInfos = querier.FetchLinkDetails(opts.HostsOrAddresses.Skip(1).ToArray());
 
@@ -230,7 +229,7 @@
 
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
+                using var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var wirelessPeerInfos = querier.WirelessPeerInfos;
 
@@ -270,7 +269,7 @@
 
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
+                using var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var systemData = querier.SystemData;
 
@@ -293,7 +292,7 @@
 
             foreach (string address in opts.HostsOrAddresses)
             {
-                var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
+                using var querier = SnmpQuerierFactory.Instance.Create(address, querierOptions);
 
                 var interfaceData = querier.NetworkInterfaceDetails;
 
@@ -310,8 +309,7 @@
         /// <param name="result">The result to print.</param>
         private static void OutputResult(GlobalOptions options, IHamnetSnmpQuerierResult result)
         {
-            ILazyEvaluated resultAsLazyEval = result as ILazyEvaluated;
-            if (resultAsLazyEval != null)
+            if (result is ILazyEvaluated resultAsLazyEval)
             {
                 resultAsLazyEval.ForceEvaluateAll();
             }

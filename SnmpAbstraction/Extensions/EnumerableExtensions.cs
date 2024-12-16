@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using tik4net.Objects.Tool;
 
 namespace SnmpAbstraction
 {
@@ -14,7 +13,9 @@ namespace SnmpAbstraction
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// Logarithmically sums the element of the given enumeration.
@@ -28,7 +29,7 @@ namespace SnmpAbstraction
                 throw new ArgumentNullException(nameof(singleValues), "The single values list to logarithmically sum up is null");
             }
 
-            var linearSum = singleValues.Where(v => !double.IsNaN(v) && !double.IsInfinity(v)).Aggregate(0.0, (aggregated, current) => 
+            var linearSum = singleValues.Where(v => !double.IsNaN(v) && !double.IsInfinity(v)).Aggregate(0.0, (aggregated, current) =>
             {
                 return aggregated += Math.Pow(10.0, current / 10.0);
             });

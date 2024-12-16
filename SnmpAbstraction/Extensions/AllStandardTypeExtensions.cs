@@ -58,12 +58,12 @@ namespace SnmpAbstraction
                 // add the missing elements as "default"
                 for (int i = 0; i < missingElements; i++)
                 {
-                    list.Add(default(T));
+                    list.Add(default);
                 }
 
                 list.Add(newElement);
 
-                return default(T);
+                return default;
             }
             else
             {
@@ -79,14 +79,14 @@ namespace SnmpAbstraction
         /// <param name="featuresList">The list of feature strings</param>
         /// <returns>The flags enum <see cref="DeviceSupportedFeatures" />.</returns>
         public static DeviceSupportedFeatures ToDeviceSupportedFeatures(this string[] featuresList)
-        { 
+        {
             DeviceSupportedFeatures dsf = featuresList.Select(x =>
-            { 
+            {
                 if (!Enum.TryParse(x, true, out DeviceSupportedFeatures outenum))
                 {
                     throw new ArgumentOutOfRangeException(nameof(featuresList), $"Feature '{x}' is not a known feature name. Supported names are {string.Join(", ", Enum.GetNames(typeof(DeviceSupportedFeatures)).Where(f => f != "None"))}");
                 }
-                
+
                 return outenum;
 
             }).Aggregate((prev , next) => prev | next);
@@ -113,7 +113,7 @@ namespace SnmpAbstraction
             {
                 if (hex.Length > 0)
                 {
-                    hex.Append(":");
+                    hex.Append(separator);
                 }
 
                 hex.AppendFormat("{0:X2}", b);
@@ -141,7 +141,7 @@ namespace SnmpAbstraction
             {
                 if (hex.Length > 0)
                 {
-                    hex.Append(":");
+                    hex.Append(separator);
                 }
 
                 hex.AppendFormat("{0:X2}", b);
@@ -156,20 +156,13 @@ namespace SnmpAbstraction
         /// <returns>The SNMP version matching the integer.</returns>
         public static SnmpVersion ToSnmpVersion(this int intVersion)
         {
-            switch (intVersion)
+            return intVersion switch
             {
-                case 1:
-                    return SnmpVersion.Ver1;
-
-                case 2:
-                    return SnmpVersion.Ver2;
-
-                case 3:
-                    return SnmpVersion.Ver3;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(intVersion), "The integer {intVersion} cannot be converted to a valid SnmpVersion");
-            }
+                1 => SnmpVersion.Ver1,
+                2 => SnmpVersion.Ver2,
+                3 => SnmpVersion.Ver3,
+                _ => throw new ArgumentOutOfRangeException(nameof(intVersion), "The integer {intVersion} cannot be converted to a valid SnmpVersion"),
+            };
         }
     }
 }

@@ -20,18 +20,6 @@ namespace SnmpAbstraction
 
         private static readonly Regex OsVersionExtractionRegex = new Regex(@"\s+([0-9.]+)\s+");
 
-        /// <summary>
-        /// The OID to obtain the string including the OS version.<br/>
-        /// Example: "RouterOS 6.45.3 (stable) on RB711-5Hn-MMCX"
-        /// </summary>
-        private readonly Oid OsVersionOid = new Oid(".1.3.6.1.2.1.47.1.1.1.1.2.65536");
-
-        /// <summary>
-        /// A second OID to obtain the string including the OS version.<br/>
-        /// Example: "RouterOS v6.45.3 Jul/29/2019 12:11:49"
-        /// </summary>
-        private readonly Oid OsVersionOid2 = new Oid(".1.3.6.1.4.1.14988.1.1.17.1.1.4.1");
-
         /// <inheritdoc />
         public override QueryApis SupportedApi { get; } = QueryApis.Snmp;
 
@@ -48,7 +36,7 @@ namespace SnmpAbstraction
             var description = snmpLowerLayer?.SystemData?.Description;
             if (string.IsNullOrWhiteSpace(description))
             {
-                var info = $"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not a MikroTik device";
+                var info = $"Description in system data of device '{snmpLowerLayer.Address}' is null, empty or white-space-only: Assuming the device is not an Alix device";
                 this.CollectException("AlixSnmp: No device description", new HamnetSnmpException(info));
                 log.Warn(info);
                 return false;
@@ -63,7 +51,7 @@ namespace SnmpAbstraction
             }
 
             log.Info($"Device '{snmpLowerLayer.Address}' seems to be an ALIX device");
-            
+
             return true;
         }
 
@@ -81,8 +69,7 @@ namespace SnmpAbstraction
 
             log.Info($"Detected device '{lowerLayer.Address}' as ALIX '{model}' v '{osVersion}'");
 
-            DeviceVersion deviceVersion;
-            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out deviceVersion, lowerLayer.Address);
+            IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out DeviceVersion deviceVersion, lowerLayer.Address);
             if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
             {
                 try
@@ -92,7 +79,7 @@ namespace SnmpAbstraction
                 catch(Exception ex)
                 {
                     this.CollectException("AlixSnmp: OID table lookup", ex);
-                    
+
                     // we want to catch and nest the exception here as the APIs involved are not able to append the infomration for which
                     // device (i.e. IP address) the exception is for
                     throw new HamnetSnmpException($"Failed to create ALIX handler for device '{lowerLayer.Address}': {ex.Message}", ex, lowerLayer?.Address?.ToString());

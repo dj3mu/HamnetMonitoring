@@ -4,7 +4,7 @@ using HamnetDbRest;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Newtonsoft.Json;
 using RestService.DataFetchingService;
 using RestService.Model;
@@ -52,10 +52,12 @@ namespace RestService.Database
             }
         };
 
+#pragma warning disable IDE0052 // for future use
         /// <summary>
         /// Handle to the logger.
         /// </summary>
         private static readonly log4net.ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// Gets access to the RSSI values table.
@@ -99,7 +101,7 @@ namespace RestService.Database
                         LastRssiQueryEnd = DateTime.MinValue,
                         LastRssiQueryStart = DateTime.MinValue
                     };
-                    
+
                     this.MonitoringStatus.Add(status);
                     this.SaveChanges();
                 }
@@ -123,12 +125,7 @@ namespace RestService.Database
         /// <param name="configuration">The configuration settings.</param>
         public QueryResultDatabaseContext(IConfigurationSection configuration)
         {
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration), "The specified database configuration data is null");
-            }
-
-            this.Configuration = configuration;
+            this.Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration), "The specified database configuration data is null");
             this.ConnectionString = configuration.GetValue<string>(QueryResultDatabaseProvider.ConnectionStringKey);
         }
 
@@ -150,7 +147,7 @@ namespace RestService.Database
             {
                 return;
             }
-            
+
             var databaseType = this.Configuration.GetValue<string>(QueryResultDatabaseProvider.DatabaseTypeKey)?.ToUpperInvariant();
 
             switch(databaseType)
@@ -165,18 +162,17 @@ namespace RestService.Database
 
                 case "MYSQL":
                     {
-                        var connection = new MySqlConnection(this.ConnectionString);
-                        optionsBuilder.UseMySql(connection);
+                        optionsBuilder.UseMySql(this.ConnectionString, ServerVersion.AutoDetect(this.ConnectionString));
                     }
-                    
+
                     break;
 
                 default:
                     throw new ArgumentOutOfRangeException($"The configured database type '{databaseType}' is not supported for the query result database");
             }
 
-        }  
-        
+        }
+
         /// <inheritdoc />
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

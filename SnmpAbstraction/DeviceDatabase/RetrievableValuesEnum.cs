@@ -134,6 +134,31 @@
         /// Root OID to get the overall CCQ value of the interface.<br/>
         /// The Interface ID needs to be appended.
         /// </summary>
-        OverallCcqAppendInterfaceId = 18
+        OverallCcqAppendInterfaceId = 18,
+
+        /// <summary>
+        /// Root OID to get the wireless remote peer MAC address from the first found sub-digit
+        /// </summary>
+        WlanRemoteMacAddressUseFirstSubdigit = 19,
+
+        /// <summary>
+        /// Root OID to get the RX signal strength from given OID with interface ID appended
+        /// </summary>
+        RxSignalStrengthCh0AppendInterfaceId = 20,
+
+        /// <summary>
+        /// RX signal strength where the chain index (e.g. for MIMOSA 1-4) is to be appended
+        /// </summary>
+        RxSignalStrengthAppendChainIndex = 21,
+
+        /// <summary>
+        /// Link uptime directly provided by the given OID
+        /// </summary>
+        LinkUptimeDirectValue = 22,
+
+        /// <summary>
+        /// TX signal strength where the chain index (e.g. for MIMOSA 1-4) is to be appended
+        /// </summary>
+        TxSignalStrengthAppendChainIndex = 23,
     }
 }

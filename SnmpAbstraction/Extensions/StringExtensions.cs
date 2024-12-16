@@ -16,7 +16,7 @@ namespace SnmpAbstraction
         /// </summary>
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        
+
 
         /// <summary>
         /// Tries to convert the given version into a valid <see cref="SemanticVersion" />
@@ -31,7 +31,7 @@ namespace SnmpAbstraction
             try
             {
                 string[] splitVersion = versionString.Split('.', StringSplitOptions.None);
-                
+
                 int major = 0, minor = 0, patch = 0;
                 string build = string.Empty, prerelease = string.Empty;
 
@@ -76,8 +76,7 @@ namespace SnmpAbstraction
         /// <returns>The converted <see cref="SemanticVersion" />.</returns>
         public static SemanticVersion ToSemanticVersion(this string versionString)
         {
-            SemanticVersion returnVersion;
-            if (!versionString.TryToSemanticVersion(out returnVersion))
+            if (!versionString.TryToSemanticVersion(out SemanticVersion returnVersion))
             {
                 throw new FormatException($"Cannot convert string '{versionString}' to a valid Semantic Version");
             }
@@ -98,8 +97,7 @@ namespace SnmpAbstraction
                 return fallBackVersion;
             }
 
-            SemanticVersion version;
-            if (!SemanticVersion.TryParse(versionString, out version))
+            if (!SemanticVersion.TryParse(versionString, out SemanticVersion version))
             {
                 log.Warn($"ParseVersion: Non-parseable version string '{versionString}' found. Returning version 'null'");
                 return fallBackVersion;
@@ -124,17 +122,17 @@ namespace SnmpAbstraction
 
             if (string.IsNullOrWhiteSpace(hexString))
             {
-                return new byte[0];
+                return Array.Empty<byte>();
             }
 
             return hexString.Split(separator).Select(x => Convert.ToByte(x.Trim(), 16)).ToArray();
         }
- 
+
         /// <summary>
         /// Converts a string to a <see cref="IanaInterfaceType" /> enum.
         /// </summary>
         /// <param name="interfaceTypeString">The string to convert.</param>
-        /// <returns>The enum of the converstion result. Returns <see cref="IanaInterfaceType.NotAvailable" /> 
+        /// <returns>The enum of the converstion result. Returns <see cref="IanaInterfaceType.NotAvailable" />
         /// if the input is invalid. Returns <see cref="IanaInterfaceType.Other" /> if the input is a valid string but cannot be convert.</returns>
         public static IanaInterfaceType ToIanaInterfaceType(this string interfaceTypeString)
         {
@@ -154,76 +152,14 @@ namespace SnmpAbstraction
                 return interfaceType;
             }
 
-            switch(interfaceTypeString.ToUpperInvariant())
+            return interfaceTypeString.ToUpperInvariant() switch
             {
-                case "ETHER":
-                    return IanaInterfaceType.EthernetCsmacd;
-
-                case "WLAN":
-                    return IanaInterfaceType.Ieee80211;
-
-                default:
-                    return IanaInterfaceType.Other;
-            }
+                "ETHER" => IanaInterfaceType.EthernetCsmacd,
+                "WLAN" => IanaInterfaceType.Ieee80211,
+                _ => IanaInterfaceType.Other,
+            };
         }
 
-        /// <summary>
-        /// Resolve string as either IP or host name (derived from <see href="https://www.codeproject.com/Tips/440861/Resolving-a-hostname-in-Csharp-and-retrieving-IP-v" />).
-        /// </summary>
-        /// <param name="hostNameOrAddress">The string containing the host name or IP address.</param>
-        /// <param name="resolvedIPAddress">The resolved IP address.</param>
-        /// <returns></returns>
-        private static bool GetResolvedConnecionIPAddress(string hostNameOrAddress, out IPAddress resolvedIPAddress)
-        {
-            bool isResolved = false;
-            IPHostEntry hostEntry = null;
-            IPAddress resolvIP = null;
-            try
-            {
-                if (!IPAddress.TryParse(hostNameOrAddress, out resolvIP))
-                {
-                    hostEntry = Dns.GetHostEntry(hostNameOrAddress);
-
-                    if (hostEntry != null && hostEntry.AddressList != null 
-                                && hostEntry.AddressList.Length > 0)
-                    {
-                        if (hostEntry.AddressList.Length == 1)
-                        {
-                            resolvIP = hostEntry.AddressList[0];
-                            isResolved = true;
-                        }
-                        else
-                        {
-                            foreach (IPAddress var in hostEntry.AddressList)
-                            {
-                                if (var.AddressFamily == AddressFamily.InterNetwork)
-                                {
-                                    resolvIP = var;
-                                    isResolved = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    isResolved = true;
-                }
-            }
-            catch (Exception)
-            {
-                isResolved = false;
-                resolvIP = null;
-            }
-            finally
-            {
-                resolvedIPAddress = resolvIP;
-            }
-
-            return isResolved;
-        }
-        
         /// <summary>
         /// Resolve string as either IP or host name (derived from <see href="https://www.codeproject.com/Tips/440861/Resolving-a-hostname-in-Csharp-and-retrieving-IP-v" />).
         /// </summary>
@@ -241,7 +177,7 @@ namespace SnmpAbstraction
                 {
                     hostEntry = Dns.GetHostEntry(hostNameOrAddress);
 
-                    if (hostEntry != null && hostEntry.AddressList != null 
+                    if (hostEntry != null && hostEntry.AddressList != null
                                 && hostEntry.AddressList.Length > 0)
                     {
                         if (hostEntry.AddressList.Length == 1)

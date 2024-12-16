@@ -9,13 +9,15 @@ namespace SnmpAbstraction
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        private readonly ISnmpLowerLayer lowerLayer;
+#pragma warning restore
 
         private readonly IInterfaceDetail underlyingInterfaceDetail;
 
-        private readonly ISnmpLowerLayer lowerLayer;
-
-        private TimeSpan queryDurationBacking = TimeSpan.Zero;
+        private readonly TimeSpan queryDurationBacking = TimeSpan.Zero;
 
         public VolatileFetchingInterfaceDetail(IInterfaceDetail underlyingInterfaceDetail, ISnmpLowerLayer lowerLayer)
         {

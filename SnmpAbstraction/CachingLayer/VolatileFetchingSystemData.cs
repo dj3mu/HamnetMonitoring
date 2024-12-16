@@ -18,7 +18,7 @@ namespace SnmpAbstraction
 
         private readonly ISnmpLowerLayer lowerLayer;
 
-        private TimeSpan queryDurationBacking = TimeSpan.Zero;
+        private readonly TimeSpan queryDurationBacking = TimeSpan.Zero;
 
         public VolatileFetchingSystemData(IDeviceSystemData underlyingSystemData, ISnmpLowerLayer lowerLayer)
         {
@@ -47,13 +47,12 @@ namespace SnmpAbstraction
             get
             {
                 var neededValue = CachableValueMeanings.SystemUptime;
-                ICachableOid queryOid = null;
-                if (!this.underlyingSystemData.Oids.TryGetValue(neededValue, out queryOid))
+                if (!this.underlyingSystemData.Oids.TryGetValue(neededValue, out ICachableOid queryOid))
                 {
                     log.Warn($"Cannot obtain an OID for querying {neededValue} from {this.DeviceAddress} ({this.DeviceModel}): Returning <null> for uptime");
                     return null;
                 }
-                
+
                 if (queryOid.IsSingleOid && (queryOid.Oid.First() == 0))
                 {
                     // value is not available for this device
@@ -91,6 +90,9 @@ namespace SnmpAbstraction
         public IReadOnlyDictionary<CachableValueMeanings, ICachableOid> Oids => this.underlyingSystemData.Oids;
 
         /// <inheritdoc />
+        public SnmpVersion MinimumSnmpVersion => this.underlyingSystemData.MinimumSnmpVersion;
+
+        /// <inheritdoc />
         public void ForceEvaluateAll()
         {
             // NOP here - the volatile values are supposed to be queried every time
@@ -110,6 +112,7 @@ namespace SnmpAbstraction
             returnBuilder.Append("  - System admin      : ").AppendLine(this.Contact);
             returnBuilder.Append("  - System uptime     : ").AppendLine(this.Uptime?.ToString());
             returnBuilder.Append("  - System root OID   : ").Append(this.EnterpriseObjectId?.ToString());
+            returnBuilder.Append("  - Min. SNMP version : ").Append(this.MinimumSnmpVersion);
             returnBuilder.Append("  - Max. SNMP version : ").Append(this.MaximumSnmpVersion);
 
             return returnBuilder.ToString();

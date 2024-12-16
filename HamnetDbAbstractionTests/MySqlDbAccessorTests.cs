@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using HamnetDbAbstraction;
+using NUnit.Framework.Legacy;
 
 namespace HamnetDbAbstractionTests
 {
@@ -27,8 +28,8 @@ namespace HamnetDbAbstractionTests
             // error behaviour !
             var accessor = new MySqlHamnetDbAccessor(TestConstants.ConnectionStringFilePath, null);
 
-            Assert.NotNull(accessor, "Constructed accessor is null");
-            Assert.AreEqual(TestConstants.ConnectionStringFilePath, accessor.ConnectionString);
+            ClassicAssert.NotNull(accessor, "Constructed accessor is null");
+            ClassicAssert.AreEqual(TestConstants.ConnectionStringFilePath, accessor.ConnectionString);
 
             Assert.Throws<ArgumentException>(() => accessor.QueryMonitoredHosts());
         }
@@ -40,13 +41,13 @@ namespace HamnetDbAbstractionTests
         public void QueryRouterHostsTest()
         {
             var accessor = HamnetDbProvider.Instance.GetHamnetDb(TestConstants.ConnectionStringFilePath);
-            
-            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            ClassicAssert.NotNull(accessor, "The accessor returned by provider is null");
 
             var routerHosts = accessor.QueryBgpRouters();
 
-            Assert.NotNull(routerHosts, "The router hosts return data is null");
-            Assert.Greater(routerHosts.Count, 0, "No hosts returned at all");
+            ClassicAssert.NotNull(routerHosts, "The router hosts return data is null");
+            ClassicAssert.Greater(routerHosts.Count, 0, "No hosts returned at all");
         }
 
         /// <summary>
@@ -56,13 +57,13 @@ namespace HamnetDbAbstractionTests
         public void QueryMonitoredHostsTest()
         {
             var accessor = HamnetDbProvider.Instance.GetHamnetDb(TestConstants.ConnectionStringFilePath);
-            
-            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            ClassicAssert.NotNull(accessor, "The accessor returned by provider is null");
 
             var monitoredHosts = accessor.QueryMonitoredHosts();
 
-            Assert.NotNull(monitoredHosts, "The monitored hosts return data is null");
-            Assert.Greater(monitoredHosts.Count, 0, "No hosts returned at all");
+            ClassicAssert.NotNull(monitoredHosts, "The monitored hosts return data is null");
+            ClassicAssert.Greater(monitoredHosts.Count, 0, "No hosts returned at all");
         }
 
         /// <summary>
@@ -72,13 +73,13 @@ namespace HamnetDbAbstractionTests
         public void QuerySubnetsTest()
         {
             var accessor = HamnetDbProvider.Instance.GetHamnetDb(TestConstants.ConnectionStringFilePath);
-            
-            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            ClassicAssert.NotNull(accessor, "The accessor returned by provider is null");
 
             var subnets = accessor.QuerySubnets();
 
-            Assert.NotNull(subnets, "The subnets return data is null");
-            Assert.Greater(subnets.Count, 0, "No subnets returned at all");
+            ClassicAssert.NotNull(subnets, "The subnets return data is null");
+            ClassicAssert.Greater(subnets.Count, 0, "No subnets returned at all");
         }
     }
 }

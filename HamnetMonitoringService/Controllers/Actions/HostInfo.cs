@@ -14,11 +14,13 @@ namespace HamnetDbRest.Controllers
     {
         private readonly string host;
 
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
 
         private readonly IConfiguration configuration;
-        
-        private IQuerierOptions querierOptions;
+#pragma warning restore
+
+        private readonly IQuerierOptions querierOptions;
 
         /// <summary>
         /// Construct for a specific host.
@@ -53,12 +55,9 @@ namespace HamnetDbRest.Controllers
         {
             try
             {
-                using(var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions))
-                {
-                    var systemData = querier.SystemData;
-
-                    return new HostInfoReply(querier.Address, systemData, querier.Api, null);
-                }
+                using var querier = SnmpQuerierFactory.Instance.Create(this.host, this.querierOptions);
+                var systemData = querier.SystemData;
+                return new HostInfoReply(querier.Address, systemData, querier.Api, null);
             }
             catch(Exception ex)
             {

@@ -29,13 +29,12 @@ namespace HamnetDbAbstraction
 
             if (allowDirectSupportClass)
             {
-                var directSupportHamnetAccess = hamnetDbAccess as IDirectSupportOfHamnetDbAccessExtensions;
-                if (directSupportHamnetAccess != null)
+                if (hamnetDbAccess is IDirectSupportOfHamnetDbAccessExtensions directSupportHamnetAccess)
                 {
                     return directSupportHamnetAccess.UniqueMonitoredHostPairsInSameSubnet();
                 }
             }
-            
+
             var hosts = hamnetDbAccess.QueryMonitoredHosts();
             var subnets = hamnetDbAccess.QuerySubnets();
 
@@ -53,7 +52,7 @@ namespace HamnetDbAbstraction
         /// <param name="hamnetDbAccess">The handle to access the database.</param>
         /// <param name="subnet">The subnet to return data for.</param>
         /// <returns>The dictionary mapping a subnet to its unique monitored host pair.</returns>
-        public static IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> UniqueMonitoredHostPairsInSubnet(this IHamnetDbAccess hamnetDbAccess, IPNetwork subnet)
+        public static IReadOnlyDictionary<IHamnetDbSubnet, IHamnetDbHosts> UniqueMonitoredHostPairsInSubnet(this IHamnetDbAccess hamnetDbAccess, IPNetwork2 subnet)
         {
             if (hamnetDbAccess == null)
             {
@@ -65,12 +64,11 @@ namespace HamnetDbAbstraction
                 throw new ArgumentNullException(nameof(subnet), "subnet search monitored hosts for is null");
             }
 
-            var directSupportHamnetAccess = hamnetDbAccess as IDirectSupportOfHamnetDbAccessExtensions;
-            if (directSupportHamnetAccess != null)
+            if (hamnetDbAccess is IDirectSupportOfHamnetDbAccessExtensions directSupportHamnetAccess)
             {
                 return directSupportHamnetAccess.UniqueMonitoredHostPairsInSubnet(subnet);
             }
-            
+
             var hosts = hamnetDbAccess.QueryMonitoredHosts();
             var allSubnets = hamnetDbAccess.QuerySubnets();
 

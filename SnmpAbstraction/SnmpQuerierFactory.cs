@@ -47,8 +47,7 @@ namespace SnmpAbstraction
                 throw new ArgumentNullException(nameof(hostNameOrAddress), "host name or address is null, empty or white-space-only");
             }
 
-            IPAddress address;
-            if (!hostNameOrAddress.TryGetResolvedConnecionIPAddress(out address))
+            if (!hostNameOrAddress.TryGetResolvedConnecionIPAddress(out IPAddress address))
             {
                 throw new HamnetSnmpException($"Host name or address '{hostNameOrAddress}' cannot be resolved to a valid IP address", hostNameOrAddress);
             }
@@ -90,14 +89,16 @@ namespace SnmpAbstraction
         /// <param name="lowerLayer">The IP address of the device to query.</param>
         /// <param name="options">The options for the query.</param>
         /// <returns>An <see cref="IHamnetQuerier" /> that talks to the given address.</returns>
+#pragma warning disable CA1822 // API
         internal IHamnetQuerier Create(ISnmpLowerLayer lowerLayer, IQuerierOptions options)
+#pragma warning restore
         {
             if (lowerLayer == null)
             {
                 throw new ArgumentNullException(nameof(lowerLayer), "lowerLayer is null");
             }
 
-            IHamnetQuerier querier = null;            
+            IHamnetQuerier querier = null;
             if (options.EnableCaching)
             {
                 querier = new CachingHamnetQuerier(lowerLayer, options);

@@ -2,6 +2,7 @@
 using System.IO;
 using HamnetMonitoringService;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace HamnetMonitoringServiceTests
 {
@@ -19,7 +20,7 @@ namespace HamnetMonitoringServiceTests
         }
 
         /// <summary>
-        /// Test 
+        /// Test
         /// </summary>
         [Test]
         public void GenerationTest()
@@ -31,7 +32,7 @@ namespace HamnetMonitoringServiceTests
 
             var text = generator.GenerateString();
 
-            Assert.NotNull(text, "text is null");
+            ClassicAssert.NotNull(text, "text is null");
 
             Console.WriteLine("Generated KML text:");
             Console.WriteLine(text);

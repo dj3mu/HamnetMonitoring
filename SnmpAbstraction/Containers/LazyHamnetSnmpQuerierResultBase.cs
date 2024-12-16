@@ -15,12 +15,7 @@ namespace SnmpAbstraction
         protected LazyHamnetSnmpQuerierResultBase(ISnmpLowerLayer lowerSnmpLayer, TimeSpan queryDuration)
             : this(lowerSnmpLayer, queryDuration, lowerSnmpLayer.SystemData?.DeviceModel)
         {
-            if (lowerSnmpLayer == null)
-            {
-                throw new ArgumentNullException(nameof(lowerSnmpLayer), "The handle to the lower layer interface is null");
-            }
-
-            this.LowerSnmpLayer = lowerSnmpLayer;
+            this.LowerSnmpLayer = lowerSnmpLayer ?? throw new ArgumentNullException(nameof(lowerSnmpLayer), "The handle to the lower layer interface is null");
         }
 
         /// <summary>
@@ -32,12 +27,7 @@ namespace SnmpAbstraction
         protected LazyHamnetSnmpQuerierResultBase(ISnmpLowerLayer lowerSnmpLayer, TimeSpan queryDuration, string deviceModel)
             : base(lowerSnmpLayer.Address, deviceModel, queryDuration)
         {
-            if (lowerSnmpLayer == null)
-            {
-                throw new ArgumentNullException(nameof(lowerSnmpLayer), "The handle to the lower layer interface is null");
-            }
-
-            this.LowerSnmpLayer = lowerSnmpLayer;
+            this.LowerSnmpLayer = lowerSnmpLayer ?? throw new ArgumentNullException(nameof(lowerSnmpLayer), "The handle to the lower layer interface is null");
         }
 
         /// <summary>

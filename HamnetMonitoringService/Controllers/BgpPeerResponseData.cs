@@ -9,7 +9,7 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     public class BgpPeerResponseData : IBgpPeerData
     {
-        private BgpPeerData underlyingDatabaseData;
+        private readonly BgpPeerData underlyingDatabaseData;
 
         /// <summary>
         /// Construct from a database peer data object.
@@ -18,7 +18,7 @@ namespace HamnetDbRest.Controllers
         public BgpPeerResponseData(BgpPeerData peerData)
         {
             this.underlyingDatabaseData = peerData;
-            
+
             if (TimeSpan.TryParse(peerData.Uptime, out TimeSpan parsedUptime))
             {
                 this.UptimeSeconds = parsedUptime;

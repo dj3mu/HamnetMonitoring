@@ -2,17 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using SnmpSharpNet;
 
 namespace SnmpAbstraction
 {
     /// <summary>
     /// Implementation of the lower layer SNMP parts.<br/>
-    /// Mainly encapsulates the necessary 
+    /// Mainly encapsulates the necessary
     /// /// </summary>
     internal static class SnmpLowerLayerExtensions
     {
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        private static readonly Regex HexStringDetectionRegex = new Regex(@"^[a-fA-F0-9]+ [a-fA-F0-9 ]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         /// <summary>
         /// Queries the given OIDs and returns the value as string or null if the OID is not available.
@@ -31,19 +34,9 @@ namespace SnmpAbstraction
                 log.Warn($"Querying '{what}' from '{lowerLayer.Address}' as string returned null");
             }
 
-            if ((encoding != null) && (retVal.Length > 0))
+            if (encoding != null)
             {
-                bool couldBeHexString = true;
-                for (int i = 2; i < retVal.Length; i+=3)
-                {
-                    if (retVal[i] != ' ')
-                    {
-                        couldBeHexString = false;
-                        break;
-                    }
-                }
-
-                if (couldBeHexString)
+                if (HexStringDetectionRegex.IsMatch(retVal))
                 {
                     retVal = encoding.GetString(retVal.HexStringToByteArray(' '));
                 }
@@ -85,7 +78,7 @@ namespace SnmpAbstraction
             {
                 throw new ArgumentNullException(nameof(oids), "The array of oids to query is null");
             }
-            
+
             VbCollection queryResult = lowerLayer.Query(oids);
 
             return queryResult.ToDictionary(qr => qr.Oid, qr =>

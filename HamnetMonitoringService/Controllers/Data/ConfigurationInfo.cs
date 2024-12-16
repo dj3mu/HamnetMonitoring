@@ -7,8 +7,6 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class ConfigurationInfo : Dictionary<string, string>, IConfigurationInfo
     {
-        private readonly Dictionary<string, string> stats = new Dictionary<string, string>();
-
         /// <summary>
         /// Constructs for a given configuration name.
         /// </summary>

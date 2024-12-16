@@ -207,26 +207,27 @@ namespace HamnetMonitoringService
                 {
                     // $next_point_nr = $point_nr + 1;
                     var next_point_nr = point_nr + 1;
-                    
+
                     // if ($point_nr == $steps_in_circles - 1)
                     if (point_nr == currentRing.Count - 1)
                     {
                         next_point_nr = 0;
                     }
 
-                    var currentPolygon = new List<ILocation>();
+                    var currentPolygon = new List<ILocation>
+                    {
+                        // $polygon[] = $rings[$ring_nr][$point_nr];
+                        rings[ring_nr][point_nr],
 
-                    // $polygon[] = $rings[$ring_nr][$point_nr];
-                    currentPolygon.Add(rings[ring_nr][point_nr]);
+                        // $polygon[] = $rings[$next_ring_nr][$point_nr];
+                        rings[next_ring_nr][point_nr],
 
-                    // $polygon[] = $rings[$next_ring_nr][$point_nr];
-                    currentPolygon.Add(rings[next_ring_nr][point_nr]);
+                        // $polygon[] = $rings[$next_ring_nr][$next_point_nr];
+                        rings[next_ring_nr][next_point_nr],
 
-                    // $polygon[] = $rings[$next_ring_nr][$next_point_nr];
-                    currentPolygon.Add(rings[next_ring_nr][next_point_nr]);
-
-                    // $polygon[] = $rings[$ring_nr][$next_point_nr];
-                    currentPolygon.Add(rings[ring_nr][next_point_nr]);
+                        // $polygon[] = $rings[$ring_nr][$next_point_nr];
+                        rings[ring_nr][next_point_nr]
+                    };
 
                     // $polygons[] = $polygon;
                     polygons.Add(currentPolygon);

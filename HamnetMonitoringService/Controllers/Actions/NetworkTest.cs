@@ -15,13 +15,15 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class NetworkTest
     {
-        private readonly IPNetwork network;
+        private readonly IPNetwork2 network;
 
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
+#pragma warning restore
 
         private readonly IHamnetDbAccess hamnetDbAccess;
-        
-        private IQuerierOptions querierOptions;
+
+        private readonly IQuerierOptions querierOptions;
 
         /// <summary>
         /// Construct for a specific host.
@@ -37,8 +39,7 @@ namespace HamnetDbRest.Controllers
                 throw new ArgumentNullException(nameof(network), "Network to test is null, empty or white-space-only");
             }
 
-            IPNetwork subnet = null;
-            if (!IPNetwork.TryParse(network, out subnet))
+            if (!IPNetwork2.TryParse(network, out IPNetwork2 subnet))
             {
                 throw new ArgumentException($"Specified network '{network}' is not a valid IP network specification", nameof(network));
             }
@@ -103,12 +104,9 @@ namespace HamnetDbRest.Controllers
             IPAddress address1 = pair.Value.First().Address;
             IPAddress address2 = pair.Value.Last().Address;
 
-            using(var querier = SnmpQuerierFactory.Instance.Create(address1, this.querierOptions))
-            {
-                var linkDetails = querier.FetchLinkDetails(address2.ToString());
-
-                return new LinkDetailsReply(linkDetails);
-            }
+            using var querier = SnmpQuerierFactory.Instance.Create(address1, this.querierOptions);
+            var linkDetails = querier.FetchLinkDetails(address2.ToString());
+            return new LinkDetailsReply(linkDetails);
         }
     }
 }

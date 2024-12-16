@@ -16,7 +16,7 @@ namespace HamnetMonitoringService
     /// </remarks>
     internal class FresnelPolygonsCreator
     {
-        private IDirectionVector directionVector;
+        private readonly IDirectionVector directionVector;
 
         /// <summary>
         /// Initialize for a specific IDirectionVector.
@@ -60,7 +60,7 @@ namespace HamnetMonitoringService
             // Add the reverse of these steps on other side of beam
 	        // $temp = $steps_in_path;
             var temp = new List<double>(stepsInPath);
-        	
+
             // foreach ($temp as $step) {
             foreach (var step in temp)
             {
@@ -106,13 +106,13 @@ namespace HamnetMonitoringService
                     //$angle = $n * (360 / $steps_in_circles );
                     var angle = n * (360.0 / stepsInCircles);
                     var radianAngle = angle.ToRadian();
-                    
+
                     // $vertical_factor = cos(deg2rad($angle));
                     var verticalFactor = Math.Cos(radianAngle);
 
                     // $horizontal_factor = sin(deg2rad($angle));
                     var horizontalFactor = Math.Sin(radianAngle);
-                    
+
                     // $lat_factor = cos(deg2rad($ring_bearing)) * $horizontal_factor;
                     var latitudeFactor = cosRingBearing * horizontalFactor;
 

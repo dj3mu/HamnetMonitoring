@@ -41,17 +41,25 @@ namespace SnmpAbstraction
             // Note: The MAC address serves as an index in nested OIDs for MikroTik devices.
             //       So this way, we get the amount of peers as well as an index to them.
             var valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressWalkRoot;
-            DeviceSpecificOid interfaceIdRootOid;
             bool singlePeerGet = false;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            bool useFirst = false;
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressAppendInterfaceId;
-                if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+                if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
                 {
-                    return false;
-                }
+                    valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressUseFirstSubdigit;
+                    if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid))
+                    {
+                        return false;
+                    }
 
-                singlePeerGet = true;
+                    useFirst = true;
+                }
+                else
+                {
+                    singlePeerGet = true;
+                }
             }
 
             var interfaceVbs = singlePeerGet ? this.LowerSnmpLayer.Query(interfaceIdRootOid.Oid) : this.LowerSnmpLayer.DoWalk(interfaceIdRootOid.Oid);
@@ -66,6 +74,8 @@ namespace SnmpAbstraction
             {
                 IEnumerable<uint> macOidFragments = null;
                 int interfaceId = int.MinValue;
+                bool? isAccessPoint = null;
+                int? numberOfClients = null;
                 if (singlePeerGet)
                 {
                     macOidFragments = item.Value.ToString().HexStringToByteArray(' ').Select(b => Convert.ToUInt32(b));
@@ -73,11 +83,28 @@ namespace SnmpAbstraction
                 }
                 else
                 {
-                    macOidFragments = item.Oid.Skip(interfaceIdRootOid.Oid.Length).Take(6);
-                    interfaceId = Convert.ToInt32(item.Oid[item.Oid.Length - 1]);
+                    if (useFirst)
+                    {
+                        macOidFragments = item.Value.ToString().HexStringToByteArray(' ').Select(b => Convert.ToUInt32(b));
+                        interfaceId = Convert.ToInt32(item.Oid.Last());
+                        isAccessPoint = interfaceId == 1;
+                        numberOfClients = (isAccessPoint ?? false) ? 1 : 0;
+                    }
+                    else
+                    {
+                        macOidFragments = item.Oid.Skip(interfaceIdRootOid.Oid.Length).Take(6);
+                        interfaceId = Convert.ToInt32(item.Oid[^1]);
+                        valueToQuery = RetrievableValuesEnum.WlanRemoteMacAddressAppendInterfaceId;
+                        if (this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid macOid) && !macOid.Oid.IsNull)
+                        {
+                            var macQueryOid = macOid.Oid + new Oid(new int[] { interfaceId });
+                            var macSnmpResponse = this.LowerSnmpLayer.Query(macQueryOid);
+                            macOidFragments = macSnmpResponse[0].Value.ToString().HexStringToByteArray(' ').Select(b => Convert.ToUInt32(b));
+                        }
+                    }
                 }
 
-                var isAccessPoint = this.CheckIsAccessPoint(interfaceId, out int? numberOfClients);
+                isAccessPoint ??= this.CheckIsAccessPoint(interfaceId, out numberOfClients);
                 this.PeerInfosBacking.Add(
                     new LazyLoadingMikroTikWirelessPeerInfo(
                         this.LowerSnmpLayer,
@@ -96,9 +123,8 @@ namespace SnmpAbstraction
         protected override bool? CheckIsAccessPoint(int interfaceId, out int? numberOfClients)
         {
             var valueToQuery = RetrievableValuesEnum.WirelessClientCount;
-            DeviceSpecificOid wirelessClientCountRootOid;
             numberOfClients = null;
-            if (this.OidLookup.TryGetValue(valueToQuery, out wirelessClientCountRootOid) && !wirelessClientCountRootOid.Oid.IsNull)
+            if (this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid wirelessClientCountRootOid) && !wirelessClientCountRootOid.Oid.IsNull)
             {
                 // finally we need to get the count of registered clients
                 // if it's 0, this must be a client (this method will only be called if the registration table
@@ -133,12 +159,11 @@ namespace SnmpAbstraction
                     return false;
                 }
 
-                int snmpNumberOfClients = 0;
-                if (!returnValue.Value.TryToInt(out snmpNumberOfClients))
+                if (!returnValue.Value.TryToInt(out int snmpNumberOfClients))
                 {
                     return false;
                 }
-                
+
                 numberOfClients = snmpNumberOfClients;
 
                 return snmpNumberOfClients > 0;

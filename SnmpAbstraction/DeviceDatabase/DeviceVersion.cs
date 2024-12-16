@@ -33,6 +33,12 @@ namespace SnmpAbstraction
         /// <summary>
         /// Gets the device's maximum supported SNMP version.
         /// </summary>
+        [Column("MinSupportedSnmpVersion")]
+        public int? MinimumSupportedSnmpVersion { get; set; }
+
+        /// <summary>
+        /// Gets the device's maximum supported SNMP version.
+        /// </summary>
         [Column("MaxSupportedSnmpVersion")]
         public int MaximumSupportedSnmpVersion { get; set; }
 

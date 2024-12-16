@@ -10,7 +10,7 @@ namespace HamnetDbAbstraction
     /// </summary>
     internal class HamnetDbHosts : IHamnetDbHosts
     {
-        private List<IHamnetDbHost> hosts;
+        private readonly List<IHamnetDbHost> hosts;
 
         /// <summary>
         /// Construct from a list of hosts.

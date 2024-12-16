@@ -21,7 +21,9 @@ namespace HamnetDbRest.Controllers
     [ApiController]
     public class BgpController : ControllerBase
     {
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
+#pragma warning restore
 
         private readonly IConfiguration configuration;
 
@@ -83,10 +85,10 @@ namespace HamnetDbRest.Controllers
 
             if (!string.IsNullOrWhiteSpace(host))
             {
-                return await this.dbContext.BgpPeers.Where(p => p.LocalAddress == host).Select(p => new BgpPeerResponseData(p)).ToListAsync();
+                return await this.dbContext.BgpPeers.AsQueryable().Where(p => p.LocalAddress == host).Select(p => new BgpPeerResponseData(p)).ToListAsync();
             }
 
-            return await this.dbContext.BgpPeers.Select(p => new BgpPeerResponseData(p)).ToListAsync();
+            return await this.dbContext.BgpPeers.AsAsyncEnumerable().Select(p => new BgpPeerResponseData(p)).ToListAsync();
         }
 
         /// <summary>
@@ -98,7 +100,7 @@ namespace HamnetDbRest.Controllers
         {
             Program.RequestStatistics.ApiV1BgpFailingRequests++;
 
-            return await this.dbContext.BgpFailingQueries
+            return await this.dbContext.BgpFailingQueries.AsAsyncEnumerable()
                 .Select(ds => new BgpFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.BgpQuery, IPAddress.Parse(ds.Host))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
                 .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
@@ -116,8 +118,9 @@ namespace HamnetDbRest.Controllers
         {
             Program.RequestStatistics.ApiV1BgpFailingRequests++;
 
-            return await this.dbContext.BgpFailingQueries
+            return await this.dbContext.BgpFailingQueries.AsQueryable()
                 .Where(q => q.ErrorInfo.Contains("Timeout") || q.ErrorInfo.Contains("timed out"))
+                .AsAsyncEnumerable()
                 .Select(ds => new BgpFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.BgpQuery, IPAddress.Parse(ds.Host))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
                 .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
@@ -135,8 +138,9 @@ namespace HamnetDbRest.Controllers
         {
             Program.RequestStatistics.ApiV1BgpFailingRequests++;
 
-            return await this.dbContext.BgpFailingQueries
+            return await this.dbContext.BgpFailingQueries.AsQueryable()
                 .Where(q => !q.ErrorInfo.Contains("Timeout") && !q.ErrorInfo.Contains("timed out"))
+                .AsAsyncEnumerable()
                 .Select(ds => new BgpFailingQueryWithPenaltyInfo(ds, this.retryFeasibleHandler.QueryPenaltyDetails(QueryType.BgpQuery, IPAddress.Parse(ds.Host))))
                 .OrderBy(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.OccuranceCount : uint.MaxValue)
                 .ThenByDescending(ds => ds.PenaltyInfo != null ? ds.PenaltyInfo.LastOccurance : DateTime.MaxValue)
@@ -153,7 +157,7 @@ namespace HamnetDbRest.Controllers
         private IQuerierOptions CreateOptions(FromUrlQueryQuerierOptions options)
         {
             FromUrlQueryQuerierOptions optionsInUse = options;
-            
+
             var monitoringAccountsSection = this.configuration.GetSection(Program.MonitoringAccountsSectionKey).GetSection(Program.BgpAccountSectionKey);
 
             var loginUserName = monitoringAccountsSection.GetValue<string>("User");

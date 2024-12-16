@@ -25,12 +25,7 @@ namespace SnmpAbstraction
         /// <param name="queryDuration">The duration of the query.</param>
         protected HamnetSnmpQuerierResultBase(IpAddress address, string deviceModel, TimeSpan queryDuration)
         {
-            if (address == null)
-            {
-                throw new ArgumentNullException(nameof(address), "The IP address of the device producing this result is null");
-            }
-
-            this.DeviceAddress = address;
+            this.DeviceAddress = address ?? throw new ArgumentNullException(nameof(address), "The IP address of the device producing this result is null");
             this.queryDuration = queryDuration;
             this.DeviceModel = deviceModel;
         }
@@ -93,6 +88,18 @@ namespace SnmpAbstraction
         {
             // intentionally add or silently replace an existing value
             this.cachableOidLookup[meaning] = new CachableOid(this.DeviceAddress, meaning, oids);
+        }
+
+        /// <summary>
+        /// Adds the given <see paramref="oid" /> as OID for the given value meaning.
+        /// </summary>
+        /// <param name="meaning">The value meaning that is requested by the given OID.</param>
+        /// <param name="oids">The OID that can be used to request the given value.</param>
+        /// <param name="factor">The factor to apply to the values (if applicable: before summing)</param>
+        protected void RecordCachableOids(CachableValueMeanings meaning, IEnumerable<Oid> oids, double factor)
+        {
+            // intentionally add or silently replace an existing value
+            this.cachableOidLookup[meaning] = new CachableOid(this.DeviceAddress, meaning, oids, factor);
         }
     }
 }

@@ -1,0 +1,16 @@
+[Unit]
+Description=Hamnet Monitoring Aquisition background service
+After=network.target docker.service
+Wants=network.target docker.service
+
+[Service]
+Type=simple
+User=kurt
+WorkingDirectory=/usr/local/lib/HamnetMonitoringService
+Restart=always
+EnvironmentFile=/etc/HamnetMonitoringService/environment-aquisition
+ExecStart=/usr/local/lib/HamnetMonitoringService/HamnetMonitoringService $SettingsFile
+AmbientCapabilities=CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target

@@ -17,16 +17,16 @@
         /// <summary>
         /// Path to a file containing the URL to obtain the hosts.
         /// </summary>
-        public static readonly string HostsUrl = @"http://fhn.lspe.org/hamnetdb/codiad/workspace/hamnetdb/csv.cgi?tab=host&json=1";
+        public static readonly string HostsUrl = @"https://hamnetdb.net/csv.cgi?tab=host&json=1";
 
         /// <summary>
         /// Path to a file containing the URL to obtain the subnets.
         /// </summary>
-        public static readonly string SubnetsUrl = @"http://fhn.lspe.org/hamnetdb/codiad/workspace/hamnetdb/csv.cgi?tab=subnet&json=1";
+        public static readonly string SubnetsUrl = @"https://hamnetdb.net/csv.cgi?tab=subnet&json=1";
 
         /// <summary>
         /// Path to a file containing the URL to obtain the sites.
         /// </summary>
-        public static readonly string SitesUrl = @"http://fhn.lspe.org/hamnetdb/codiad/workspace/hamnetdb/csv.cgi?tab=site&json=1";
+        public static readonly string SitesUrl = @"https://hamnetdb.net/csv.cgi?tab=site&json=1";
     }
 }

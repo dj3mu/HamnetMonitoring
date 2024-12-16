@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 
 namespace SnmpAbstraction
 {
@@ -21,7 +20,7 @@ namespace SnmpAbstraction
         /// </summary>
         public HamnetSnmpException()
         {
-            this.AffectedHosts = new string[0];
+            this.AffectedHosts = Array.Empty<string>();
         }
 
         /// <summary>
@@ -30,7 +29,7 @@ namespace SnmpAbstraction
         /// <param name="message">The message containing details of the exception.</param>
         public HamnetSnmpException(string message) : base(message)
         {
-            this.AffectedHosts = new string[0];
+            this.AffectedHosts = Array.Empty<string>();
         }
 
         /// <summary>
@@ -40,7 +39,7 @@ namespace SnmpAbstraction
         /// <param name="affectedHosts">The addresses of the host(s) impacted by this exception.</param>
         public HamnetSnmpException(string message, params string[] affectedHosts) : base(message)
         {
-            this.AffectedHosts = affectedHosts?.Where(a => !string.IsNullOrWhiteSpace(a))?.ToArray() ?? new string[0];
+            this.AffectedHosts = affectedHosts?.Where(a => !string.IsNullOrWhiteSpace(a))?.ToArray() ?? Array.Empty<string>();
         }
 
         /// <summary>
@@ -50,7 +49,7 @@ namespace SnmpAbstraction
         /// <param name="innerException">The exception to be nested.</param>
         public HamnetSnmpException(string message, Exception innerException) : base(message, innerException)
         {
-            this.AffectedHosts = new string[0];
+            this.AffectedHosts = Array.Empty<string>();
         }
 
         /// <summary>
@@ -61,16 +60,7 @@ namespace SnmpAbstraction
         /// <param name="affectedHosts">The addresses of the host(s) impacted by this exception.</param>
         public HamnetSnmpException(string message, Exception innerException, params string[] affectedHosts) : base(message, innerException)
         {
-            this.AffectedHosts = affectedHosts?.Where(a => !string.IsNullOrWhiteSpace(a))?.ToArray() ?? new string[0];
-        }
-
-        /// <summary>
-        /// Deserialization c'tor.
-        /// </summary>
-        /// <param name="info">The serialization info.</param>
-        /// <param name="context">The streaming context.</param>
-        protected HamnetSnmpException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
+            this.AffectedHosts = affectedHosts?.Where(a => !string.IsNullOrWhiteSpace(a))?.ToArray() ?? Array.Empty<string>();
         }
     }
 }

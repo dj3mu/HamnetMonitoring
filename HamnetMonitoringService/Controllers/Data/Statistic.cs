@@ -7,8 +7,6 @@ namespace HamnetDbRest.Controllers
     /// </summary>
     internal class Statistic : Dictionary<string, string>, IStatistic
     {
-        private readonly Dictionary<string, string> stats = new Dictionary<string, string>();
-
         /// <summary>
         /// Constructs for a given databse name.
         /// </summary>

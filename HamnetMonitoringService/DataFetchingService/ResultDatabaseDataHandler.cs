@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using HamnetDbAbstraction;
 using HamnetDbRest;
@@ -30,11 +31,11 @@ namespace RestService.DataFetchingService
         private static readonly log4net.ILog log = Program.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly IConfiguration configuration;
-        
+
         private readonly IFailureRetryFilteringDataHandler failureRetryFilteringDataHandler;
 
         private readonly IConfigurationSection hamnetDbConfig;
-        
+
         private bool disposedValue = false;
 
         /// <summary>
@@ -68,16 +69,21 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void PrepareForNewAquisition()
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+
+            if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
             {
-                if (hamnetDbConfig.GetValue<bool>("TruncateFailingQueries"))
+                using var transaction = databaseContext.Database.BeginTransaction();
+                try
                 {
-                    using (var transaction = databaseContext.Database.BeginTransaction())
-                    {
-                        databaseContext.Database.ExecuteSqlCommand("DELETE FROM RssiFailingQueries");
-                        databaseContext.SaveChanges();
-                        transaction.Commit();
-                    }
+                    databaseContext.Database.ExecuteSqlRaw("DELETE FROM RssiFailingQueries");
+                    databaseContext.SaveChanges();
+                    transaction.Commit();
+                }
+                catch(Exception e)
+                {
+                    log.Error("Failed to delete RssiFailingQuery", e);
+                    transaction.Rollback();
                 }
             }
         }
@@ -85,18 +91,22 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordRssiDetailsInDatabase(KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+            using var transaction = databaseContext.Database.BeginTransaction();
+            try
             {
-                using (var transaction = databaseContext.Database.BeginTransaction())
-                {
-                    this.DoRecordRssiDetailsInDatabase(databaseContext, inputData, linkDetails, DateTime.UtcNow);
+                DoRecordRssiDetailsInDatabase(databaseContext, inputData, linkDetails, DateTime.UtcNow);
 
-                    this.DoDeleteFailingRssiQuery(databaseContext, inputData.Key);
-            
-                    databaseContext.SaveChanges();
+                DoDeleteFailingRssiQuery(databaseContext, inputData.Key);
 
-                    transaction.Commit();
-                }
+                databaseContext.SaveChanges();
+
+                transaction.Commit();
+            }
+            catch(Exception e)
+            {
+                log.Error("Failed to record RSSI details in database", e);
+                transaction.Rollback();
             }
         }
 
@@ -120,19 +130,23 @@ namespace RestService.DataFetchingService
         /// <inheritdoc />
         public void RecordFailingRssiQuery(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+            using var transaction = databaseContext.Database.BeginTransaction();
+            try
             {
-                using (var transaction = databaseContext.Database.BeginTransaction())
-                {
-                    this.DoRecordFailingRssiQueryEntry(databaseContext, exception, inputData);
+                this.DoRecordFailingRssiQueryEntry(databaseContext, exception, inputData);
 
-                    databaseContext.SaveChanges();
+                databaseContext.SaveChanges();
 
-                    transaction.Commit();
-                }
+                transaction.Commit();
+            }
+            catch(Exception e)
+            {
+                log.Error("Failed to record RSSI failing query in database", e);
+                transaction.Rollback();
             }
         }
- 
+
         /// <inheritdoc />
         public Task RecordFailingRssiQueryAsync(Exception exception, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData)
         {
@@ -153,16 +167,20 @@ namespace RestService.DataFetchingService
        /// <inheritdoc />
         public void RecordFailingBgpQuery(Exception exception, IHamnetDbHost host)
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+            using var transaction = databaseContext.Database.BeginTransaction();
+            try
             {
-                using (var transaction = databaseContext.Database.BeginTransaction())
-                {
-                    this.DoRecordFailingBgpQueryEntry(databaseContext, exception, host);
+                this.DoRecordFailingBgpQueryEntry(databaseContext, exception, host);
 
-                    databaseContext.SaveChanges();
+                databaseContext.SaveChanges();
 
-                    transaction.Commit();
-                }
+                transaction.Commit();
+            }
+            catch(Exception e)
+            {
+                log.Error("Failed to record BGP failing query in database", e);
+                transaction.Rollback();
             }
         }
 
@@ -182,22 +200,26 @@ namespace RestService.DataFetchingService
                 }
             });
         }
- 
+
         /// <inheritdoc />
         public void RecordDetailsInDatabase(IHamnetDbHost host, IBgpPeers peers, DateTime queryTime)
         {
-            using(var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext())
+            using var databaseContext = QueryResultDatabaseProvider.Instance.CreateContext();
+            using var transaction = databaseContext.Database.BeginTransaction();
+            try
             {
-                using (var transaction = databaseContext.Database.BeginTransaction())
-                {
-                    this.DoRecordBgpDetailsInDatabase(databaseContext, host, peers, DateTime.UtcNow);
+                DoRecordBgpDetailsInDatabase(databaseContext, host, peers, DateTime.UtcNow);
 
-                    this.DoDeleteFailingBgpQuery(databaseContext, host);
-            
-                    databaseContext.SaveChanges();
+                DoDeleteFailingBgpQuery(databaseContext, host);
 
-                    transaction.Commit();
-                }
+                databaseContext.SaveChanges();
+
+                transaction.Commit();
+            }
+            catch(Exception e)
+            {
+                log.Error("Failed to record BGP details in database", e);
+                transaction.Rollback();
             }
         }
 
@@ -267,18 +289,18 @@ namespace RestService.DataFetchingService
         /// <param name="inputData">The input data of the query.</param>
         /// <param name="linkDetails">The link details to record.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
-        private void DoRecordRssiDetailsInDatabase(QueryResultDatabaseContext databaseContext, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
+        private static void DoRecordRssiDetailsInDatabase(QueryResultDatabaseContext databaseContext, KeyValuePair<IHamnetDbSubnet, IHamnetDbHosts> inputData, ILinkDetails linkDetails, DateTime queryTime)
         {
             string host1call = inputData.Value.First().Callsign?.ToUpperInvariant();
             string host2call = inputData.Value.Last().Callsign?.ToUpperInvariant();
 
             foreach (var item in linkDetails.Details)
             {
-                this.SetNewRssiForLink(databaseContext, inputData.Key, queryTime, item, item.Address1.ToString(), item.RxLevel1at2, host1call, $"{host1call} at {host2call}");
-                this.SetNewRssiForLink(databaseContext, inputData.Key, queryTime, item, item.Address2.ToString(), item.RxLevel2at1 , host2call, $"{host2call} at {host1call}");
+                SetNewRssiForLink(databaseContext, inputData.Key, queryTime, item.Address1.ToString(), item.RxLevel1at2, host1call, $"{host1call} at {host2call}");
+                SetNewRssiForLink(databaseContext, inputData.Key, queryTime, item.Address2.ToString(), item.RxLevel2at1 , host2call, $"{host2call} at {host1call}");
             }
         }
- 
+
         /// <summary>
         /// Records the BGP results in the database.
         /// </summary>
@@ -286,7 +308,7 @@ namespace RestService.DataFetchingService
         /// <param name="host">The host data of the query.</param>
         /// <param name="bgpPeers">The BGP peers to record.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
-        private void DoRecordBgpDetailsInDatabase(QueryResultDatabaseContext databaseContext, IHamnetDbHost host, IBgpPeers bgpPeers, DateTime queryTime)
+        private static void DoRecordBgpDetailsInDatabase(QueryResultDatabaseContext databaseContext, IHamnetDbHost host, IBgpPeers bgpPeers, DateTime queryTime)
         {
             var localAdressToSearch = host.Address.ToString();
 
@@ -316,13 +338,13 @@ namespace RestService.DataFetchingService
                 peerEntry.UnixTimeStamp = (ulong)queryTime.ToUniversalTime().Subtract(Program.UnixTimeStampBase).TotalSeconds;
             }
         }
- 
+
         /// <summary>
         /// Deletes an entry in the failing query table.
         /// </summary>
         /// <param name="databaseContext">The database context to work with.</param>
         /// <param name="subnet">The subnet which serves as key to the entry to delete.</param>
-        private void DoDeleteFailingRssiQuery(QueryResultDatabaseContext databaseContext, IHamnetDbSubnet subnet)
+        private static void DoDeleteFailingRssiQuery(QueryResultDatabaseContext databaseContext, IHamnetDbSubnet subnet)
         {
             var failingSubnetString = subnet.Subnet.ToString();
             var entryToRemove = databaseContext.RssiFailingQueries.SingleOrDefault(e => e.Subnet == failingSubnetString);
@@ -338,7 +360,7 @@ namespace RestService.DataFetchingService
         /// </summary>
         /// <param name="databaseContext">The database context to work with.</param>
         /// <param name="host">The host which serves as a key to the entry to delete.</param>
-        private void DoDeleteFailingBgpQuery(QueryResultDatabaseContext databaseContext, IHamnetDbHost host)
+        private static void DoDeleteFailingBgpQuery(QueryResultDatabaseContext databaseContext, IHamnetDbHost host)
         {
             var failingHostString = host.Address.ToString();
             var entryToRemove = databaseContext.BgpFailingQueries.SingleOrDefault(e => e.Host == failingHostString);
@@ -355,12 +377,11 @@ namespace RestService.DataFetchingService
         /// <param name="databaseContext">The database context to work with.</param>
         /// <param name="subnet">The subnet that is being recorded.</param>
         /// <param name="queryTime">The time of the data aquisition (recorded with the data).</param>
-        /// <param name="linkDetail">The link details to record.</param>
         /// <param name="adressToSearch">The host address to search for (and modify if found).</param>
         /// <param name="rssiToSet">The RSSI value to record.</param>
         /// <param name="hostCall">The call of the foreign host.</param>
         /// <param name="description">The description for this value.</param>
-        private void SetNewRssiForLink(QueryResultDatabaseContext databaseContext, IHamnetDbSubnet subnet, DateTime queryTime, ILinkDetail linkDetail, string adressToSearch, double rssiToSet, string hostCall, string description)
+        private static void SetNewRssiForLink(QueryResultDatabaseContext databaseContext, IHamnetDbSubnet subnet, DateTime queryTime, string adressToSearch, double rssiToSet, string hostCall, string description)
         {
             var adressEntry = databaseContext.RssiValues.Find(adressToSearch);
             if (adressEntry == null)
@@ -388,8 +409,8 @@ namespace RestService.DataFetchingService
             adressEntry.TimeStampString = queryTime.ToUniversalTime().ToString("yyyy-MM-ddTHH\\:mm\\:sszzz");
             adressEntry.UnixTimeStamp = (ulong)queryTime.ToUniversalTime().Subtract(Program.UnixTimeStampBase).TotalSeconds;
         }
- 
- 
+
+
         /// <summary>
         /// Records a failing query.
         /// </summary>
@@ -431,13 +452,12 @@ namespace RestService.DataFetchingService
         {
             var failingSubnetString = pair.Key.Subnet.ToString();
             var failEntry = databaseContext.RssiFailingQueries.Find(failingSubnetString);
-            var hamnetSnmpEx = ex as HamnetSnmpException;
             if (failEntry == null)
             {
                 failEntry = new RssiFailingQuery
                 {
                     Subnet = failingSubnetString,
-                    AffectedHosts = (hamnetSnmpEx != null) ? hamnetSnmpEx.AffectedHosts : pair.Value.Select(h => h.Address?.ToString()).ToArray()
+                    AffectedHosts = (ex is HamnetSnmpException hamnetSnmpEx) ? hamnetSnmpEx.AffectedHosts : pair.Value.Select(h => h.Address?.ToString()).ToArray()
                 };
 
                 databaseContext.RssiFailingQueries.Add(failEntry);

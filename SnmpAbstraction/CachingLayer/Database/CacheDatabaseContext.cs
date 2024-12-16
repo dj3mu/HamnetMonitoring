@@ -4,7 +4,6 @@ using System.Net;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using SnmpSharpNet;
 
@@ -18,7 +17,9 @@ namespace SnmpAbstraction
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
         /// <summary>
         /// JSON serialization / deserialization settings for all data.
@@ -80,7 +81,7 @@ namespace SnmpAbstraction
 
                 var databaseDefaultPath = Path.Combine(Environment.CurrentDirectory, "Config/CacheDatabase.sqlite");
                 connStringBuilder.DataSource = databaseDefaultPath;
-                
+
                 this.DatabaseType = "SQLITE";
                 this.ConnectionString = connStringBuilder.ToString();
             }
@@ -102,10 +103,11 @@ namespace SnmpAbstraction
                 throw new InvalidOperationException("Only SQLite is currently supported for the cache database");
             }
 
-            SqliteConnectionStringBuilder connStringBuilder = new SqliteConnectionStringBuilder();
+            SqliteConnectionStringBuilder connStringBuilder = new SqliteConnectionStringBuilder
+            {
+                DataSource = databaseFilePath
+            };
 
-            connStringBuilder.DataSource = databaseFilePath;
-            
             this.ConnectionString = connStringBuilder.ToString();
         }
 
@@ -142,8 +144,7 @@ namespace SnmpAbstraction
 
                 case "MYSQL":
                     {
-                        var connection = new MySqlConnection(this.ConnectionString);
-                        optionsBuilder.UseMySql(connection);
+                        optionsBuilder.UseMySql(this.ConnectionString, ServerVersion.AutoDetect(this.ConnectionString));
                     }
                     break;
 

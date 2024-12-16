@@ -53,11 +53,13 @@ namespace HamnetDbRest.Controllers
 
         private static readonly char[] Separators = new[] { ' ', '\t', ',' };
 
+#pragma warning disable IDE0052 // for future use
         private readonly ILogger logger;
 
-        private readonly IConfiguration configuration;
-
         private readonly QueryResultDatabaseContext dbContext;
+#pragma warning restore
+
+        private readonly IConfiguration configuration;
 
         private readonly IHamnetDbAccess hamnetDbAccess;
 
@@ -181,7 +183,7 @@ namespace HamnetDbRest.Controllers
                 {
                     return this.Ok(kmlString);
                 }
-                
+
                 return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"{fromSite}-{toSite}-{DateTime.Now:yyyyMMddTHHmmss}.kml");
             }
             catch(Exception ex)
@@ -220,7 +222,7 @@ namespace HamnetDbRest.Controllers
                 {
                     return this.Ok(kmlString);
                 }
-                
+
                 return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"{fromSite}-raw-{DateTime.Now:yyyyMMddTHHmmss}.kml");
             }
             catch(Exception ex)
@@ -259,7 +261,7 @@ namespace HamnetDbRest.Controllers
                 {
                     return this.Ok(kmlString);
                 }
-                
+
                 return this.File(Encoding.UTF8.GetBytes(kmlString), KmlContentType, $"raw-From-To-{DateTime.Now:yyyyMMddTHHmmss}.kml");
             }
             catch(Exception ex)
@@ -276,7 +278,7 @@ namespace HamnetDbRest.Controllers
         private IQuerierOptions CreateOptions(FromUrlQueryQuerierOptions options)
         {
             FromUrlQueryQuerierOptions optionsInUse = options;
-            
+
             var monitoringAccountsSection = this.configuration.GetSection(Program.MonitoringAccountsSectionKey).GetSection(Program.BgpAccountSectionKey);
 
             var loginUserName = monitoringAccountsSection.GetValue<string>("User");
@@ -404,7 +406,7 @@ namespace HamnetDbRest.Controllers
         /// </summary>
         private class HostsSupportingFeatureResult : IStatusReply, IReadOnlyList<IHostInfoReply>
         {
-            private List<IHostInfoReply> underlyingData;
+            private readonly List<IHostInfoReply> underlyingData;
 
             /// <summary>
             /// Construct

@@ -29,9 +29,11 @@ namespace SnmpAbstraction
         /// <summary>
         /// Handle to the logger.
         /// </summary>
+#pragma warning disable IDE0052 // for future use
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+#pragma warning restore
 
-        private object lockObject = new object();
+        private readonly object lockObject = new object();
 
         private bool migrateCalled = false;
 
@@ -62,7 +64,7 @@ namespace SnmpAbstraction
                 lock(this.lockObject)
                 {
                     var context = new CacheDatabaseContext(this.Configuration);
-                    
+
                     if (!this.migrateCalled)
                     {
                         context.Database.Migrate();
@@ -101,7 +103,7 @@ namespace SnmpAbstraction
                 .AddJsonFile(configFile, optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
-            
+
             CacheDatabaseProvider.Instance.Configuration = configuration.GetSection(CacheDatabaseProvider.CacheDatabaseSectionName);
 
             return CacheDatabaseProvider.Instance.CacheDatabase;

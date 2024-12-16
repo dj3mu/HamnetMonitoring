@@ -1,5 +1,8 @@
 ﻿using NUnit.Framework;
 using HamnetDbAbstraction;
+using System.Linq;
+using System.Net;
+using NUnit.Framework.Legacy;
 
 namespace HamnetDbAbstractionTests
 {
@@ -24,9 +27,9 @@ namespace HamnetDbAbstractionTests
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
 
-            Assert.NotNull(accessor, "Constructed accessor is null");
-            Assert.AreEqual(TestConstants.HostsUrl, accessor.HostApiUrl);
-            Assert.AreEqual(TestConstants.SubnetsUrl, accessor.SubnetsApiUrl);
+            ClassicAssert.NotNull(accessor, "Constructed accessor is null");
+            ClassicAssert.AreEqual(TestConstants.HostsUrl, accessor.HostApiUrl);
+            ClassicAssert.AreEqual(TestConstants.SubnetsUrl, accessor.SubnetsApiUrl);
         }
 
         /// <summary>
@@ -36,13 +39,13 @@ namespace HamnetDbAbstractionTests
         public void QueryRouterHostsTest()
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
-            
-            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            ClassicAssert.NotNull(accessor, "The accessor returned by provider is null");
 
             var routerHosts = accessor.QueryBgpRouters();
 
-            Assert.NotNull(routerHosts, "The router hosts return data is null");
-            Assert.Greater(routerHosts.Count, 0, "No hosts returned at all");
+            ClassicAssert.NotNull(routerHosts, "The router hosts return data is null");
+            ClassicAssert.Greater(routerHosts.Count, 0, "No hosts returned at all");
         }
 
         /// <summary>
@@ -52,13 +55,13 @@ namespace HamnetDbAbstractionTests
         public void QuerySitesTest()
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SitesUrl, TestConstants.SitesUrl, null);
-            
-            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            ClassicAssert.NotNull(accessor, "The accessor returned by provider is null");
 
             var sites = accessor.QuerySites();
 
-            Assert.NotNull(sites, "The sites return data is null");
-            Assert.Greater(sites.Count, 0, "No sites returned at all");
+            ClassicAssert.NotNull(sites, "The sites return data is null");
+            ClassicAssert.Greater(sites.Count, 0, "No sites returned at all");
         }
 
         /// <summary>
@@ -68,13 +71,13 @@ namespace HamnetDbAbstractionTests
         public void QueryMonitoredHostsTest()
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
-            
-            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            ClassicAssert.NotNull(accessor, "The accessor returned by provider is null");
 
             var monitoredHosts = accessor.QueryMonitoredHosts();
 
-            Assert.NotNull(monitoredHosts, "The monitored hosts return data is null");
-            Assert.Greater(monitoredHosts.Count, 0, "No hosts returned at all");
+            ClassicAssert.NotNull(monitoredHosts, "The monitored hosts return data is null");
+            ClassicAssert.Greater(monitoredHosts.Count, 0, "No hosts returned at all");
         }
 
         /// <summary>
@@ -84,13 +87,16 @@ namespace HamnetDbAbstractionTests
         public void QuerySubnetsTest()
         {
             var accessor = new JsonHamnetDbAccessor(TestConstants.HostsUrl, TestConstants.SubnetsUrl, TestConstants.SitesUrl, null);
-            
-            Assert.NotNull(accessor, "The accessor returned by provider is null");
+
+            ClassicAssert.NotNull(accessor, "The accessor returned by provider is null");
 
             var subnets = accessor.QuerySubnets();
 
-            Assert.NotNull(subnets, "The subnets return data is null");
-            Assert.Greater(subnets.Count, 0, "No subnets returned at all");
+            var wantedSubnet = IPNetwork2.Parse("44.148.46.48/29");
+            var ciriticalNet = subnets.FirstOrDefault(s => s.Subnet == wantedSubnet);
+
+            ClassicAssert.NotNull(subnets, "The subnets return data is null");
+            ClassicAssert.Greater(subnets.Count, 0, "No subnets returned at all");
         }
     }
 }

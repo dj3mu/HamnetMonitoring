@@ -44,8 +44,7 @@ namespace SnmpAbstraction
         protected override bool RetrieveTxSignalStrength()
         {
             var valueToQuery = RetrievableValuesEnum.TxSignalStrengthAppendMacAndInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.TxSignalStrengthBacking = double.NaN;
@@ -72,31 +71,36 @@ namespace SnmpAbstraction
         {
             Stopwatch durationWatch = Stopwatch.StartNew();
 
-            DeviceSpecificOid singleOid;
-            if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthImmediateOid, out singleOid) && !singleOid.Oid.IsNull)
+            if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthImmediateOid, out DeviceSpecificOid singleOid) && !singleOid.Oid.IsNull)
             {
-                this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid, "RSSI single value");
+                this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(singleOid.Oid, "RSSI single value (RxSignalStrengthImmediateOid)");
                 this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, singleOid.Oid);
+            }
+            else if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthCh0AppendInterfaceId, out singleOid) && !singleOid.Oid.IsNull)
+            {
+                var queryOid = singleOid.Oid + new Oid(new int[] { this.InterfaceId.Value });
+                this.RxSignalStrengthBacking = this.LowerSnmpLayer.QueryAsInt(queryOid, "RSSI single value with Interface ID (RxSignalStrengthCh0AppendInterfaceId)");
+                this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, queryOid);
             }
             else
             {
-                RetrievableValuesEnum[] valuesToQuery =
+                var valuesToQuery = new[]
                 {
                     RetrievableValuesEnum.RxSignalStrengthCh0AppendMacAndInterfaceId,
                     RetrievableValuesEnum.RxSignalStrengthCh1AppendMacAndInterfaceId,
                     RetrievableValuesEnum.RxSignalStrengthCh2AppendMacAndInterfaceId
                 };
 
-                DeviceSpecificOid[] deviceSpecificOids = new DeviceSpecificOid[valuesToQuery.Length];
-                DeviceSpecificOid[] oidValues;
-                if (!this.OidLookup.TryGetValues(out oidValues, valuesToQuery))
+                if (!this.OidLookup.TryGetValues(out DeviceSpecificOid[] oidValues, valuesToQuery))
                 {
+
                     log.Warn($"Not even one supported OID has been found for getting the stream-specific RX level. RxSignalStrength for device '{this.DeviceAddress}', interface ID {this.InterfaceId}, cannot be retrieved.");
                     this.RxSignalStrengthBacking = double.NegativeInfinity;
                     return true;
                 }
 
-                var clientSpecificOids = oidValues.Where(oid => oid != null).Select(oid => {
+                var clientSpecificOids = oidValues.Where(oid => oid != null).Select(oid =>
+                {
                     var interfaceTypeOid = oid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
 
                     return interfaceTypeOid;
@@ -104,11 +108,28 @@ namespace SnmpAbstraction
 
                 var queryResults = this.LowerSnmpLayer.QueryAsInt(clientSpecificOids, "wireless peer info, RX signal strength");
 
-                this.RecordCachableOids(CachableValueMeanings.WirelessRxSignalStrength, clientSpecificOids);
-
                 // Note: As the SNMP cannot return -infinity MikroTik devices return 0.
                 //       Hence we effectively skip 0 values here assuming that stream is not in use.
-                this.RxSignalStrengthBacking = queryResults.Values.Where(v => v != 0).DecibelLogSum();
+                var valueToSet = queryResults.Values.Where(v => v != 0).DecibelLogSum();
+
+                if (double.IsNegativeInfinity(valueToSet))
+                {
+                    // if the device didn't return anyhting useful until here, we do a final try with RxSignalStrengthApAppendMacAndInterfaceId
+                    if (this.OidLookup.TryGetValue(RetrievableValuesEnum.RxSignalStrengthApAppendMacAndInterfaceId, out singleOid) && !singleOid.Oid.IsNull)
+                    {
+                        var interfaceTypeOid = singleOid.Oid + this.RemoteMacString.HexStringToByteArray().ToDottedDecimalOid() + new Oid(new int[] { this.InterfaceId.Value });
+
+                        valueToSet = this.LowerSnmpLayer.QueryAsInt(interfaceTypeOid, "RSSI single value (SignalStrengthApAppendMacAndInterfaceId)");
+                        this.RecordCachableOid(CachableValueMeanings.WirelessRxSignalStrength, interfaceTypeOid);
+                    }
+                }
+                else
+                {
+                    // we have valid per-stream values
+                    this.RecordCachableOids(CachableValueMeanings.WirelessRxSignalStrength, clientSpecificOids);
+                }
+
+                this.RxSignalStrengthBacking = valueToSet;
             }
 
             durationWatch.Stop();
@@ -122,8 +143,7 @@ namespace SnmpAbstraction
         protected override bool RetrieveLinkUptime()
         {
             var valueToQuery = RetrievableValuesEnum.LinkUptimeAppendMacAndInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.LinkUptimeBacking = TimeSpan.Zero;
@@ -160,8 +180,7 @@ namespace SnmpAbstraction
             }
 
             var valueToQuery = RetrievableValuesEnum.OverallCcqAppendInterfaceId;
-            DeviceSpecificOid interfaceIdRootOid;
-            if (!this.OidLookup.TryGetValue(valueToQuery, out interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
+            if (!this.OidLookup.TryGetValue(valueToQuery, out DeviceSpecificOid interfaceIdRootOid) || interfaceIdRootOid.Oid.IsNull)
             {
                 log.Warn($"Failed to obtain OID for '{valueToQuery}'");
                 this.RecordCachableOid(CachableValueMeanings.Ccq, new Oid("0"));

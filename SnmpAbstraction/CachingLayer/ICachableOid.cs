@@ -73,5 +73,10 @@ namespace SnmpAbstraction
         /// Gets the SNMP OIDs that shall be queried to obtain the values that are to be combined to get the final value of the given meaning.
         /// </summary>
         IEnumerable<Oid> Oids { get; }
+
+        /// <summary>
+        /// Gets the factor to apply to the retrieved values (if applicable, before combining them).
+        /// </summary>
+        double Factor { get; }
     }
 }

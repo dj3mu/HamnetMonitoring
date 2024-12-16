@@ -12,11 +12,6 @@ namespace SnmpAbstraction
     internal class LazyLoadingUbiquitiInterfaceDetails : LazyLoadingGenericInterfaceDetails
     {
         /// <summary>
-        /// Field to sum up the query duration on each "Populate" call.
-        /// </summary>
-        private TimeSpan localQueryDuration = TimeSpan.Zero;
-
-        /// <summary>
         /// Construct taking the lower layer to use for lazy-querying the data.
         /// </summary>
         /// <param name="lowerSnmpLayer">The communication layer to use for talking to the device.</param>
