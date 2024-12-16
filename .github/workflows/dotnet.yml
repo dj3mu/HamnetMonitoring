@@ -42,7 +42,7 @@ jobs:
 
         # A file, directory or wildcard pattern that describes what to upload
         # Required.
-        path: HamnetMonitoringService\HamnetMonitoringService.*.deb
+        path: HamnetMonitoringService.*.deb
 
         # The desired behavior if no files are found using the provided path.
         # Available Options:
