@@ -40,7 +40,7 @@ jobs:
         fi
         dotnet msbuild HamnetMonitoringService/HamnetMonitoringService.csproj -t:CreateDeb -p:TargetFramework=net8.0 -p:RuntimeIdentifier=linux-x64 -p:Configuration=Release -p:PackageDir=./ -p:DebSection=$DEB_SECTION
 
-    - name: Upload Release Asset
+    - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
       with:
