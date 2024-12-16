@@ -453,3 +453,4 @@ debian-packages
 *.sqlite-journal
 
 *.log
+*.deb

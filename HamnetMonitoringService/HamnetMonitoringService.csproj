@@ -11,20 +11,28 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>HamnetMonitor.RestService</PackageId>
     <AssemblyTitle>REST service for Hamnet Monitoring.</AssemblyTitle>
-    <PackageDescription>
-    The application is the REST service providing access to Hamnet Monitoring data.
-    </PackageDescription>
+    <PackageDescription>The application is the service collecting and providing access to Hamnet Monitoring data.</PackageDescription>
     <Authors>DJ3MU</Authors>
     <Product>Hamnet Monitoring REST service</Product>
-    <Copyright>(c) 2019 by the Amateur Radio Community</Copyright>
+    <Copyright>(c) 2024 by the Amateur Radio Community</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>Hamnet Monitoring REST service</PackageTags>
+    <PackageTags>Hamnet Monitoring aquisition and REST service</PackageTags>
     <PublishTrimmed>false</PublishTrimmed>
     <SelfContained>true</SelfContained>
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishSingleFile>false</PublishSingleFile>
     <ConfigDir>Config</ConfigDir>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <DebSection>testing</DebSection>
+    <DebHomepage>https://github.com/dj3mu/HamnetMonitoring.git</DebHomepage>
+    <DebPriority>optional</DebPriority>
+    <InstallService>false</InstallService>
+    <ServiceName>HamnetMonitoringWeb</ServiceName>
+    <Prefix>/usr/local/lib/HamnetMonitoringService</Prefix>
+    <LinuxFolders>/usr/local/lib/systemd/system;</LinuxFolders>
+    <SuppressWindowsPlatformTargetingRequiredError>true</SuppressWindowsPlatformTargetingRequiredError>
+    <PostInstallScript><![CDATA[systemctl list-units --type=service --all --plain | grep HamnetMonitoring | awk '{print $1}' | xargs -r -t systemctl start]]></PostInstallScript>
+    <PreRemoveScript><![CDATA[systemctl list-units --type=service --state=running --plain | grep HamnetMonitoring | awk '{print $1}' | xargs -r -t systemctl stop]]></PreRemoveScript>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SnmpAbstraction\SnmpAbstraction.csproj" />
@@ -34,6 +42,14 @@
     <_CopyItems Include="$(OutDir)$(ConfigDir)/*.*" />
     <_DeleteItems1 Include="$(PublishDir)/appsettings*.json" />
     <_DeleteItems2 Include="$(PublishDir)/log4net*.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Contrib/HamnetMonitoringAquisition.service" CopyToPublishDirectory="PreserveNewest" LinuxFileMode="1755">
+      <LinuxPath>/usr/local/lib/systemd/system/HamnetMonitoringAquisition.service</LinuxPath>
+    </Content>
+    <Content Include="Contrib/HamnetMonitoringWeb.service" CopyToPublishDirectory="PreserveNewest" LinuxFileMode="1755">
+      <LinuxPath>/usr/local/lib/systemd/system/HamnetMonitoringWeb.service</LinuxPath>
+    </Content>
   </ItemGroup>
   <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
     <Message Text="Copying config files to $(OutDir)$(ConfigDir)" Importance="high" />
