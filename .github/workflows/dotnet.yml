@@ -33,6 +33,9 @@ jobs:
     - name: Build
       run: dotnet msbuild HamnetMonitoringService/HamnetMonitoringService.csproj -t:CreateDeb -p:TargetFramework=net8.0 -p:RuntimeIdentifier=linux-x64 -p:Configuration=Release -p:PackageDir=./ -p:DebSection=testing
 
+    - name: List files
+      run: ls -R
+
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4
       with:
