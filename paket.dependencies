@@ -11,7 +11,9 @@ nuget IPNetwork2 ~> 3.0
 nuget log4net ~> 2.0.14
 
 nuget Microsoft.Data.Sqlite.Core ~> 8.0
-nuget SQLitePCLRaw.lib.e_sqlite3 ~> 2.1.11
+nuget SQLitePCLRaw.core ~> 2.1.10
+nuget SQLitePCLRaw.provider.e_sqlite3 ~> 2.1.0
+nuget SQLitePCLRaw.lib.e_sqlite3 ~> 2.1.10
 
 nuget Microsoft.AspNetCore.JsonPatch ~> 8.0
 nuget Microsoft.AspNetCore.Mvc.NewtonsoftJson ~> 8.0
