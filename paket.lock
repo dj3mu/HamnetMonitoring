@@ -210,6 +210,7 @@ NUGET
       SQLitePCLRaw.provider.e_sqlite3 (>= 3.0.2)
     SQLitePCLRaw.core (3.0.2)
       System.Memory (>= 4.6.3)
+    SQLitePCLRaw.lib.e_sqlite3 (2.1.11)
     SQLitePCLRaw.provider.e_sqlite3 (3.0.2)
       SQLitePCLRaw.core (>= 3.0.2)
     System.CodeDom (8.0)

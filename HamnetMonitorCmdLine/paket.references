@@ -2,3 +2,4 @@ GitVersion.MsBuild
 IPNetwork2
 CommandLineParser
 log4net
+Microsoft.Data.Sqlite.Core

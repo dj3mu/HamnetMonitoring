@@ -9,3 +9,4 @@ Microsoft.EntityFrameworkCore.Sqlite
 Pomelo.EntityFrameworkCore.MySql
 SharpKml.Core
 System.Linq.Async
+Microsoft.Data.Sqlite.Core
