@@ -6,25 +6,29 @@
       "version": "5.12.0",
       "commands": [
         "dotnet-gitversion"
-      ]
+      ],
+      "rollForward": false
     },
     "dotnet-ef": {
-      "version": "8.0.13",
+      "version": "8.0.21",
       "commands": [
         "dotnet-ef"
-      ]
+      ],
+      "rollForward": false
     },
     "paket": {
-      "version": "8.0.3",
+      "version": "9.0.2",
       "commands": [
         "paket"
-      ]
+      ],
+      "rollForward": false
     },
     "dotnet-deb": {
-      "version": "0.1.226",
+      "version": "0.1.232",
       "commands": [
         "dotnet-deb"
-      ]
+      ],
+      "rollForward": false
     }
   }
 }
