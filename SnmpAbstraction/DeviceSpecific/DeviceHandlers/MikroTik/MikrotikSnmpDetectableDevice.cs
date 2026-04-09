@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Text.RegularExpressions;
 using SemVersion;
 using SnmpSharpNet;
@@ -9,11 +8,14 @@ namespace SnmpAbstraction
     /// <summary>
     /// Detectable device implementation for MikroTik devices
     /// </summary>
-    internal class MikrotikSnmpDetectableDevice : DetectableDeviceBase
+    internal partial class MikrotikSnmpDetectableDevice : DetectableDeviceBase
     {
-        private static readonly Regex OsVersionExtractionRegex = new Regex(RouterOsDetectionString + @"\s+([0-9.]+).*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
-        private static readonly Regex ModelFromVersionExtractionRegex = new Regex(@".*\s+on\s+(.+)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        [GeneratedRegex(@"RouterOS\s+([0-9.]+).*", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant)]
+        private static partial Regex OsVersionExtractionRegex();
+
+        [GeneratedRegex(@".*\s+on\s+(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant)]
+        private static partial Regex ModelFromVersionExtractionRegex();
 
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -64,7 +66,7 @@ namespace SnmpAbstraction
                 return false;
             }
 
-            log.Info($"Device '{snmpLowerLayer.Address}' seems to be a MikroTik device");
+            log.InfoFormat("Device '{0}' seems to be a MikroTik device", snmpLowerLayer.Address);
 
             return true;
         }
@@ -97,22 +99,24 @@ namespace SnmpAbstraction
             }
 
             // Example: "RouterOS 6.45.3 (stable) on RB711-5Hn-MMCX"
-            Match match = OsVersionExtractionRegex.Match(osVersionString);
+            Match match = OsVersionExtractionRegex().Match(osVersionString);
 
             SemanticVersion osVersion = match.Success ? match.Groups[1].Value.ToSemanticVersion() : null;
 
-            var model = lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Replace("RB ", string.Empty).Trim();
-
-            if (string.IsNullOrWhiteSpace(model))
+            // Example for ROS < 7.22: "RouterOS RB912UAG-5HPnD"
+            // Example for ROS >= 7.22: "RouterOS RBLHG-5nD 7.22.1 (stable)"
+            string model = null;
+            Match modelMatch = ModelFromVersionExtractionRegex().Match(osVersionString);
+            if (modelMatch.Success)
             {
-                Match modelMatch = ModelFromVersionExtractionRegex.Match(osVersionString);
-                if (modelMatch.Success)
-                {
-                    model = modelMatch.Groups[1].Value.Trim();
-                }
+                model = modelMatch.Groups[1].Value.Trim();
+            }
+            else
+            {
+                model = lowerLayer.SystemData.Description.Replace(RouterOsDetectionString, string.Empty).Replace("RB ", string.Empty).Trim();
             }
 
-            log.Info($"Detected device '{lowerLayer.Address}' as MikroTik '{model}' v '{osVersion}'");
+            log.InfoFormat("Detected device '{0}' as MikroTik '{1}' v '{2}'", lowerLayer.Address, model, osVersion);
 
             IDeviceSpecificOidLookup oidTable = this.ObtainOidTable(model.Trim(), osVersion, out DeviceVersion deviceVersion, lowerLayer.Address);
             if (string.IsNullOrWhiteSpace(deviceVersion.HandlerClassName))
