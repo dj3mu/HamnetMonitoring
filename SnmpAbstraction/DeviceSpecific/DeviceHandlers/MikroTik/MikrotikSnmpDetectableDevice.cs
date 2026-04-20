@@ -11,10 +11,10 @@ namespace SnmpAbstraction
     internal partial class MikrotikSnmpDetectableDevice : DetectableDeviceBase
     {
 
-        [GeneratedRegex(@"RouterOS\s+([0-9.]+).*", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant)]
+        [GeneratedRegex(@"RouterOS\s+(?<Version>[0-9.]+).*", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant)]
         private static partial Regex OsVersionExtractionRegex();
 
-        [GeneratedRegex(@".*\s+on\s+(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant)]
+        [GeneratedRegex(@".*\s+on\s+(RB\s)?(?<Model>.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant)]
         private static partial Regex ModelFromVersionExtractionRegex();
 
         private static readonly log4net.ILog log = SnmpAbstraction.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -101,7 +101,7 @@ namespace SnmpAbstraction
             // Example: "RouterOS 6.45.3 (stable) on RB711-5Hn-MMCX"
             Match match = OsVersionExtractionRegex().Match(osVersionString);
 
-            SemanticVersion osVersion = match.Success ? match.Groups[1].Value.ToSemanticVersion() : null;
+            SemanticVersion osVersion = match.Success ? match.Groups["Version"].Value.ToSemanticVersion() : null;
 
             // Example for ROS < 7.22: "RouterOS RB912UAG-5HPnD"
             // Example for ROS >= 7.22: "RouterOS RBLHG-5nD 7.22.1 (stable)"
@@ -109,7 +109,7 @@ namespace SnmpAbstraction
             Match modelMatch = ModelFromVersionExtractionRegex().Match(osVersionString);
             if (modelMatch.Success)
             {
-                model = modelMatch.Groups[1].Value.Trim();
+                model = modelMatch.Groups["Model"].Value.Trim();
             }
             else
             {
